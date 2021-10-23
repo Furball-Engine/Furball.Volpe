@@ -1,81 +1,41 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Text;
 using Volpe.LexicalAnalysis.Exceptions;
 
 namespace Volpe.LexicalAnalysis
 {
-    public class Lexer: IEnumerable<WithPositionInText<Token>?>
+    public class Lexer: IEnumerable<WithPositionInText<Token>>
     {
-        private string _source;
+        private TextConsumer _textConsumer;
 
-        private int _position;
-        private PositionInText _positionInText;
-        
         public Lexer(string source)
         {
-            _source = source;
-            _position = -1;
-        }
-
-        private char _lastConsumedCharacter;
-
-        private char? PeekNextCharacter()
-        {
-            int nextPosition = _position + 1;
-            return GetCharAtPosition(nextPosition);
-        }
-
-        private void Step() => ++_position;
-
-        private TResult StepAnd<TResult>(Func<TResult> action)
-        {
-            ++_position;
-            return action();
-        }
-        
-        private void StepAnd(Action action)
-        {
-            ++_position;
-            action();
-        }
-
-        private char? GetCharAtPosition(int position)
-        {
-            if (position < 0 || position >= _source.Length)
-                return null;
-
-            return _source[position];
-        }
-        
-        private char? ConsumeNextCharacter()
-        {
-            Step();
-            return GetCharAtPosition(_position);
+            _textConsumer = new TextConsumer(source.ToImmutableArray());
         }
 
         private string ConsumeNextString()
         {
+            char character;
             StringBuilder stringBuilder = new StringBuilder();
 
-            if (ConsumeNextCharacter() != '"')
+            if (!_textConsumer.TryConsumeNext(out character) || character != '"')
                 throw new InvalidOperationException();
 
             for(;;)
             {
-                char? c = ConsumeNextCharacter();
+                if (!_textConsumer.TryConsumeNext(out character))
+                    throw new LexerUnexpectedEofException(_textConsumer.PositionInText);
 
-                switch (c)
+                switch (character)
                 {
                     case '"':
                         return stringBuilder.ToString();
                     
-                    case null:
-                        throw new LexerUnexpectedEofException(_positionInText);
-                    
                     default:
-                        stringBuilder.Append(c.Value);
+                        stringBuilder.Append(character);
                         break;
                 }
             }
@@ -87,22 +47,19 @@ namespace Volpe.LexicalAnalysis
             
             for(;;)
             {
-                char? c = PeekNextCharacter();
-
-                switch (c)
+                if (!_textConsumer.TryPeekNext(out char character))
+                    break;
+                
+                if (character is ((>= '¡' or (>= 'a' and <= 'z') or (>= '@' and <= 'Z') or (>= '0' and <= '9')) and not '$'))
                 {
-                    case >= '¡':
-                    case >= 'a' and <= 'z':
-                    case >= '@' and <= 'Z':
-                    case >= '0' and <= '9':
-                        stringBuilder.Append(c.Value);
-                        ConsumeNextCharacter(); 
-                        break;
-                    
-                    default:
-                        return stringBuilder.ToString();
-                }
+                    stringBuilder.Append(character);
+                    _textConsumer.TryConsumeNext(out _); 
+                } 
+                else 
+                    break;
             }
+
+            return stringBuilder.ToString();
         }
 
         private double ConsumeNextNumber()
@@ -113,49 +70,59 @@ namespace Volpe.LexicalAnalysis
             
             for(;;)
             {
-                char? c = ConsumeNextCharacter();
+                if (!_textConsumer.TryConsumeNext(out char character))
+                    break;
 
-                switch (c)
+                if (character is ( >= '0' and <= '9'))
                 {
-                    case >= '0' and <= '9':
-                        num = num * 10 + (c.Value - '0');
+                    num = num * 10 + (character - '0');
 
-                        if (isRational)
-                            exp--;
-
-                        break;
-
-                    case '.':
-                        if (isRational)
-                            throw new LexerUnexceptedSymbolException('.', _positionInText);
+                    if (isRational)
+                        exp--;
+                } 
+                else if (character == '.')
+                {
+                    if (isRational)
+                        throw new LexerUnexceptedSymbolException('.', _textConsumer.PositionInText);
                         
-                        isRational = true;
-                        break;
-                    
-                    default:
-                        return Math.Pow(10, exp) * num;
-                }
+                    isRational = true;
+                } 
+                else
+                    break;
             }
+
+            return Math.Pow(10, exp) * num;
         }
 
         private void SkipWhiteSpaces()
         {
-            while (PeekNextCharacter() is {} character && char.IsWhiteSpace(character))
-                ConsumeNextCharacter();
+            while (_textConsumer.TryPeekNext(out char character) && char.IsWhiteSpace(character))
+                _textConsumer.TryConsumeNext(out _);
         }
 
-        public WithPositionInText<Token>? ConsumeNextToken()
+        public bool TryConsumeNextToken(out WithPositionInText<Token> tokenWithPositionInText)
         {
+            tokenWithPositionInText = default;
+            
             SkipWhiteSpaces();
-            PositionInText currentPositionInText = _positionInText;
+            PositionInText currentPositionInText = _textConsumer.PositionInText;
 
-            Token? token = PeekNextCharacter() switch
+            char character;
+            if (!_textConsumer.TryPeekNext(out character))
+                return false;
+
+            Token token = character switch
             {
                 '"' => new Token.String(ConsumeNextString()),
-                ':' => StepAnd(() => new Token.Column()),
-                >= '0' and <= '9' => new Token.Number(ConsumeNextNumber()),
+                
+                ':' => _textConsumer.TryConsumeNextAndThen((_, _) => new Token.Column()),
+                '[' => _textConsumer.TryConsumeNextAndThen((_, _) => new Token.LeftBracket()),
+                ']' => _textConsumer.TryConsumeNextAndThen((_, _) => new Token.RightBracket()),
+                '$' => _textConsumer.TryConsumeNextAndThen((_, _) => new Token.Dollar()),
+                '=' => _textConsumer.TryConsumeNextAndThen((_, _) => new Token.Operator(new TokenOperator.Assign())),
+                ';' => _textConsumer.TryConsumeNextAndThen((_, _) => new Token.SemiColon()),
 
-                null => null,
+                >= '0' and <= '9' => new Token.Number(ConsumeNextNumber()),
 
                 _ => ConsumeNextLiteral() switch 
                 {
@@ -166,20 +133,19 @@ namespace Volpe.LexicalAnalysis
                 }
             };
 
-            if (token == null)
-                return null;
-
-            return new WithPositionInText<Token>
+            tokenWithPositionInText = new WithPositionInText<Token>
             {
                 Position = currentPositionInText,
                 Value = token
             };
+
+            return true;
         }
 
-        public IEnumerator<WithPositionInText<Token>?> GetEnumerator()
+        public IEnumerator<WithPositionInText<Token>> GetEnumerator()
         {
-            WithPositionInText<Token>? token;
-            while ((token = ConsumeNextToken()) != null)
+            WithPositionInText<Token> token;
+            while (TryConsumeNextToken(out token))
                 yield return token;
         }
 

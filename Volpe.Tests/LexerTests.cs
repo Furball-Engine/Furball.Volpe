@@ -8,12 +8,12 @@ namespace Volpe.Tests
 {
     public static class LexerExtension
     {
-        public static WithPositionInText<Token>? ConsumeNextToken(this Lexer lexer)
+        public static Token ConsumeNextToken(this Lexer lexer)
         {
-            WithPositionInText<Token> token;
+            Token token;
             lexer.TryConsumeNextToken(out token);
 
-            return token;
+            return token!;
         }
     }
     
@@ -25,8 +25,8 @@ namespace Volpe.Tests
             Lexer lexer = new Lexer("\"I want to kill myself\"");
             
             Assert.AreEqual(
-                    lexer.ConsumeNextToken()!.Value.Value, 
-                    new Token.String("I want to kill myself"));
+                    lexer.ConsumeNextToken().Value, 
+                    new TokenValue.String("I want to kill myself"));
         }
         
         [Test]
@@ -35,8 +35,8 @@ namespace Volpe.Tests
             Lexer lexer = new Lexer("\"こんにちは\"");
             
             Assert.AreEqual(
-                lexer.ConsumeNextToken()!.Value.Value, 
-                new Token.String("こんにちは"));
+                lexer.ConsumeNextToken().Value, 
+                new TokenValue.String("こんにちは"));
         }
         
         [Test]
@@ -45,8 +45,8 @@ namespace Volpe.Tests
             Lexer lexer = new Lexer(":");
             
             Assert.AreEqual(
-                lexer.ConsumeNextToken()!.Value.Value, 
-                new Token.Column());
+                lexer.ConsumeNextToken().Value, 
+                new TokenValue.Column());
         }
         
         
@@ -56,8 +56,8 @@ namespace Volpe.Tests
             Lexer lexer = new Lexer("1234");
             
             Assert.AreEqual(
-                lexer.ConsumeNextToken()!.Value.Value, 
-                new Token.Number(1234));
+                lexer.ConsumeNextToken().Value, 
+                new TokenValue.Number(1234));
         }
         
         [Test]
@@ -66,8 +66,8 @@ namespace Volpe.Tests
             Lexer lexer = new Lexer("1234.1234");
             
             Assert.AreEqual(
-                lexer.ConsumeNextToken()!.Value.Value, 
-                new Token.Number(1234.1234));
+                lexer.ConsumeNextToken().Value, 
+                new TokenValue.Number(1234.1234));
         }
         
         [Test]
@@ -76,24 +76,23 @@ namespace Volpe.Tests
             Lexer lexer = new Lexer("hi");
             
             Assert.AreEqual(
-                lexer.ConsumeNextToken()!.Value.Value, 
-                new Token.Literal("hi"));
+                lexer.ConsumeNextToken().Value, 
+                new TokenValue.Literal("hi"));
         }
      
         [Test]
         public void ParseMultiple()
         {
-            Token[] tokens = new Lexer("helpme 1234 \"help me\" 𝕙𝕖𝕝𝕡𝕞𝕖")
-                .Select(token => token!.Value).ToArray();
+            TokenValue[] tokens = new Lexer("helpme 1234 \"help me\" 𝕙𝕖𝕝𝕡𝕞𝕖").Select(t => t.Value).ToArray();
             
             Assert.AreEqual(
                 tokens, 
-                new Token[]
+                new TokenValue[]
                 {
-                    new Token.Literal("helpme"), 
-                    new Token.Number(1234), 
-                    new Token.String("help me"),
-                    new Token.Literal("𝕙𝕖𝕝𝕡𝕞𝕖")
+                    new TokenValue.Literal("helpme"), 
+                    new TokenValue.Number(1234), 
+                    new TokenValue.String("help me"),
+                    new TokenValue.Literal("𝕙𝕖𝕝𝕡𝕞𝕖")
                 });
         }
         
@@ -117,22 +116,22 @@ namespace Volpe.Tests
             int[] indices = { 0, 3, 6, 11, 14 };
 
             foreach (var index in indices)
-                Assert.AreEqual(lexer.ConsumeNextToken()!.Value.Position, new PositionInText {Column = 0, Row = index});
+                Assert.AreEqual(lexer.ConsumeNextToken().PositionInText, new PositionInText {Column = 0, Row = index});
             
-            Assert.AreEqual(lexer.ConsumeNextToken()!.Value.Position, new PositionInText {Column = 1, Row = 0});
+            Assert.AreEqual(lexer.ConsumeNextToken().PositionInText, new PositionInText {Column = 1, Row = 0});
         }
         
         [Test]
         public void ParseAssignmentExampleTokens()
         {
-            Token[] tokens = new Lexer("$test = 1").Select(v => v!.Value).ToArray();
+            TokenValue[] tokens = new Lexer("$test = 1").Select(t => t.Value).ToArray();
 
-            Assert.AreEqual(tokens, new Token[]
+            Assert.AreEqual(tokens, new TokenValue[]
             {
-                new Token.Dollar(),
-                new Token.Literal("test"),
-                new Token.Operator(new TokenOperator.Assign()),
-                new Token.Number(1),
+                new TokenValue.Dollar(),
+                new TokenValue.Literal("test"),
+                new TokenValue.Operator(new TokenValueOperator.Assign()),
+                new TokenValue.Number(1),
             });
         }
     }

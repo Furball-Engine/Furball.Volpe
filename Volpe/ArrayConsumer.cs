@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using Volpe.LexicalAnalysis;
 
 namespace Volpe
 {
@@ -12,7 +13,10 @@ namespace Volpe
         {
             _elements = elements;
             _position = -1;
+            LastConsumed = default;
         }
+
+        public T? LastConsumed { get; private set; }
 
         public virtual bool TryPeekNext(out T? value)
         {
@@ -37,10 +41,16 @@ namespace Volpe
             return true;
         }
         
-        public virtual bool TryConsumeNext(out T value)
+        public virtual bool TryConsumeNext(out T? value)
         {
             _position++;
-            return TryGetAtPosition(_position, out value);
+            if (TryGetAtPosition(_position, out value))
+            {
+                LastConsumed = value;
+                return true;
+            }
+
+            return false;
         }
     }
 }

@@ -7,9 +7,9 @@ using Volpe.LexicalAnalysis.Exceptions;
 
 namespace Volpe.LexicalAnalysis
 {
-    public class Lexer: IEnumerable<WithPositionInText<Token>>
+    public class Lexer: IEnumerable<Token>
     {
-        private TextConsumer _textConsumer;
+        private readonly TextConsumer _textConsumer;
 
         public Lexer(string source)
         {
@@ -100,9 +100,9 @@ namespace Volpe.LexicalAnalysis
                 _textConsumer.TryConsumeNext(out _);
         }
 
-        public bool TryConsumeNextToken(out WithPositionInText<Token> tokenWithPositionInText)
+        public bool TryConsumeNextToken(out Token? token)
         {
-            tokenWithPositionInText = default;
+            token = null;
             
             SkipWhiteSpaces();
             PositionInText currentPositionInText = _textConsumer.PositionInText;
@@ -111,42 +111,42 @@ namespace Volpe.LexicalAnalysis
             if (!_textConsumer.TryPeekNext(out character))
                 return false;
 
-            Token token = character switch
+            TokenValue tokenValue = character switch
             {
-                '"' => new Token.String(ConsumeNextString()),
+                '"' => new TokenValue.String(ConsumeNextString()),
                 
-                ':' => _textConsumer.TryConsumeNextAndThen((_, _) => new Token.Column()),
-                '[' => _textConsumer.TryConsumeNextAndThen((_, _) => new Token.LeftBracket()),
-                ']' => _textConsumer.TryConsumeNextAndThen((_, _) => new Token.RightBracket()),
-                '$' => _textConsumer.TryConsumeNextAndThen((_, _) => new Token.Dollar()),
-                '=' => _textConsumer.TryConsumeNextAndThen((_, _) => new Token.Operator(new TokenOperator.Assign())),
-                ';' => _textConsumer.TryConsumeNextAndThen((_, _) => new Token.SemiColon()),
+                ':' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Column()),
+                '[' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.LeftBracket()),
+                ']' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.RightBracket()),
+                '$' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Dollar()),
+                '=' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Operator(new TokenValueOperator.Assign())),
+                '+' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Operator(new TokenValueOperator.Add())),
+                '-' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Operator(new TokenValueOperator.Sub())),
+                '/' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Operator(new TokenValueOperator.Div())),
+                '*' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Operator(new TokenValueOperator.Mul())),
+                ';' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.SemiColon()),
 
-                >= '0' and <= '9' => new Token.Number(ConsumeNextNumber()),
+                >= '0' and <= '9' => new TokenValue.Number(ConsumeNextNumber()),
 
                 _ => ConsumeNextLiteral() switch 
                 {
-                    "true" => new Token.True(),
-                    "false" => new Token.False(),
+                    "true" => new TokenValue.True(),
+                    "false" => new TokenValue.False(),
                     
-                    {} value => new Token.Literal(value) 
+                    {} value => new TokenValue.Literal(value) 
                 }
             };
 
-            tokenWithPositionInText = new WithPositionInText<Token>
-            {
-                Position = currentPositionInText,
-                Value = token
-            };
+            token = new Token {Value = tokenValue, PositionInText = currentPositionInText};
 
             return true;
         }
 
-        public IEnumerator<WithPositionInText<Token>> GetEnumerator()
+        public IEnumerator<Token> GetEnumerator()
         {
-            WithPositionInText<Token> token;
+            Token? token;
             while (TryConsumeNextToken(out token))
-                yield return token;
+                yield return token!;
         }
 
         IEnumerator IEnumerable.GetEnumerator()

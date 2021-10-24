@@ -1,28 +1,35 @@
 using System;
+using Volpe;
 
 namespace Volpe.LexicalAnalysis
 {
-    public abstract record TokenOperator
+    public abstract record TokenValueOperator
     {
-        public record Assign : TokenOperator;
-        public record Add : TokenOperator;
-        public record Sub : TokenOperator;
-        public record Mul : TokenOperator;
-        public record Div : TokenOperator;
+        public record Assign : TokenValueOperator;
+        public record Add : TokenValueOperator;
+        public record Sub : TokenValueOperator;
+        public record Mul : TokenValueOperator;
+        public record Div : TokenValueOperator;
+    }
+
+    public abstract record TokenValue
+    {
+        public record Literal(string Value) : TokenValue;
+        public record String(string Value) : TokenValue;
+        public record Column : TokenValue;
+        public record Number(double Value) : TokenValue;
+        public record True : TokenValue;
+        public record False : TokenValue;
+        public record LeftBracket : TokenValue;
+        public record RightBracket : TokenValue;
+        public record Dollar : TokenValue;
+        public record SemiColon : TokenValue;
+        public record Operator(TokenValueOperator Value) : TokenValue;
     }
     
-    public abstract record Token
+    public class Token: IPositionableInText
     {
-        public record Literal(string value) : Token;
-        public record String(string value) : Token;
-        public record Column : Token;
-        public record Number(double value) : Token;
-        public record True : Token;
-        public record False : Token;
-        public record LeftBracket : Token;
-        public record RightBracket : Token;
-        public record Dollar : Token;
-        public record SemiColon : Token;
-        public record Operator(TokenOperator @operator) : Token;
+        public PositionInText PositionInText { get; set; }
+        public TokenValue Value { get; set; }
     }
 }

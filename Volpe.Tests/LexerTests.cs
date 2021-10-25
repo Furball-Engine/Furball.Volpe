@@ -134,5 +134,22 @@ namespace Volpe.Tests
                 new TokenValue.Number(1),
             });
         }
+        
+        [Test]
+        public void ParseNumbersNoSpace()
+        {
+            TokenValue[] tokens = new Lexer("2+1+3+4").Select(t => t.Value).ToArray();
+
+            Assert.AreEqual(tokens, new TokenValue[]
+            {
+                new TokenValue.Number(2),
+                new TokenValue.Operator(new TokenValueOperator.Add()),
+                new TokenValue.Number(1),
+                new TokenValue.Operator(new TokenValueOperator.Add()),
+                new TokenValue.Number(3),
+                new TokenValue.Operator(new TokenValueOperator.Add()),
+                new TokenValue.Number(4),
+            });
+        }
     }
 }

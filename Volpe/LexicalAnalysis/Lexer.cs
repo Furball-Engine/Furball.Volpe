@@ -70,7 +70,7 @@ namespace Volpe.LexicalAnalysis
             
             for(;;)
             {
-                if (!_textConsumer.TryConsumeNext(out char character))
+                if (!_textConsumer.TryPeekNext(out char character))
                     break;
 
                 if (character is ( >= '0' and <= '9'))
@@ -79,6 +79,8 @@ namespace Volpe.LexicalAnalysis
 
                     if (isRational)
                         exp--;
+                    
+                    _textConsumer.TryConsumeNext(out _);
                 } 
                 else if (character == '.')
                 {
@@ -86,6 +88,8 @@ namespace Volpe.LexicalAnalysis
                         throw new UnexceptedSymbolException('.', _textConsumer.PositionInText);
                         
                     isRational = true;
+
+                    _textConsumer.TryConsumeNext(out _);
                 } 
                 else
                     break;

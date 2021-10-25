@@ -5,7 +5,6 @@ namespace Volpe.LexicalAnalysis
 {
     public abstract record TokenValueOperator
     {
-        public record Assign : TokenValueOperator;
         public record Add : TokenValueOperator;
         public record Sub : TokenValueOperator;
         public record Mul : TokenValueOperator;
@@ -14,6 +13,7 @@ namespace Volpe.LexicalAnalysis
 
     public abstract record TokenValue
     {
+        public record Assign : TokenValue;
         public record Literal(string Value) : TokenValue;
         public record String(string Value) : TokenValue;
         public record Column : TokenValue;

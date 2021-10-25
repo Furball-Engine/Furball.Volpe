@@ -30,15 +30,18 @@ namespace Volpe.Tests
         [Test]
         public void ParseAssignment()
         {
-            Expression[] values = new Parser(new Lexer("$test = 2").ToImmutableArray())
+            Expression[] values = new Parser(new Lexer("$test = 2 * 4").ToImmutableArray())
                 .ToArray();
 
             Assert.AreEqual(values, new Expression[] {
                 new Expression {
-                    Value = new ExpressionValue.InfixExpression(
-                        new ExpressionOperator.Assign(),
-                        new Expression { Value = new ExpressionValue.Variable("test") },
-                        new Expression { Value = new ExpressionValue.Number(2) })
+                    Value = new ExpressionValue.Assignment(
+                        "test",
+                        new Expression { Value = new ExpressionValue.InfixExpression(
+                            new ExpressionOperator.Mul(),
+                            new Expression { Value = new ExpressionValue.Number(2) },
+                            new Expression { Value = new ExpressionValue.Number(4) })
+                        })
                 }
             });
         }

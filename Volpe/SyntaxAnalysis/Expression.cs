@@ -8,6 +8,8 @@ namespace Volpe.SyntaxAnalysis
         public record Variable(string Name) : ExpressionValue;
         public record Number(double Value) : ExpressionValue;
         public record InfixExpression(ExpressionOperator Operator, Expression Left, Expression Right): ExpressionValue;
+        public record PrefixExpression(ExpressionOperator Operator, Expression Left) : ExpressionValue;
+        public record Assignment(string VariableName, Expression Expression) : ExpressionValue;
     }
     
     public class Expression : IPositionableInText, IEquatable<Expression>

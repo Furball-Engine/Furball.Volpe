@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text;
-using Volpe.LexicalAnalysis.Exceptions;
+using Volpe.Exceptions;
 
 namespace Volpe.LexicalAnalysis
 {
@@ -20,14 +20,14 @@ namespace Volpe.LexicalAnalysis
         {
             char character;
             StringBuilder stringBuilder = new StringBuilder();
-
+            
             if (!_textConsumer.TryConsumeNext(out character) || character != '"')
                 throw new InvalidOperationException();
 
             for(;;)
             {
                 if (!_textConsumer.TryConsumeNext(out character))
-                    throw new LexerUnexpectedEofException(_textConsumer.PositionInText);
+                    throw new UnexpectedEofException(_textConsumer.PositionInText);
 
                 switch (character)
                 {
@@ -83,7 +83,7 @@ namespace Volpe.LexicalAnalysis
                 else if (character == '.')
                 {
                     if (isRational)
-                        throw new LexerUnexceptedSymbolException('.', _textConsumer.PositionInText);
+                        throw new UnexceptedSymbolException('.', _textConsumer.PositionInText);
                         
                     isRational = true;
                 } 
@@ -119,7 +119,7 @@ namespace Volpe.LexicalAnalysis
                 '[' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.LeftBracket()),
                 ']' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.RightBracket()),
                 '$' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Dollar()),
-                '=' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Operator(new TokenValueOperator.Assign())),
+                '=' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Assign()),
                 '+' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Operator(new TokenValueOperator.Add())),
                 '-' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Operator(new TokenValueOperator.Sub())),
                 '/' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Operator(new TokenValueOperator.Div())),

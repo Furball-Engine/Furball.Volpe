@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using Volpe.LexicalAnalysis;
 using NUnit.Framework;
-using Volpe.LexicalAnalysis.Exceptions;
+using Volpe.Exceptions;
 
 namespace Volpe.Tests
 {
@@ -101,7 +101,7 @@ namespace Volpe.Tests
         {
             Lexer lexer = new Lexer("1234...23");
             
-            LexerUnexceptedSymbolException exception = Assert.Throws<LexerUnexceptedSymbolException>(
+            UnexceptedSymbolException exception = Assert.Throws<UnexceptedSymbolException>(
                 () => lexer.ConsumeNextToken());
                 
             Assert.AreEqual(exception.Symbol, '.');
@@ -130,7 +130,7 @@ namespace Volpe.Tests
             {
                 new TokenValue.Dollar(),
                 new TokenValue.Literal("test"),
-                new TokenValue.Operator(new TokenValueOperator.Assign()),
+                new TokenValue.Assign(),
                 new TokenValue.Number(1),
             });
         }

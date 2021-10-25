@@ -8,7 +8,6 @@ namespace Volpe.SyntaxAnalysis
         Lowest = 1,
         Add,
         Mul,
-        Assign
     }
 
     [Flags]
@@ -29,7 +28,6 @@ namespace Volpe.SyntaxAnalysis
             return tokenOperator switch
             {
                 TokenValueOperator.Add => new Add(),
-                TokenValueOperator.Assign => new Assign(),
                 TokenValueOperator.Div => new Div(),
                 TokenValueOperator.Mul => new Mul(),
                 TokenValueOperator.Sub => new Sub(),
@@ -38,12 +36,6 @@ namespace Volpe.SyntaxAnalysis
             };
         }
 
-        public record Assign : ExpressionOperator
-        {
-            public override ExpressionOperatorPrecedence Precedence => ExpressionOperatorPrecedence.Assign;
-            public override ExpressionOperatorType Type => ExpressionOperatorType.Infix;
-        }
-        
         public record Add : ExpressionOperator
         {
             public override ExpressionOperatorPrecedence Precedence => ExpressionOperatorPrecedence.Add;

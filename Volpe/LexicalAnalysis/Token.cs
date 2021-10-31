@@ -22,9 +22,16 @@ namespace Volpe.LexicalAnalysis
         public record False : TokenValue;
         public record LeftBracket : TokenValue;
         public record RightBracket : TokenValue;
+        public record LeftRoundBracket : TokenValue;
+        public record RightRoundBracket : TokenValue;
+        public record LeftCurlyBracket : TokenValue;
+        public record RightCurlyBracket : TokenValue;
         public record Dollar : TokenValue;
         public record SemiColon : TokenValue;
+        public record FuncDef : TokenValue;
         public record Operator(TokenValueOperator Value) : TokenValue;
+        public record Comma : TokenValue;
+        public record Hashtag : TokenValue;
     }
     
     public class Token: IPositionableInText

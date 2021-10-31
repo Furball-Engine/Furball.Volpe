@@ -1,5 +1,7 @@
 
 
+using System.Collections.Generic;
+using System.Linq;
 using Volpe.Exceptions;
 using Volpe.SyntaxAnalysis;
 
@@ -20,10 +22,10 @@ namespace Volpe.Evaluation
 
             return expr.Operator switch
             {
-                ExpressionOperator.Add => Builtins.Sum(leftValue, rightValue, context),
-                ExpressionOperator.Sub => Builtins.Subtract(leftValue, rightValue, context),
-                ExpressionOperator.Mul => Builtins.Multiply(leftValue, rightValue, context),
-                ExpressionOperator.Div => Builtins.Divide(leftValue, rightValue, context)
+                ExpressionOperator.Add => Operators.Sum(leftValue, rightValue),
+                ExpressionOperator.Sub => Operators.Subtract(leftValue, rightValue),
+                ExpressionOperator.Mul => Operators.Multiply(leftValue, rightValue),
+                ExpressionOperator.Div => Operators.Divide(leftValue, rightValue)
             };
         }
 
@@ -41,20 +43,47 @@ namespace Volpe.Evaluation
             if (!context.Scope.TryGetVariableValue(expr.Name, out value))
                 throw new VariableNotFoundException(context.RootExpression.PositionInText);
                 
-            return value;
+            return value!;
+        }
+
+        private Value EvaluateFunctionDefinition(ExpressionValue.FunctionDefinition functionDefinition, Context context)
+        {
+            if (!context.Scope.TrySetFunction(functionDefinition.Name,
+                new Value.Function(functionDefinition.ParameterNames, functionDefinition.Expressions)))
+            {
+                throw new CannotRedefineFunctionsException(context.RootExpression.PositionInText);
+            }
+
+            return new Value.Void();
         }
         
+        private Value.Function EvaluateFunctionReference(ExpressionValue.FunctionReference functionReference, Context context)
+        {
+            Value.Function? value;
+            if (!context.Scope.TryGetFunctionReference(functionReference.Name, out value))
+                throw new VariableNotFoundException(context.RootExpression.PositionInText);
+                
+            return value!;
+        }
+
         public Value Evaluate(Context context)
         {
             return context.RootExpression.Value switch
             {
                 ExpressionValue.InfixExpression expr => EvaluateInfixExpression(expr, context),
                 ExpressionValue.Number(var v) => new Value.Number(v),
-                ExpressionValue.Assignment expr => EvaluateAssignment(expr, context)
+                ExpressionValue.Assignment expr => EvaluateAssignment(expr, context),
+                ExpressionValue.Variable expr => EvaluateVariable(expr, context),
+                ExpressionValue.FunctionDefinition expr => EvaluateFunctionDefinition(expr, context),
+                ExpressionValue.SubExpression(var expr) => Evaluate(expr, context.Scope),
+                ExpressionValue.FunctionReference expr => EvaluateFunctionReference(expr, context)
             };
         }
 
         public Value Evaluate(Expression expression, Scope scope) =>
             Evaluate(new Context {Scope = scope, RootExpression = expression});
+
+        public IEnumerable<Value> EvaluateAll(IEnumerable<Expression> expressions, Scope scope) =>
+            expressions.Select(expression => Evaluate(expression, scope));
     }
 }

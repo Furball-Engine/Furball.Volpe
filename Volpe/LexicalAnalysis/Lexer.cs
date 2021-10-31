@@ -53,7 +53,7 @@ namespace Volpe.LexicalAnalysis
                 if (character is ((>= '¡' or (>= 'a' and <= 'z') or (>= '@' and <= 'Z') or (>= '0' and <= '9')) and not '$'))
                 {
                     stringBuilder.Append(character);
-                    _textConsumer.TryConsumeNext(out _); 
+                    _textConsumer.SkipOne();
                 } 
                 else 
                     break;
@@ -120,8 +120,14 @@ namespace Volpe.LexicalAnalysis
                 '"' => new TokenValue.String(ConsumeNextString()),
                 
                 ':' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Column()),
+                ',' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Comma()),
+                '#' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Hashtag()),
                 '[' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.LeftBracket()),
                 ']' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.RightBracket()),
+                '(' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.LeftRoundBracket()),
+                ')' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.RightRoundBracket()),
+                '{' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.LeftCurlyBracket()),
+                '}' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.RightCurlyBracket()),
                 '$' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Dollar()),
                 '=' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Assign()),
                 '+' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Operator(new TokenValueOperator.Add())),
@@ -136,6 +142,7 @@ namespace Volpe.LexicalAnalysis
                 {
                     "true" => new TokenValue.True(),
                     "false" => new TokenValue.False(),
+                    "funcdef" => new TokenValue.FuncDef(),
                     
                     {} value => new TokenValue.Literal(value) 
                 }

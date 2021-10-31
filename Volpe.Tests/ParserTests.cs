@@ -93,5 +93,65 @@ namespace Volpe.Tests
                 }
             });
         }
+        
+        
+        [Test]
+        public void ParseSubExpression()
+        {
+            Expression[] values = new Parser(new Lexer("(2+2)*(2+2)").ToImmutableArray())
+                .ToArray();
+
+            Assert.AreEqual(values, new Expression[]
+            {
+                new Expression
+                {
+                    Value = new ExpressionValue.InfixExpression(
+                        new ExpressionOperator.Mul(),
+                        new Expression
+                        {
+                            Value = new ExpressionValue.SubExpression(new Expression { 
+                                Value = new ExpressionValue.InfixExpression(
+                                    new ExpressionOperator.Add(), 
+                                    new Expression
+                                    {
+                                        Value = new ExpressionValue.Number(2)
+                                    },
+                                    new Expression
+                                    {
+                                        Value = new ExpressionValue.Number(2)
+                                    })
+                            })
+                        },
+                        new Expression
+                        {
+                            Value = new ExpressionValue.SubExpression(new Expression { 
+                                Value = new ExpressionValue.InfixExpression(
+                                    new ExpressionOperator.Add(), 
+                                    new Expression
+                                    {
+                                        Value = new ExpressionValue.Number(2)
+                                    },
+                                    new Expression
+                                    {
+                                        Value = new ExpressionValue.Number(2)
+                                    })
+                            })
+                        })
+                }
+            });
+        }
+
+        [Test]
+        public void ParseFunctionDefinition()
+        {
+            Expression expr =new Parser(new Lexer("funcdef hi($testVariable, $testVariable2) {}").ToImmutableArray())
+                .ParseNextExpression();
+
+            ExpressionValue.FunctionDefinition functionDefinition = (ExpressionValue.FunctionDefinition) expr.Value;
+            
+            Assert.AreEqual(functionDefinition.Name, "hi");
+            CollectionAssert.AreEqual(functionDefinition.ParameterNames, new string[] { "testVariable", "testVariable2"  });
+            CollectionAssert.AreEqual(functionDefinition.Expressions, new Expression[] {});
+        }
     }
 }

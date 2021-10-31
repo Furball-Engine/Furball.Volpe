@@ -14,8 +14,7 @@ namespace Volpe.SyntaxAnalysis
     public enum ExpressionOperatorType : byte
     {
         Prefix = 1 << 0,
-        Infix = 1 << 1,
-        Postfix = 1 << 2
+        Infix = 1 << 1
     }
 
     public abstract record ExpressionOperator

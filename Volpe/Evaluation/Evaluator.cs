@@ -49,12 +49,12 @@ namespace Volpe.Evaluation
         private Value EvaluateFunctionDefinition(ExpressionValue.FunctionDefinition functionDefinition, Context context)
         {
             if (!context.Scope.TrySetFunction(functionDefinition.Name,
-                new Value.Function(functionDefinition.ParameterNames, functionDefinition.Expressions)))
+                new Value.Function(functionDefinition.ParameterNames, functionDefinition.Expressions, context.Scope)))
             {
                 throw new CannotRedefineFunctionsException(context.RootExpression.PositionInText);
             }
 
-            return new Value.Void();
+            return Value.DefaultVoid;
         }
         
         private Value.Function EvaluateFunctionReference(ExpressionValue.FunctionReference functionReference, Context context)
@@ -66,6 +66,37 @@ namespace Volpe.Evaluation
             return value!;
         }
 
+        private Value EvaluateFunctionCall(ExpressionValue.FunctionCall functionCall, Context context)
+        {
+            Value.Function? function;
+            if (!context.Scope.TryGetFunctionReference(functionCall.Name, out function))
+                throw new VariableNotFoundException(context.RootExpression.PositionInText);
+
+            int parameterCount = function!.ParameterNames.Length;
+            
+            if (parameterCount != functionCall.Parameters.Length)
+                throw new ParamaterCountMismatchException(context.RootExpression.PositionInText);
+
+            Scope scope = new Scope(function.ParentScope);
+
+            for (int i = 0; i < parameterCount; i++)
+                scope.SetVariableValue(function.ParameterNames[i], Evaluate(functionCall.Parameters[i], context.Scope));
+
+            Value toReturn = Value.DefaultVoid;
+            
+            foreach (Expression expression in function.Expressions)
+            {
+                if (Evaluate(expression, scope) is Value.ToReturn value)
+                {
+                    toReturn = value.Value;
+                    break;
+                }
+            }
+
+            return toReturn;
+        }
+        
+
         public Value Evaluate(Context context)
         {
             return context.RootExpression.Value switch
@@ -76,14 +107,22 @@ namespace Volpe.Evaluation
                 ExpressionValue.Variable expr => EvaluateVariable(expr, context),
                 ExpressionValue.FunctionDefinition expr => EvaluateFunctionDefinition(expr, context),
                 ExpressionValue.SubExpression(var expr) => Evaluate(expr, context.Scope),
-                ExpressionValue.FunctionReference expr => EvaluateFunctionReference(expr, context)
+                ExpressionValue.FunctionReference expr => EvaluateFunctionReference(expr, context),
+                ExpressionValue.FunctionCall expr => EvaluateFunctionCall(expr, context),
+                ExpressionValue.Return(var expr) => new Value.ToReturn(Evaluate(expr, context.Scope))
             };
         }
 
         public Value Evaluate(Expression expression, Scope scope) =>
             Evaluate(new Context {Scope = scope, RootExpression = expression});
 
-        public IEnumerable<Value> EvaluateAll(IEnumerable<Expression> expressions, Scope scope) =>
-            expressions.Select(expression => Evaluate(expression, scope));
+        public void EvaluateAll(IEnumerable<Expression> expressions, Scope scope)
+        {
+            foreach (var expression in expressions)
+            {
+                if (Evaluate(expression, scope) is Value.ToReturn)
+                    throw new ReturnNotAllowedOutsideFunctionsException(expression.PositionInText);
+            }
+        }
     }
 }

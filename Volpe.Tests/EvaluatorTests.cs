@@ -61,11 +61,17 @@ namespace Volpe.Tests
             Scope scope = new Scope();
             Evaluator evaluator = new Evaluator();
             
-            Assert.AreEqual(evaluator.EvaluateAll(parser, scope), new Value[]
-            {
-                new Value.Number(38),
-                new Value.Number(38)
-            });
+            Assert.AreEqual(
+                new Value[]
+                {
+                    evaluator.Evaluate(parser.ParseNextExpression(), scope), 
+                    evaluator.Evaluate(parser.ParseNextExpression(), scope)
+                }, 
+                    new Value[]
+                {
+                    new Value.Number(38),
+                    new Value.Number(38)
+                });
         }
         
         [Test]
@@ -78,13 +84,23 @@ namespace Volpe.Tests
 
             evaluator.Evaluate(parser.ParseNextExpression(), scope);
 
-            Value value;
-            scope.TryGetVariableValue("hi", out value);
+            Value.Function function;
+            scope.TryGetFunctionReference("hi", out function);
 
-            Value.Function function = (Value.Function) value;
-            
             CollectionAssert.AreEqual(function!.ParameterNames, new string[] { "testVariable" });
             CollectionAssert.AreEqual(function.Expressions, new Expression[] { });
+        }
+        
+        [Test]
+        public void EvaluateFunctionCall()
+        {
+            Parser parser = new Parser(new Lexer("funcdef hi($testVariable) { $testVariable2 = 2; ret $testVariable2 }; hi(2) + 2").ToImmutableArray());
+
+            Scope scope = new Scope();
+            Evaluator evaluator = new Evaluator();
+
+            evaluator.Evaluate(parser.ParseNextExpression(), scope);
+            Assert.AreEqual(evaluator.Evaluate(parser.ParseNextExpression(), scope), new Value.Number(4));
         }
     }
 }

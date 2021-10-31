@@ -153,5 +153,41 @@ namespace Volpe.Tests
             CollectionAssert.AreEqual(functionDefinition.ParameterNames, new string[] { "testVariable", "testVariable2"  });
             CollectionAssert.AreEqual(functionDefinition.Expressions, new Expression[] {});
         }
+        
+        [Test]
+        public void ParseFunctionCall()
+        {
+            Expression expr =new Parser(new Lexer("hi(2, 3)").ToImmutableArray())
+                .ParseNextExpression();
+
+            ExpressionValue.FunctionCall functionDefinition = (ExpressionValue.FunctionCall) expr.Value;
+            
+            Assert.AreEqual(functionDefinition.Name, "hi");
+            CollectionAssert.AreEqual(functionDefinition.Parameters, new Expression[]
+            {
+                new Expression {Value = new ExpressionValue.Number(2)},
+                new Expression {Value = new ExpressionValue.Number(3)}
+            });
+        }
+        
+        [Test]
+        public void ParseFunctionCallNoBracketsWithAFollowingExpression()
+        {
+            Parser expr =new Parser(new Lexer("hi 2, 3; 2").ToImmutableArray());
+            
+            ExpressionValue.FunctionCall functionDefinition = (ExpressionValue.FunctionCall) expr.ParseNextExpression().Value;
+            
+            Assert.AreEqual(functionDefinition.Name, "hi");
+            CollectionAssert.AreEqual(functionDefinition.Parameters, new Expression[]
+            {
+                new Expression {Value = new ExpressionValue.Number(2)},
+                new Expression {Value = new ExpressionValue.Number(3)}
+            });
+            
+            ExpressionValue v = expr.ParseNextExpression().Value;
+            
+            Assert.AreEqual(v, new ExpressionValue.Number(2));
+        }
+        
     }
 }

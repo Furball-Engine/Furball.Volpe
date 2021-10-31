@@ -15,6 +15,7 @@ namespace Volpe.SyntaxAnalysis
             (string Name, string[] ParameterNames, Expression[] Expressions) : ExpressionValue;
         public record FunctionCall(string Name, Expression[] Parameters) : ExpressionValue;
         public record FunctionReference(string Name) : ExpressionValue;
+        public record Return(Expression Expression) : ExpressionValue;
     }
     
     public class Expression : IPositionableInText, IEquatable<Expression>

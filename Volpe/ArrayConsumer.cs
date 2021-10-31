@@ -43,6 +43,21 @@ namespace Volpe
 
         public bool SkipOne() => TryConsumeNext(out _);
 
+        public void SkipTill(Func<T, bool> predicate)
+        {
+            for (;;)
+            {
+                T? t;
+                if (!TryPeekNext(out t))
+                    break;
+                
+                if (!predicate(t!))
+                    break;
+
+                SkipOne();
+            }
+        } 
+        
         public virtual bool TryConsumeNext(out T? value)
         {
             _position++;

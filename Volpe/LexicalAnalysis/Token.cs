@@ -32,6 +32,7 @@ namespace Volpe.LexicalAnalysis
         public record Operator(TokenValueOperator Value) : TokenValue;
         public record Comma : TokenValue;
         public record Hashtag : TokenValue;
+        public record Return : TokenValue;
     }
     
     public class Token: IPositionableInText

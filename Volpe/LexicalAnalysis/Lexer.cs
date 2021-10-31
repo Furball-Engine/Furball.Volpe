@@ -143,6 +143,7 @@ namespace Volpe.LexicalAnalysis
                     "true" => new TokenValue.True(),
                     "false" => new TokenValue.False(),
                     "funcdef" => new TokenValue.FuncDef(),
+                    "ret" => new TokenValue.Return(),
                     
                     {} value => new TokenValue.Literal(value) 
                 }

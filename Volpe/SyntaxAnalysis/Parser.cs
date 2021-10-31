@@ -300,6 +300,9 @@ namespace Volpe.SyntaxAnalysis
                 case TokenValue.FuncDef:
                     expression = new Expression {Value = ParseFunctionDefinition()};
                     break;
+                case TokenValue.Return:
+                    expression = new Expression {Value = ParseReturnExpression()};
+                    break;
                 default:
                 {
                     canBeSubExpression = true;
@@ -309,7 +312,9 @@ namespace Volpe.SyntaxAnalysis
                         TokenValue.Dollar => ParseVariable(),
                         TokenValue.Hashtag => ParseFunctionReference(),
                         TokenValue.Operator => ParsePrefixExpression(),
-                        TokenValue.Return => ParseReturnExpression(),
+                        
+                        TokenValue.String(var nValue) => 
+                            _tokenConsumer.TryConsumeNextAndThen((_, _) => new ExpressionValue.String(nValue)),
 
                         TokenValue.Number(var nValue) =>
                             _tokenConsumer.TryConsumeNextAndThen((_, _) => new ExpressionValue.Number(nValue)),

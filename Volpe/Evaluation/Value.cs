@@ -1,3 +1,4 @@
+using System;
 using Volpe.SyntaxAnalysis;
 
 namespace Volpe.Evaluation
@@ -6,10 +7,11 @@ namespace Volpe.Evaluation
     {
         public record ToReturn(Value Value) : Value;
         public record Number(double Value) : Value;
+        public record String(string Value) : Value;
         public record Void : Value;
 
-        public static readonly Void DefaultVoid = new Void();
+        public record FunctionReference(string Name, Function Function) : Value;
         
-        public record Function(string[] ParameterNames, Expression[] Expressions, Scope ParentScope) : Value;
+        public static readonly Void DefaultVoid = new Void();
     }
 }

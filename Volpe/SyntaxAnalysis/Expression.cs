@@ -6,6 +6,7 @@ namespace Volpe.SyntaxAnalysis
     public abstract record ExpressionValue
     {
         public record Variable(string Name) : ExpressionValue;
+        public record String(string Value) : ExpressionValue;
         public record Number(double Value) : ExpressionValue;
         public record InfixExpression(ExpressionOperator Operator, Expression Left, Expression Right): ExpressionValue;
         public record PrefixExpression(ExpressionOperator Operator, Expression Left) : ExpressionValue;

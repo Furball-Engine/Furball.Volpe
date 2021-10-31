@@ -4,18 +4,46 @@ namespace Volpe.Evaluation
 {
     public class Scope
     {
-        private Scope? Parent { get; }
+        public Scope? Parent { get; }
+        
+        private readonly Dictionary<string, Value> _variables;
+        private readonly Dictionary<string, Value.Function> _functions;
         
         public Scope()
         {
             _variables = new Dictionary<string, Value>();
+            _functions = new Dictionary<string, Value.Function>();
         }
 
-        public Scope(Scope parent) : this()
+        public Scope(Scope? parent) : this()
         {
             Parent = parent;
         }
 
+        public bool TryGetFunctionReference(string functionName, out Value.Function? function)
+        {
+            if (_functions.TryGetValue(functionName, out function))
+                return true;
+            
+            if (Parent is not null)
+                return Parent.TryGetFunctionReference(functionName, out function);
+
+            return false;
+        }
+        
+        public bool TrySetFunction(string functionName, Value.Function function)
+        {
+            if (Parent?.HasFunction(functionName) ?? false)
+                return false;
+
+            if (this.HasFunction(functionName))
+                return false;
+            
+            _functions.Add(functionName, function);
+            
+            return true;
+        }
+        
         public bool TryGetVariableValue(string variableName, out Value? value)
         {
             if (_variables.TryGetValue(variableName, out value))
@@ -27,11 +55,12 @@ namespace Volpe.Evaluation
             return false;
         }
 
-        public bool HasVariable(string variableName) => TryGetVariableValue(variableName, out _);
+        public bool HasVariable(string variableName) => _variables.ContainsKey(variableName);
+        public bool HasFunction(string functionName) => _functions.ContainsKey(functionName);
         
-        public void SetVariableValue(string variableName, Value value)
+        public void SetVariableValue(string variableName, Value value, bool shadowParentVariables = true)
         {
-            if (Parent is not null && Parent.HasVariable(variableName))
+            if (!shadowParentVariables && Parent is not null && Parent.HasVariable(variableName))
             {
                 Parent.SetVariableValue(variableName, value);
                 return;
@@ -43,6 +72,5 @@ namespace Volpe.Evaluation
                 _variables.Add(variableName, value);
         }
         
-        private readonly Dictionary<string, Value> _variables;
     }
 }

@@ -2,9 +2,9 @@ using Volpe.Exceptions;
 
 namespace Volpe.Evaluation
 {
-    public class Builtins
+    public class Operators
     {
-        public static Value Sum(Value rightValue, Value leftValue, Evaluator.Context context)
+        public static Value Sum(Value rightValue, Value leftValue)
         {
             return (rightValue, leftValue) switch
             {
@@ -12,7 +12,7 @@ namespace Volpe.Evaluation
             };
         }
         
-        public static Value Subtract(Value rightValue, Value leftValue, Evaluator.Context context)
+        public static Value Subtract(Value rightValue, Value leftValue)
         {
             return (rightValue, leftValue) switch
             {
@@ -20,7 +20,7 @@ namespace Volpe.Evaluation
             };
         }
         
-        public static Value Multiply(Value rightValue, Value leftValue, Evaluator.Context context)
+        public static Value Multiply(Value rightValue, Value leftValue)
         {
             return (rightValue, leftValue) switch
             {
@@ -28,7 +28,7 @@ namespace Volpe.Evaluation
             };
         }
         
-        public static Value Divide(Value rightValue, Value leftValue, Evaluator.Context context)
+        public static Value Divide(Value rightValue, Value leftValue)
         {
             return (rightValue, leftValue) switch
             {

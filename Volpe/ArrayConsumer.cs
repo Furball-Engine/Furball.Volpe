@@ -40,17 +40,33 @@ namespace Volpe
             value = _elements[position];
             return true;
         }
+
+        public bool SkipOne() => TryConsumeNext(out _);
+
+        public void SkipTill(Func<T, bool> predicate)
+        {
+            for (;;)
+            {
+                T? t;
+                if (!TryPeekNext(out t))
+                    break;
+                
+                if (!predicate(t!))
+                    break;
+
+                SkipOne();
+            }
+        } 
         
         public virtual bool TryConsumeNext(out T? value)
         {
             _position++;
-            if (TryGetAtPosition(_position, out value))
-            {
-                LastConsumed = value;
-                return true;
-            }
-
-            return false;
+            
+            if (!TryGetAtPosition(_position, out value)) 
+                return false;
+            
+            LastConsumed = value;
+            return true;
         }
     }
 }

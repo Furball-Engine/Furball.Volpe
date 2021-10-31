@@ -10,6 +10,12 @@ namespace Volpe.SyntaxAnalysis
         public record InfixExpression(ExpressionOperator Operator, Expression Left, Expression Right): ExpressionValue;
         public record PrefixExpression(ExpressionOperator Operator, Expression Left) : ExpressionValue;
         public record Assignment(string VariableName, Expression Expression) : ExpressionValue;
+        public record SubExpression(Expression Expression) : ExpressionValue;
+        public record FunctionDefinition
+            (string Name, string[] ParameterNames, Expression[] Expressions) : ExpressionValue;
+        public record FunctionCall(string Name, Expression[] Parameters) : ExpressionValue;
+        public record FunctionReference(string Name) : ExpressionValue;
+        public record Return(Expression Expression) : ExpressionValue;
     }
     
     public class Expression : IPositionableInText, IEquatable<Expression>
@@ -26,11 +32,11 @@ namespace Volpe.SyntaxAnalysis
             return Value.Equals(other.Value);
         }
 
+        #endregion
+        
         public override string ToString()
         {
             return $"Expression {{ Value = {Value} }}";
         }
-
-        #endregion
     }
 }

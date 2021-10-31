@@ -9,7 +9,6 @@ namespace Volpe.Tests
 {
     public class EvaluatorTests
     {
-            
         [Test]
         public void EvaluateAddition()
         {
@@ -18,8 +17,7 @@ namespace Volpe.Tests
             Value value = new Evaluator().Evaluate(expression, new Scope());
             Assert.AreEqual(value, new Value.Number(11));
         }
-        
-           
+
         [Test]
         public void EvaluateVariableAssignment()
         {
@@ -94,7 +92,7 @@ namespace Volpe.Tests
         [Test]
         public void EvaluateFunctionCall()
         {
-            Parser parser = new Parser(new Lexer("funcdef hi($testVariable) { $testVariable2 = 2; ret $testVariable2 }; hi(2) + 2").ToImmutableArray());
+            Parser parser = new Parser(new Lexer("funcdef hi($testVariable) { $testVariable2 = $testVariable; ret $testVariable2; } hi(2) + 2").ToImmutableArray());
 
             Scope scope = new Scope();
             Evaluator evaluator = new Evaluator();

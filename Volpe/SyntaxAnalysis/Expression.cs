@@ -16,6 +16,7 @@ namespace Volpe.SyntaxAnalysis
         public record FunctionCall(string Name, Expression[] Parameters) : ExpressionValue;
         public record FunctionReference(string Name) : ExpressionValue;
         public record Return(Expression Expression) : ExpressionValue;
+        public record Void : ExpressionValue;
     }
     
     public class Expression : IPositionableInText, IEquatable<Expression>

@@ -104,14 +104,26 @@ namespace Volpe.Tests
         }
         
         [Test]
-        public void EvaluateBuiltin()
+        public void EvaluateConversionStringNumber()
         {
-            Parser parser = new Parser(new Lexer("println \"a\";").ToImmutableArray());
+            Parser parser = new Parser(new Lexer("int \"2\";").ToImmutableArray());
 
             Scope scope = new Scope(DefaultBuiltins.Io);
             Evaluator evaluator = new Evaluator();
 
-            evaluator.EvaluateAll(parser, scope);
+            Assert.AreEqual(evaluator.Evaluate(parser.ParseNextExpression(), scope), new Value.Number(2));
+        }
+        
+        
+        [Test]
+        public void EvaluateConversionNumberString()
+        {
+            Parser parser = new Parser(new Lexer("string 2;").ToImmutableArray());
+
+            Scope scope = new Scope(DefaultBuiltins.Io);
+            Evaluator evaluator = new Evaluator();
+
+            Assert.AreEqual(evaluator.Evaluate(parser.ParseNextExpression(), scope), new Value.String("2"));
         }
     }
 }

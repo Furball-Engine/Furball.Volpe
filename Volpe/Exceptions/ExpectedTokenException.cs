@@ -6,5 +6,7 @@ namespace Volpe.Exceptions
             : base(positionInText)
         {
         }
+
+        public override string Description => "a token was expected";
     }
 }

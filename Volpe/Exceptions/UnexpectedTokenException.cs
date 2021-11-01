@@ -11,5 +11,7 @@ namespace Volpe.Exceptions
         {
             Token = token;
         }
+        
+        public override string Description => $"unexpected token {Token.GetType().Name}";
     }
 }

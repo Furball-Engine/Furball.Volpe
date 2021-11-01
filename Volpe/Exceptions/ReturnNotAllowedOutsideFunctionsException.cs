@@ -8,5 +8,7 @@ namespace Volpe.Exceptions
             : base(positionInText)
         {
         }
+
+        public override string Description => "return is not allowed outside of a function";
     }
 }

@@ -2,10 +2,12 @@ using System;
 
 namespace Volpe.Exceptions
 {
-    public class VolpeException : Exception
+    public abstract class VolpeException : Exception
     {
         public PositionInText PositionInText { get; }
         public virtual Func<string>? AdditionalInfoGenerator => null;
+        
+        public abstract string Description { get; }
         
         public VolpeException(PositionInText positionInText)
         {
@@ -13,7 +15,7 @@ namespace Volpe.Exceptions
         }
 
         public override string Message =>
-            $"An error occurred at line {PositionInText.Row}, column {PositionInText.Column}." +
+            $"An error occurred at line {PositionInText.Row}, column {PositionInText.Column}: {Description}." +
             (AdditionalInfoGenerator != null ? " Additional Info: " + AdditionalInfoGenerator() : String.Empty);
     }
 }

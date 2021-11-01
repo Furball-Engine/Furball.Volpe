@@ -119,7 +119,6 @@ namespace Volpe.LexicalAnalysis
             {
                 '"' => new TokenValue.String(ConsumeNextString()),
                 
-                ':' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Column()),
                 ',' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Comma()),
                 '#' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Hashtag()),
                 '[' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.LeftBracket()),

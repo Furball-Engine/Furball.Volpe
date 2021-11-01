@@ -16,7 +16,7 @@ namespace Volpe.Exceptions
             OperationName = operationName;
         }
 
-        public override Func<string>? AdditionalInfoGenerator =>
-            () => $"no {OperationName} operation is defined for the pair {LOperandType.Name}/{ROperandType.Name}";
+        public override string Description =>
+            $"no {OperationName} operation is defined for the pair {LOperandType.Name}/{ROperandType.Name}";
     }
 }

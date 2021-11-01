@@ -8,5 +8,7 @@ namespace Volpe.Exceptions
             : base(positionInText)
         {
         }
+        
+        public override string Description => $"unexpected End-Of-File";
     }
 }

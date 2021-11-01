@@ -9,5 +9,7 @@ namespace Volpe.Exceptions
         {
             Symbol = symbol;
         }
+
+        public override string Description => $"unexpected symbol '{Symbol}'";
     }
 }

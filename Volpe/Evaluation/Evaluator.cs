@@ -41,7 +41,7 @@ namespace Volpe.Evaluation
         {
             Value? value;
             if (!context.Scope.TryGetVariableValue(expr.Name, out value))
-                throw new VariableNotFoundException(context.RootExpression.PositionInText);
+                throw new VariableNotFoundException(expr.Name, context.RootExpression.PositionInText);
                 
             return value!;
         }
@@ -61,7 +61,7 @@ namespace Volpe.Evaluation
         {
             Function? value;
             if (!context.Scope.TryGetFunctionReference(functionReference.Name, out value))
-                throw new VariableNotFoundException(context.RootExpression.PositionInText);
+                throw new FunctionNotFoundException(functionReference.Name, context.RootExpression.PositionInText);
                 
             return new Value.FunctionReference(functionReference.Name, value!);
         }
@@ -70,7 +70,7 @@ namespace Volpe.Evaluation
         {
             Function? function;
             if (!context.Scope.TryGetFunctionReference(functionCall.Name, out function))
-                throw new VariableNotFoundException(context.RootExpression.PositionInText);
+                throw new FunctionNotFoundException(functionCall.Name, context.RootExpression.PositionInText);
 
             Value toReturn = Value.DefaultVoid;
             
@@ -80,7 +80,8 @@ namespace Volpe.Evaluation
                     int parameterCount = standardFunction.ParameterNames.Length;
             
                     if (parameterCount != functionCall.Parameters.Length)
-                        throw new ParamaterCountMismatchException(context.RootExpression.PositionInText);
+                        throw new ParamaterCountMismatchException(functionCall.Name, 
+                            parameterCount, functionCall.Parameters.Length, context.RootExpression.PositionInText);
 
                     Scope scope = new Scope(standardFunction.ParentScope);
 

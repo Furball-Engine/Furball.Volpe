@@ -12,7 +12,7 @@ namespace Volpe.Evaluation
             new ("print", (context, values) =>
             {
                 if (values.Length != 1)
-                    throw new ParamaterCountMismatchException(context.RootExpression.PositionInText);
+                    throw new ParamaterCountMismatchException("print", 1, values.Length, context.RootExpression.PositionInText);
                 
                 string output = values[0] switch
                 {

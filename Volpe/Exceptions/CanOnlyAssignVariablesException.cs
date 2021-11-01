@@ -8,5 +8,7 @@ namespace Volpe.Exceptions
             : base(positionInText)
         {
         }
+
+        public override string Description => "the left operator of an assign expression can only be a variable";
     }
 }

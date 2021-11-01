@@ -90,7 +90,7 @@ namespace Volpe.SyntaxAnalysis
             ExpressionOperator expressionOperator = ExpressionOperator.FromTokenOperator(tokenValueOperator.Value);
 
             if ((expressionOperator.Type & ExpressionOperatorType.Prefix) == 0)
-                throw new InvalidInfixOperatorException(GetLastConsumedTokenPositionOrZero());
+                throw new InvalidPrefixOperatorException(expressionOperator, GetLastConsumedTokenPositionOrZero());
 
             Expression leftExpression = ForceParseNextExpression();
 
@@ -342,7 +342,7 @@ namespace Volpe.SyntaxAnalysis
                         ExpressionOperator expressionOperator = ExpressionOperator.FromTokenOperator(tokenOperator);
 
                         if ((expressionOperator.Type & ExpressionOperatorType.Infix) == 0)
-                            throw new InvalidInfixOperatorException(GetLastConsumedTokenPositionOrZero());
+                            throw new InvalidInfixOperatorException(expressionOperator, GetLastConsumedTokenPositionOrZero());
 
                         if (precedence >= expressionOperator.Precedence)
                             break;

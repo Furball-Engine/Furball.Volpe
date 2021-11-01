@@ -4,14 +4,14 @@ namespace Volpe.Exceptions
 {
     public class OperatorDomainException : VolpeException
     {
-        private string? _message;
+        private string _details;
         
-        public OperatorDomainException(PositionInText positionInText, string? message = null) 
+        public OperatorDomainException(PositionInText positionInText, string details) 
             : base(positionInText)
         {
-            _message = message;
+            _details = details;
         }
 
-        public override Func<string> AdditionalInfoGenerator => () => _message ?? string.Empty;
-    }
+        public override string Description => $"operator domain error ({_details})";
+    } 
 }

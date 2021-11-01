@@ -106,7 +106,7 @@ namespace Volpe.Tests
         [Test]
         public void EvaluateBuiltin()
         {
-            Parser parser = new Parser(new Lexer("print \"Too many strings\"").ToImmutableArray());
+            Parser parser = new Parser(new Lexer("println \"Too many strings\"").ToImmutableArray());
 
             Scope scope = new Scope(DefaultBuiltins.Io);
             Evaluator evaluator = new Evaluator();

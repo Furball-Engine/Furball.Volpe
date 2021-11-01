@@ -7,25 +7,31 @@ namespace Volpe.Evaluation
 {
     public static class DefaultBuiltins
     {
-        public static (string, Func<Evaluator.Context, Value[], Value>)[] Io = new (string name, Func<Evaluator.Context, Value[], Value> del)[]
+        private static string GetValueRepresentation(Value v)
         {
-            new ("print", (context, values) =>
+            return v switch
             {
-                if (values.Length != 1)
-                    throw new ParamaterCountMismatchException("print", 1, values.Length, context.RootExpression.PositionInText);
+                Value.Number(var number) => number.ToString(CultureInfo.InvariantCulture),
+                Value.Void => "void",
+                Value.String(var value) => value, 
+                Value.FunctionReference(var name, var function) => $"<Function \"{name}\", {function.GetHashCode()}>",
                 
-                string output = values[0] switch
-                {
-                    Value.Number(var number) => number.ToString(CultureInfo.InvariantCulture),
-                    Value.Void => "void",
-                    Value.String(var value) => value, 
-                    Value.FunctionReference(var name, var function) => $"<Function \"{name}\", {function.GetHashCode()}>"
-                };
+                _ => throw new ArgumentOutOfRangeException(nameof(v), v, null)
+            };
+        }
+        
+        public static (string, int, Func<Evaluator.Context, Value[], Value>)[] Io = new (string, int, Func<Evaluator.Context, Value[], Value>)[]
+        {
+            new ("println", 1, (context, values) =>
+            {
+                string output = GetValueRepresentation(values[0]);
                 
                 Console.WriteLine(output);
                 
                 return Value.DefaultVoid;
-            })
+            }),
+            
+            new ("repr", 1, (context, values) => new Value.String(GetValueRepresentation(values[0])))
         };
     }
 }

@@ -72,16 +72,17 @@ namespace Volpe.Evaluation
             if (!context.Scope.TryGetFunctionReference(functionCall.Name, out function))
                 throw new FunctionNotFoundException(functionCall.Name, context.RootExpression.PositionInText);
 
+            int parameterCount = function!.ParameterCount;
+            
+            if (parameterCount != functionCall.Parameters.Length)
+                throw new ParamaterCountMismatchException(functionCall.Name, 
+                    parameterCount, functionCall.Parameters.Length, context.RootExpression.PositionInText);
+            
             Value toReturn = Value.DefaultVoid;
             
             switch (function)
             {
                 case Function.Standard standardFunction:
-                    int parameterCount = standardFunction.ParameterNames.Length;
-            
-                    if (parameterCount != functionCall.Parameters.Length)
-                        throw new ParamaterCountMismatchException(functionCall.Name, 
-                            parameterCount, functionCall.Parameters.Length, context.RootExpression.PositionInText);
 
                     Scope scope = new Scope(standardFunction.ParentScope);
 

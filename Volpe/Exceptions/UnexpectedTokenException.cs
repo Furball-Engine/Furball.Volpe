@@ -6,8 +6,8 @@ namespace Volpe.Exceptions
     {
         public Token Token { get; }
         
-        public UnexpectedTokenException(PositionInText positionInText, Token token, string? message = null) 
-            : base(positionInText, message)
+        public UnexpectedTokenException(PositionInText positionInText, Token token) 
+            : base(positionInText)
         {
             Token = token;
         }

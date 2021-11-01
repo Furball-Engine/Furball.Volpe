@@ -22,10 +22,10 @@ namespace Volpe.Evaluation
 
             return expr.Operator switch
             {
-                ExpressionOperator.Add => Operators.Sum(leftValue, rightValue),
-                ExpressionOperator.Sub => Operators.Subtract(leftValue, rightValue),
-                ExpressionOperator.Mul => Operators.Multiply(leftValue, rightValue),
-                ExpressionOperator.Div => Operators.Divide(leftValue, rightValue)
+                ExpressionOperator.Add => Operators.Sum(leftValue, rightValue, context),
+                ExpressionOperator.Sub => Operators.Subtract(leftValue, rightValue, context),
+                ExpressionOperator.Mul => Operators.Multiply(leftValue, rightValue, context),
+                ExpressionOperator.Div => Operators.Divide(leftValue, rightValue, context)
             };
         }
 

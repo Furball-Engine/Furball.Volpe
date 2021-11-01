@@ -4,8 +4,8 @@ namespace Volpe.Exceptions
     {
         public char Symbol { get; }
         
-        public UnexceptedSymbolException(char symbol, PositionInText positionInText, string? message = null) 
-            : base(positionInText, message)
+        public UnexceptedSymbolException(char symbol, PositionInText positionInText) 
+            : base(positionInText)
         {
             Symbol = symbol;
         }

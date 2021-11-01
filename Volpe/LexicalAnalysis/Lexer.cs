@@ -137,7 +137,7 @@ namespace Volpe.LexicalAnalysis
 
                 >= '0' and <= '9' => new TokenValue.Number(ConsumeNextNumber()),
 
-                _ => ConsumeNextLiteral() switch 
+                ((>= '¡' or (>= 'a' and <= 'z') or (>= '@' and <= 'Z') or (>= '0' and <= '9')) and not '$') => ConsumeNextLiteral() switch 
                 {
                     "true" => new TokenValue.True(),
                     "false" => new TokenValue.False(),
@@ -145,7 +145,9 @@ namespace Volpe.LexicalAnalysis
                     "ret" => new TokenValue.Return(),
                     
                     {} value => new TokenValue.Literal(value) 
-                }
+                },
+
+                var c => throw new UnexceptedSymbolException(c, currentPositionInText)
             };
 
             token = new Token {Value = tokenValue, PositionInText = currentPositionInText};

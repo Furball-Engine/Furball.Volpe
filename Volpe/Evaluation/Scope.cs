@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Volpe.Evaluation
 {
@@ -7,20 +9,24 @@ namespace Volpe.Evaluation
         public Scope? Parent { get; }
         
         private readonly Dictionary<string, Value> _variables;
-        private readonly Dictionary<string, Value.Function> _functions;
+        private readonly Dictionary<string, Function> _functions;
         
-        public Scope()
+        public Scope((string name, Func<Evaluator.Context, Value[], Value> del)[] builtins)
         {
             _variables = new Dictionary<string, Value>();
-            _functions = new Dictionary<string, Value.Function>();
+            _functions = builtins.ToDictionary(b => b.name, b => (Function)new Function.Builtin(b.del));
         }
 
+        public Scope() : this(Array.Empty<(string, Func<Evaluator.Context, Value[], Value>)>())
+        {
+        }
+        
         public Scope(Scope? parent) : this()
         {
             Parent = parent;
         }
-
-        public bool TryGetFunctionReference(string functionName, out Value.Function? function)
+        
+        public bool TryGetFunctionReference(string functionName, out Function? function)
         {
             if (_functions.TryGetValue(functionName, out function))
                 return true;
@@ -31,7 +37,7 @@ namespace Volpe.Evaluation
             return false;
         }
         
-        public bool TrySetFunction(string functionName, Value.Function function)
+        public bool TrySetFunction(string functionName, Function.Standard function)
         {
             if (Parent?.HasFunction(functionName) ?? false)
                 return false;

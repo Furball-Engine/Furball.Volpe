@@ -6,6 +6,7 @@ namespace Volpe.SyntaxAnalysis
     public abstract record ExpressionValue
     {
         public record Variable(string Name) : ExpressionValue;
+        public record String(string Value) : ExpressionValue;
         public record Number(double Value) : ExpressionValue;
         public record InfixExpression(ExpressionOperator Operator, Expression Left, Expression Right): ExpressionValue;
         public record PrefixExpression(ExpressionOperator Operator, Expression Left) : ExpressionValue;
@@ -16,6 +17,7 @@ namespace Volpe.SyntaxAnalysis
         public record FunctionCall(string Name, Expression[] Parameters) : ExpressionValue;
         public record FunctionReference(string Name) : ExpressionValue;
         public record Return(Expression Expression) : ExpressionValue;
+        public record Void : ExpressionValue;
     }
     
     public class Expression : IPositionableInText, IEquatable<Expression>

@@ -18,41 +18,41 @@ namespace Volpe.SyntaxAnalysis
         }
 
         private PositionInText GetLastConsumedTokenPositionOrZero() => _tokenConsumer.LastConsumed?.PositionInText
-                                                                  ?? PositionInText.Zero;
-        
+                                                                       ?? PositionInText.Zero;
+
         private Token ForceGetNextToken()
         {
             Token? token;
-            
+
             if (!_tokenConsumer.TryConsumeNext(out token))
                 throw new UnexpectedEofException(GetLastConsumedTokenPositionOrZero());
 
             return token!;
         }
-        
-        private T ForceGetNextTokenValueWithType<T>() where T: TokenValue
+
+        private T ForceGetNextTokenValueWithType<T>() where T : TokenValue
         {
             Token token = ForceGetNextToken();
 
             if (token.Value is not T tokenValue)
                 throw new UnexpectedTokenException(token!.PositionInText, token);
-            
+
             return tokenValue;
         }
 
-        private T GetAndAssertNextTokenType<T>() where T: TokenValue
+        private T GetAndAssertNextTokenType<T>() where T : TokenValue
         {
             if (ForceGetNextToken().Value is not T value)
                 throw new InvalidOperationException();
 
             return value;
         }
-        
+
         private Expression ForceParseNextExpression(
             ExpressionOperatorPrecedence precedence = ExpressionOperatorPrecedence.Lowest)
         {
             Expression? expression;
-            
+
             if (!TryParseNextExpression(out expression, precedence))
                 throw new ExpectedExpressionException(GetLastConsumedTokenPositionOrZero());
 
@@ -65,7 +65,7 @@ namespace Volpe.SyntaxAnalysis
 
             return new ExpressionValue.Variable(ForceGetNextTokenValueWithType<TokenValue.Literal>().Value);
         }
-        
+
         private ExpressionValue.FunctionReference ParseFunctionReference()
         {
             GetAndAssertNextTokenType<TokenValue.Hashtag>();
@@ -77,9 +77,9 @@ namespace Volpe.SyntaxAnalysis
         {
             GetAndAssertNextTokenType<TokenValue.Assign>();
 
-            if (expression.Value is not ExpressionValue.Variable { Name: var variableName })
+            if (expression.Value is not ExpressionValue.Variable {Name: var variableName})
                 throw new ExpectedVariableException(expression.PositionInText);
-            
+
             return new ExpressionValue.Assignment(variableName, ForceParseNextExpression());
         }
 
@@ -88,7 +88,7 @@ namespace Volpe.SyntaxAnalysis
             TokenValue.Operator tokenValueOperator = GetAndAssertNextTokenType<TokenValue.Operator>();
 
             ExpressionOperator expressionOperator = ExpressionOperator.FromTokenOperator(tokenValueOperator.Value);
-            
+
             if ((expressionOperator.Type & ExpressionOperatorType.Prefix) == 0)
                 throw new InvalidInfixOperatorException(GetLastConsumedTokenPositionOrZero());
 
@@ -100,9 +100,9 @@ namespace Volpe.SyntaxAnalysis
         public ExpressionValue.SubExpression ParseSubExpression()
         {
             GetAndAssertNextTokenType<TokenValue.LeftRoundBracket>();
-            
+
             Expression expression = ForceParseNextExpression();
-            
+
             ForceGetNextTokenValueWithType<TokenValue.RightRoundBracket>();
 
             return new ExpressionValue.SubExpression(expression);
@@ -114,7 +114,7 @@ namespace Volpe.SyntaxAnalysis
             {
                 List<string> variableNames = new List<string>();
                 bool needComma = false;
-                
+
                 for (;;)
                 {
                     Token token = ForceGetNextToken();
@@ -126,11 +126,11 @@ namespace Volpe.SyntaxAnalysis
                             variableNames.Add(identifier.Value);
                             needComma = true;
                             break;
-                    
+
                         case TokenValue.Comma when needComma:
                             needComma = false;
                             break;
-                        
+
                         case TokenValue.RightRoundBracket:
                             return variableNames.ToArray();
 
@@ -139,35 +139,34 @@ namespace Volpe.SyntaxAnalysis
                     }
                 }
             }
-            
+
             Expression[] ParseExpressionBlock()
             {
                 List<Expression> expressions = new List<Expression>();
-                
+
                 for (;;)
                 {
                     Token? token;
 
-                    if (!_tokenConsumer.TryPeekNext(out token))
+                    if (!_tokenConsumer.TryPeekNext(out _))
                         throw new UnexpectedEofException(GetLastConsumedTokenPositionOrZero());
 
-                    switch (token!.Value)
-                    {
-                        case TokenValue.RightCurlyBracket:
-                            _tokenConsumer.SkipOne();
-                            return expressions.ToArray();
+                    Expression expression = ForceParseNextExpression();
 
-                        default:
-                            expressions.Add(ForceParseNextExpression());
-                            break;
+                    if (expression.Value is ExpressionValue.Void)
+                    {
+                        _tokenConsumer.SkipOne();
+                        return expressions.ToArray();
                     }
+
+                    expressions.Add(expression);
                 }
             }
 
             GetAndAssertNextTokenType<TokenValue.FuncDef>();
-            
+
             string functionName = ForceGetNextTokenValueWithType<TokenValue.Literal>().Value;
-            
+
             ForceGetNextTokenValueWithType<TokenValue.LeftRoundBracket>();
             string[] parametersName = ParseFormalParameters();
 
@@ -184,26 +183,26 @@ namespace Volpe.SyntaxAnalysis
             {
                 List<Expression> actualParameters = new List<Expression>();
                 bool needComma = false;
-                
+
                 for (;;)
                 {
                     Token? token;
-                    
+
                     if (!_tokenConsumer.TryPeekNext(out token))
                         return actualParameters.ToArray();
-                        
+
                     switch (token!.Value)
                     {
-                        case {} when !needComma:
+                        case { } when !needComma:
                             actualParameters.Add(ForceParseNextExpression());
                             needComma = true;
                             break;
-                    
+
                         case TokenValue.Comma when needComma:
                             needComma = false;
                             _tokenConsumer.SkipOne();
                             break;
-                        
+
                         case TokenValue.SemiColon:
                             return actualParameters.ToArray();
 
@@ -212,14 +211,14 @@ namespace Volpe.SyntaxAnalysis
                     }
                 }
             }
-            
+
             Expression[] ParseActualParameterListWithBrackets()
             {
                 GetAndAssertNextTokenType<TokenValue.LeftRoundBracket>();
-                
+
                 List<Expression> actualParameters = new List<Expression>();
                 bool needComma = false;
-                
+
                 for (;;)
                 {
                     Token? token;
@@ -229,16 +228,16 @@ namespace Volpe.SyntaxAnalysis
 
                     switch (token!.Value)
                     {
-                        case {} when !needComma:
+                        case { } when !needComma:
                             actualParameters.Add(ForceParseNextExpression());
                             needComma = true;
                             break;
-                    
+
                         case TokenValue.Comma when needComma:
                             _tokenConsumer.SkipOne();
                             needComma = false;
                             break;
-                        
+
                         case TokenValue.RightRoundBracket:
                             _tokenConsumer.SkipOne();
                             return actualParameters.ToArray();
@@ -248,17 +247,17 @@ namespace Volpe.SyntaxAnalysis
                     }
                 }
             }
-            
+
             canBeSubExpression = false;
 
             string functionName = GetAndAssertNextTokenType<TokenValue.Literal>().Value;
-            
+
             Token? token;
             if (!_tokenConsumer.TryPeekNext(out token))
                 return new ExpressionValue.FunctionCall(functionName, Array.Empty<Expression>());
 
             Expression[] actualParameters;
-            
+
             if (token!.Value is TokenValue.LeftRoundBracket)
             {
                 canBeSubExpression = true;
@@ -268,45 +267,54 @@ namespace Volpe.SyntaxAnalysis
             {
                 actualParameters = ParseActualParameterListWithoutBrackets();
             }
-            
+
             return new ExpressionValue.FunctionCall(functionName, actualParameters);
         }
-        
+
         // https://en.wikipedia.org/wiki/Operator-precedence_parser for reference
         public bool TryParseNextExpression(
             out Expression? expression,
             ExpressionOperatorPrecedence precedence = ExpressionOperatorPrecedence.Lowest)
         {
             expression = default;
-         
+
             // Skip all the expression separators
             _tokenConsumer.SkipTill(t => t.Value is TokenValue.SemiColon);
-            
+
             // Parse the first expression that comes in, if any
             Token? token;
             if (!_tokenConsumer.TryPeekNext(out token))
                 return false;
-            
+
             PositionInText currentPositionInText = token!.PositionInText;
-            bool canBeSubExpression = true;
+            bool canBeSubExpression = false;
 
             switch (token.Value)
             {
+                case TokenValue.RightCurlyBracket:
+                    expression = new Expression {Value = new ExpressionValue.Void()};
+                    break;
                 case TokenValue.Literal:
                     expression = new Expression {Value = ParseFunctionCall(out canBeSubExpression)};
                     break;
                 case TokenValue.FuncDef:
                     expression = new Expression {Value = ParseFunctionDefinition()};
-                    canBeSubExpression = false;
+                    break;
+                case TokenValue.Return:
+                    expression = new Expression {Value = ParseReturnExpression()};
                     break;
                 default:
                 {
+                    canBeSubExpression = true;
+
                     ExpressionValue value = token.Value switch
                     {
                         TokenValue.Dollar => ParseVariable(),
                         TokenValue.Hashtag => ParseFunctionReference(),
                         TokenValue.Operator => ParsePrefixExpression(),
-                        TokenValue.Return => ParseReturnExpression(),
+                        
+                        TokenValue.String(var nValue) => 
+                            _tokenConsumer.TryConsumeNextAndThen((_, _) => new ExpressionValue.String(nValue)),
 
                         TokenValue.Number(var nValue) =>
                             _tokenConsumer.TryConsumeNextAndThen((_, _) => new ExpressionValue.Number(nValue)),
@@ -351,7 +359,11 @@ namespace Volpe.SyntaxAnalysis
                     }
                     else if (token is {Value: TokenValue.Assign})
                         expression.Value = ParseAssign(expression);
-                    else if (token is {Value: TokenValue.Comma or TokenValue.RightCurlyBracket or TokenValue.RightRoundBracket or TokenValue.Dollar or TokenValue.SemiColon})
+                    else if (token is
+                    {
+                        Value: TokenValue.Comma or TokenValue.RightCurlyBracket or TokenValue.RightRoundBracket or
+                        TokenValue.Dollar or TokenValue.SemiColon
+                    })
                         break;
                     else
                         throw new UnexpectedTokenException(GetLastConsumedTokenPositionOrZero(), token!);

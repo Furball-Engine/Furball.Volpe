@@ -49,7 +49,7 @@ namespace Volpe.Evaluation
         private Value EvaluateFunctionDefinition(ExpressionValue.FunctionDefinition functionDefinition, Context context)
         {
             if (!context.Scope.TrySetFunction(functionDefinition.Name,
-                new Value.Function(functionDefinition.ParameterNames, functionDefinition.Expressions, context.Scope)))
+                new Function.Standard(functionDefinition.ParameterNames, functionDefinition.Expressions, context.Scope)))
             {
                 throw new CannotRedefineFunctionsException(context.RootExpression.PositionInText);
             }
@@ -57,42 +57,52 @@ namespace Volpe.Evaluation
             return Value.DefaultVoid;
         }
         
-        private Value.Function EvaluateFunctionReference(ExpressionValue.FunctionReference functionReference, Context context)
+        private Value.FunctionReference EvaluateFunctionReference(ExpressionValue.FunctionReference functionReference, Context context)
         {
-            Value.Function? value;
+            Function? value;
             if (!context.Scope.TryGetFunctionReference(functionReference.Name, out value))
                 throw new VariableNotFoundException(context.RootExpression.PositionInText);
                 
-            return value!;
+            return new Value.FunctionReference(functionReference.Name, value!);
         }
 
         private Value EvaluateFunctionCall(ExpressionValue.FunctionCall functionCall, Context context)
         {
-            Value.Function? function;
+            Function? function;
             if (!context.Scope.TryGetFunctionReference(functionCall.Name, out function))
                 throw new VariableNotFoundException(context.RootExpression.PositionInText);
 
-            int parameterCount = function!.ParameterNames.Length;
-            
-            if (parameterCount != functionCall.Parameters.Length)
-                throw new ParamaterCountMismatchException(context.RootExpression.PositionInText);
-
-            Scope scope = new Scope(function.ParentScope);
-
-            for (int i = 0; i < parameterCount; i++)
-                scope.SetVariableValue(function.ParameterNames[i], Evaluate(functionCall.Parameters[i], context.Scope));
-
             Value toReturn = Value.DefaultVoid;
             
-            foreach (Expression expression in function.Expressions)
+            switch (function)
             {
-                if (Evaluate(expression, scope) is Value.ToReturn value)
-                {
-                    toReturn = value.Value;
-                    break;
-                }
-            }
+                case Function.Standard standardFunction:
+                    int parameterCount = standardFunction.ParameterNames.Length;
+            
+                    if (parameterCount != functionCall.Parameters.Length)
+                        throw new ParamaterCountMismatchException(context.RootExpression.PositionInText);
 
+                    Scope scope = new Scope(standardFunction.ParentScope);
+
+                    for (int i = 0; i < parameterCount; i++)
+                        scope.SetVariableValue(standardFunction.ParameterNames[i], Evaluate(functionCall.Parameters[i], context.Scope));
+
+                    foreach (Expression expression in standardFunction.Expressions)
+                    {
+                        if (Evaluate(expression, scope) is Value.ToReturn value)
+                        {
+                            toReturn = value.Value;
+                            break;
+                        }
+                    }
+                    break;
+                
+                case Function.Builtin builtinFunction:
+                    toReturn = builtinFunction.Delegate(context,
+                        functionCall.Parameters.Select(expr => Evaluate(expr, context.Scope)).ToArray());
+                    break;
+            }
+            
             return toReturn;
         }
         
@@ -109,6 +119,7 @@ namespace Volpe.Evaluation
                 ExpressionValue.SubExpression(var expr) => Evaluate(expr, context.Scope),
                 ExpressionValue.FunctionReference expr => EvaluateFunctionReference(expr, context),
                 ExpressionValue.FunctionCall expr => EvaluateFunctionCall(expr, context),
+                ExpressionValue.String expr => new Value.String(expr.Value),
                 ExpressionValue.Return(var expr) => new Value.ToReturn(Evaluate(expr, context.Scope))
             };
         }

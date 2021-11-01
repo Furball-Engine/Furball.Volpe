@@ -9,7 +9,6 @@ namespace Volpe.Tests
 {
     public class EvaluatorTests
     {
-            
         [Test]
         public void EvaluateAddition()
         {
@@ -18,8 +17,7 @@ namespace Volpe.Tests
             Value value = new Evaluator().Evaluate(expression, new Scope());
             Assert.AreEqual(value, new Value.Number(11));
         }
-        
-           
+
         [Test]
         public void EvaluateVariableAssignment()
         {
@@ -67,7 +65,7 @@ namespace Volpe.Tests
                     evaluator.Evaluate(parser.ParseNextExpression(), scope), 
                     evaluator.Evaluate(parser.ParseNextExpression(), scope)
                 }, 
-                    new Value[]
+                new Value[]
                 {
                     new Value.Number(38),
                     new Value.Number(38)
@@ -84,23 +82,36 @@ namespace Volpe.Tests
 
             evaluator.Evaluate(parser.ParseNextExpression(), scope);
 
-            Value.Function function;
+            Function function;
             scope.TryGetFunctionReference("hi", out function);
 
-            CollectionAssert.AreEqual(function!.ParameterNames, new string[] { "testVariable" });
-            CollectionAssert.AreEqual(function.Expressions, new Expression[] { });
+            Function.Standard standardFunction = (Function.Standard)function;
+            
+            CollectionAssert.AreEqual(standardFunction!.ParameterNames, new string[] { "testVariable" });
+            CollectionAssert.AreEqual(standardFunction.Expressions, new Expression[] { });
         }
         
         [Test]
         public void EvaluateFunctionCall()
         {
-            Parser parser = new Parser(new Lexer("funcdef hi($testVariable) { $testVariable2 = 2; ret $testVariable2 }; hi(2) + 2").ToImmutableArray());
+            Parser parser = new Parser(new Lexer("funcdef hi($testVariable) { $testVariable2 = $testVariable; ret $testVariable2; } hi(2) + 2").ToImmutableArray());
 
             Scope scope = new Scope();
             Evaluator evaluator = new Evaluator();
 
             evaluator.Evaluate(parser.ParseNextExpression(), scope);
             Assert.AreEqual(evaluator.Evaluate(parser.ParseNextExpression(), scope), new Value.Number(4));
+        }
+        
+        [Test]
+        public void EvaluateBuiltin()
+        {
+            Parser parser = new Parser(new Lexer("print \"i like god\"").ToImmutableArray());
+
+            Scope scope = new Scope(DefaultBuiltins.Io);
+            Evaluator evaluator = new Evaluator();
+
+            evaluator.EvaluateAll(parser, scope);
         }
     }
 }

@@ -40,13 +40,13 @@ namespace Volpe.Tests
         }
         
         [Test]
-        public void ParseColumn()
+        public void ParseHashtag()
         {
-            Lexer lexer = new Lexer(":");
+            Lexer lexer = new Lexer("#");
             
             Assert.AreEqual(
                 lexer.ConsumeNextToken().Value, 
-                new TokenValue.Column());
+                new TokenValue.Hashtag());
         }
         
         

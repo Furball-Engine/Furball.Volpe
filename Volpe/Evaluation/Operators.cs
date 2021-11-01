@@ -21,7 +21,6 @@ namespace Volpe.Evaluation
         
         public static Value Subtract(Value rightValue, Value leftValue, Evaluator.Context context)
         {
-            
             return (rightValue, leftValue) switch
             {
                 (Value.Number(var n1), Value.Number(var n2)) => new Value.Number(n1 - n2),

@@ -1,5 +1,6 @@
 
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Volpe.Exceptions;
@@ -25,7 +26,9 @@ namespace Volpe.Evaluation
                 ExpressionOperator.Add => Operators.Sum(leftValue, rightValue, context),
                 ExpressionOperator.Sub => Operators.Subtract(leftValue, rightValue, context),
                 ExpressionOperator.Mul => Operators.Multiply(leftValue, rightValue, context),
-                ExpressionOperator.Div => Operators.Divide(leftValue, rightValue, context)
+                ExpressionOperator.Div => Operators.Divide(leftValue, rightValue, context),
+                
+                _ => throw new ArgumentOutOfRangeException()
             };
         }
 
@@ -122,7 +125,9 @@ namespace Volpe.Evaluation
                 ExpressionValue.FunctionReference expr => EvaluateFunctionReference(expr, context),
                 ExpressionValue.FunctionCall expr => EvaluateFunctionCall(expr, context),
                 ExpressionValue.String expr => new Value.String(expr.Value),
-                ExpressionValue.Return(var expr) => new Value.ToReturn(Evaluate(expr, context.Scope))
+                ExpressionValue.Return(var expr) => new Value.ToReturn(Evaluate(expr, context.Scope)),
+                
+                _ => throw new ArgumentException()
             };
         }
 

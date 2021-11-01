@@ -146,8 +146,6 @@ namespace Volpe.SyntaxAnalysis
 
                 for (;;)
                 {
-                    Token? token;
-
                     if (!_tokenConsumer.TryPeekNext(out _))
                         throw new UnexpectedEofException(GetLastConsumedTokenPositionOrZero());
 
@@ -193,6 +191,9 @@ namespace Volpe.SyntaxAnalysis
 
                     switch (token!.Value)
                     {
+                        case TokenValue.SemiColon:
+                            return actualParameters.ToArray();
+                        
                         case { } when !needComma:
                             actualParameters.Add(ForceParseNextExpression());
                             needComma = true;
@@ -202,9 +203,6 @@ namespace Volpe.SyntaxAnalysis
                             needComma = false;
                             _tokenConsumer.SkipOne();
                             break;
-
-                        case TokenValue.SemiColon:
-                            return actualParameters.ToArray();
 
                         default:
                             throw new UnexpectedTokenException(GetLastConsumedTokenPositionOrZero(), token);
@@ -278,9 +276,6 @@ namespace Volpe.SyntaxAnalysis
         {
             expression = default;
 
-            // Skip all the expression separators
-            _tokenConsumer.SkipTill(t => t.Value is TokenValue.SemiColon);
-
             // Parse the first expression that comes in, if any
             Token? token;
             if (!_tokenConsumer.TryPeekNext(out token))
@@ -288,6 +283,12 @@ namespace Volpe.SyntaxAnalysis
 
             PositionInText currentPositionInText = token!.PositionInText;
             bool canBeSubExpression = false;
+
+            if (token.Value is TokenValue.SemiColon)
+            {
+                _tokenConsumer.SkipOne();
+                return TryParseNextExpression(out expression, precedence);
+            }
 
             switch (token.Value)
             {

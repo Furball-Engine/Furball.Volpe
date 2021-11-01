@@ -22,7 +22,7 @@ namespace Volpe.SyntaxAnalysis
     
     public class Expression : IPositionableInText, IEquatable<Expression>
     {
-        public ExpressionValue Value { get; set; }
+        public ExpressionValue Value { get; set; } = null!;
         public PositionInText PositionInText { get; set; }
 
         #region IEquatable implementation

@@ -38,6 +38,6 @@ namespace Volpe.LexicalAnalysis
     public class Token: IPositionableInText
     {
         public PositionInText PositionInText { get; set; }
-        public TokenValue Value { get; set; }
+        public TokenValue Value { get; set; } = null!;
     }
 }

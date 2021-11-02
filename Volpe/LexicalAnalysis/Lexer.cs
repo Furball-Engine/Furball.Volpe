@@ -50,7 +50,7 @@ namespace Volpe.LexicalAnalysis
                 if (!_textConsumer.TryPeekNext(out char character))
                     break;
                 
-                if (character is ((>= '¡' or (>= 'a' and <= 'z') or (>= '@' and <= 'Z') or (>= '0' and <= '9')) and not '$'))
+                if (character is ((>= '¡' or (>= 'a' and <= 'z') or (>= '@' and <= 'Z') or (>= '0' and <= '9')) or '_' and not '$'))
                 {
                     stringBuilder.Append(character);
                     _textConsumer.SkipOne();
@@ -137,7 +137,7 @@ namespace Volpe.LexicalAnalysis
 
                 >= '0' and <= '9' => new TokenValue.Number(ConsumeNextNumber()),
 
-                ((>= '¡' or (>= 'a' and <= 'z') or (>= '@' and <= 'Z') or (>= '0' and <= '9')) and not '$') => ConsumeNextLiteral() switch 
+                ((>= '¡' or (>= 'a' and <= 'z') or (>= '@' and <= 'Z') or (>= '0' and <= '9')) or '_' and not '$') => ConsumeNextLiteral() switch 
                 {
                     "true" => new TokenValue.True(),
                     "false" => new TokenValue.False(),

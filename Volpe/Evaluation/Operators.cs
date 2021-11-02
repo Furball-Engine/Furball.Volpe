@@ -61,6 +61,9 @@ namespace Volpe.Evaluation
         {
             return (rightValue, leftValue) switch
             {
+                (Value.Number, Value.Number(0)) => 
+                    throw new OperatorDomainException(context.Expression.PositionInText, "cannot divide by zero"),
+                
                 (Value.Number(var n1), Value.Number(var n2)) => new Value.Number(n1 / n2),
                 
                 _ => throw new UndefinedOperationException(

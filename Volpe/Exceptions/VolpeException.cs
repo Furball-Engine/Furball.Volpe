@@ -15,7 +15,7 @@ namespace Volpe.Exceptions
         }
 
         public override string Message =>
-            $"An error occurred at line {PositionInText.Row}, column {PositionInText.Column}: {Description}." +
+            $"An error occurred at column {PositionInText.Row}, line {PositionInText.Column}: {Description}." +
             (AdditionalInfoGenerator != null ? " Additional Info: " + AdditionalInfoGenerator() : String.Empty);
     }
 }

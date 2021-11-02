@@ -15,7 +15,7 @@ namespace Volpe.Repl
         {
             Console.WriteLine($"Volpe Language - REPL");
 
-            Scope scope = new Scope(DefaultBuiltins.Core);
+            Scope scope = new Scope(DefaultBuiltins.Core.Concat(DefaultBuiltins.Math).ToArray());
             
             for (;;)
             {

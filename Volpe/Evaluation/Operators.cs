@@ -7,6 +7,28 @@ namespace Volpe.Evaluation
 {
     public class Operators
     {
+        public static Value Positive(Value leftValue, EvaluatorContext context)
+        {
+            return leftValue switch
+            {
+                Value.Number(var n1) => new Value.Number(+n1),
+                
+                _ => throw new UndefinedPrefixOperationException(
+                    "positive", leftValue.GetType(), context.Expression.PositionInText)
+            };
+        }
+        
+        public static Value Negative(Value leftValue, EvaluatorContext context)
+        {
+            return leftValue switch
+            {
+                Value.Number(var n1) => new Value.Number(-n1),
+                
+                _ => throw new UndefinedPrefixOperationException(
+                    "negative", leftValue.GetType(), context.Expression.PositionInText)
+            };
+        }
+        
         public static Value Sum(Value rightValue, Value leftValue, EvaluatorContext context)
         {
             return (rightValue, leftValue) switch
@@ -14,7 +36,7 @@ namespace Volpe.Evaluation
                 (Value.Number(var n1), Value.Number(var n2)) => new Value.Number(n1 + n2),
                 (Value.String(var n1), Value.String(var n2)) => new Value.String(n1 + n2),
                 
-                _ => throw new UndefinedOperationException(
+                _ => throw new UndefinedInfixOperationException(
                     "sum", rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
             };
         }
@@ -26,7 +48,7 @@ namespace Volpe.Evaluation
                 (Value.Number(var n1), Value.Number(var n2)) => new Value.Number(n1 - n2),
                 (Value.String(var n1), Value.String(var n2)) => new Value.String(n1.Replace(n2, string.Empty)),
                 
-                _ => throw new UndefinedOperationException(
+                _ => throw new UndefinedInfixOperationException(
                     "subtraction", rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
             };
         }
@@ -52,7 +74,7 @@ namespace Volpe.Evaluation
                 (Value.Number(var n1), Value.Number(var n2)) => new Value.Number(n1 * n2),
                 (Value.String(var n1), Value.Number(var n2)) => new Value.String(MultiplyString(n1, (int)n2)),
                 
-                _ => throw new UndefinedOperationException(
+                _ => throw new UndefinedInfixOperationException(
                     "multiplication", rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
             };
         }
@@ -66,7 +88,7 @@ namespace Volpe.Evaluation
                 
                 (Value.Number(var n1), Value.Number(var n2)) => new Value.Number(n1 / n2),
                 
-                _ => throw new UndefinedOperationException(
+                _ => throw new UndefinedInfixOperationException(
                     "division", rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
             };
         }

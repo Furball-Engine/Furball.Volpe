@@ -10,6 +10,15 @@ namespace Volpe.Evaluation
     {
         public static (string, int, Func<EvaluatorContext, Value[], Value>)[] Math = new (string, int, Func<EvaluatorContext, Value[], Value>)[]
         {
+            new ("abs", 1, (context, values) =>
+            {
+                if (values[0] is not Value.Number n)
+                    throw new InvalidValueTypeException(
+                        typeof(Value.Number), values[0].GetType(), context.Expression.PositionInText);
+
+                return new Value.Number(System.Math.Abs(n.Value));
+            }),
+            
             new ("cos", 1, (context, values) =>
             {
                 if (values[0] is not Value.Number n)

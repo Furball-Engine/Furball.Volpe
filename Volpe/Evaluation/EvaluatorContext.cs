@@ -91,12 +91,27 @@ namespace Volpe.Evaluation
             return function.Invoke(this, values.ToArray());
         }
         
+        
+        private Value EvaluatePrefixExpression(ExpressionValue.PrefixExpression expr)
+        {
+            Value leftValue = new EvaluatorContext(expr.Left, Scope).Evaluate();
+
+            return expr.Operator switch
+            {
+                ExpressionOperator.Add => Operators.Positive(leftValue, this),
+                ExpressionOperator.Sub => Operators.Negative(leftValue, this),
+                
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
+        
 
         public Value Evaluate()
         {
             return Expression.Value switch
             {
                 ExpressionValue.InfixExpression expr => EvaluateInfixExpression(expr),
+                ExpressionValue.PrefixExpression expr => EvaluatePrefixExpression(expr),
                 ExpressionValue.Number(var v) => new Value.Number(v),
                 ExpressionValue.Assignment expr => EvaluateAssignment(expr),
                 ExpressionValue.Variable expr => EvaluateVariable(expr),
@@ -111,5 +126,6 @@ namespace Volpe.Evaluation
                 _ => throw new ArgumentException()
             };
         }
+
     }
 }

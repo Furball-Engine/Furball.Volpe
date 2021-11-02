@@ -2,13 +2,13 @@ using System;
 
 namespace Volpe.Exceptions
 {
-    public class UndefinedOperationException : VolpeException
+    public class UndefinedInfixOperationException : VolpeException
     {
         public Type LOperandType { get; }
         public Type ROperandType { get; }
         public string OperationName { get; }
 
-        public UndefinedOperationException(string operationName, Type lOperandType, Type rOperandType, PositionInText positionInText) 
+        public UndefinedInfixOperationException(string operationName, Type lOperandType, Type rOperandType, PositionInText positionInText) 
             : base(positionInText)
         {
             LOperandType = lOperandType;
@@ -17,6 +17,6 @@ namespace Volpe.Exceptions
         }
 
         public override string Description =>
-            $"no {OperationName} operation is defined for the pair {LOperandType.Name}/{ROperandType.Name}";
+            $"no {OperationName} infix operation is defined for the pair {LOperandType.Name}/{ROperandType.Name}";
     }
 }

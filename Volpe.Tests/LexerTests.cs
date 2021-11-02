@@ -83,7 +83,7 @@ namespace Volpe.Tests
         [Test]
         public void ParseMultiple()
         {
-            TokenValue[] tokens = new Lexer("helpme 1234 \"help me\" 𝕙𝕖𝕝𝕡𝕞𝕖").Select(t => t.Value).ToArray();
+            TokenValue[] tokens = new Lexer("helpme 1234 \"help me\" 𝕙𝕖𝕝𝕡𝕞𝕖").GetTokenEnumerator().Select(t => t.Value).ToArray();
             
             Assert.AreEqual(
                 tokens, 
@@ -124,7 +124,7 @@ namespace Volpe.Tests
         [Test]
         public void ParseAssignmentExampleTokens()
         {
-            TokenValue[] tokens = new Lexer("$test = 1").Select(t => t.Value).ToArray();
+            TokenValue[] tokens = new Lexer("$test = 1").GetTokenEnumerator().Select(t => t.Value).ToArray();
 
             Assert.AreEqual(tokens, new TokenValue[]
             {
@@ -138,7 +138,7 @@ namespace Volpe.Tests
         [Test]
         public void ParseNumbersNoSpace()
         {
-            TokenValue[] tokens = new Lexer("2+1+3+4").Select(t => t.Value).ToArray();
+            TokenValue[] tokens = new Lexer("2+1+3+4").GetTokenEnumerator().Select(t => t.Value).ToArray();
 
             Assert.AreEqual(tokens, new TokenValue[]
             {

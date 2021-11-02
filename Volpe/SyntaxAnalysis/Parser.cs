@@ -8,7 +8,7 @@ using Volpe.LexicalAnalysis;
 
 namespace Volpe.SyntaxAnalysis
 {
-    public class Parser : IEnumerable<Expression>
+    public class Parser
     {
         private ArrayConsumer<Token> _tokenConsumer;
 
@@ -226,6 +226,10 @@ namespace Volpe.SyntaxAnalysis
 
                     switch (token!.Value)
                     {
+                        case TokenValue.RightRoundBracket:
+                            _tokenConsumer.SkipOne();
+                            return actualParameters.ToArray();
+                        
                         case { } when !needComma:
                             actualParameters.Add(ForceParseNextExpression());
                             needComma = true;
@@ -235,10 +239,6 @@ namespace Volpe.SyntaxAnalysis
                             _tokenConsumer.SkipOne();
                             needComma = false;
                             break;
-
-                        case TokenValue.RightRoundBracket:
-                            _tokenConsumer.SkipOne();
-                            return actualParameters.ToArray();
 
                         default:
                             throw new UnexpectedTokenException(GetLastConsumedTokenPositionOrZero(), token);
@@ -276,6 +276,8 @@ namespace Volpe.SyntaxAnalysis
         {
             expression = default;
 
+            _tokenConsumer.SkipTill(t => t.Value is TokenValue.SemiColon);
+
             // Parse the first expression that comes in, if any
             Token? token;
             if (!_tokenConsumer.TryPeekNext(out token))
@@ -283,12 +285,6 @@ namespace Volpe.SyntaxAnalysis
 
             PositionInText currentPositionInText = token!.PositionInText;
             bool canBeSubExpression = false;
-
-            if (token.Value is TokenValue.SemiColon)
-            {
-                _tokenConsumer.SkipOne();
-                return TryParseNextExpression(out expression, precedence);
-            }
 
             switch (token.Value)
             {
@@ -383,16 +379,11 @@ namespace Volpe.SyntaxAnalysis
             return new ExpressionValue.Return(ForceParseNextExpression());
         }
 
-        public IEnumerator<Expression> GetEnumerator()
+        public IEnumerable<Expression> GetExpressionEnumerator()
         {
             Expression? expression;
             while (TryParseNextExpression(out expression))
                 yield return expression!;
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
     }
 }

@@ -6,6 +6,6 @@ namespace Volpe.Exceptions
         {
         }
 
-        public override string Description => "an expression was expected.";
+        public override string Description => "an expression was expected";
     }
 }

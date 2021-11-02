@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Volpe", "Volpe\Volpe.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Volpe.Tests", "Volpe.Tests\Volpe.Tests.csproj", "{7998A1BB-4B9E-4E46-9552-8171FE9FCF49}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Volpe.Repl", "Volpe.Repl\Volpe.Repl.csproj", "{4E08E454-617A-4710-AF2D-84E32D440B80}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{7998A1BB-4B9E-4E46-9552-8171FE9FCF49}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7998A1BB-4B9E-4E46-9552-8171FE9FCF49}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7998A1BB-4B9E-4E46-9552-8171FE9FCF49}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E08E454-617A-4710-AF2D-84E32D440B80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E08E454-617A-4710-AF2D-84E32D440B80}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E08E454-617A-4710-AF2D-84E32D440B80}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E08E454-617A-4710-AF2D-84E32D440B80}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

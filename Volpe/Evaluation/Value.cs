@@ -18,7 +18,7 @@ namespace Volpe.Evaluation
 
         public record String(string Value) : Value
         {
-            public override string Representation => Value;
+            public override string Representation => '"' + Value + '"';
         }
         
         public record Void : Value
@@ -30,7 +30,7 @@ namespace Volpe.Evaluation
         {
             public override string Representation => $"<Function \"{Name}\", {Function.GetHashCode()}>";
         }
-        
+
         public static readonly Void DefaultVoid = new Void();
         
         public abstract string Representation { get; }

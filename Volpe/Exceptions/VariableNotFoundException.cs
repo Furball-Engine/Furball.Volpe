@@ -12,6 +12,6 @@ namespace Volpe.Exceptions
             VariableName = variableName;
         }
 
-        public override string Description => $"the variable \"{VariableName}\" was not found.";
+        public override string Description => $"the variable \"{VariableName}\" was not found";
     }
 }

@@ -10,6 +10,6 @@ namespace Volpe.Exceptions
             FunctionName = functionName;
         }
 
-        public override string Description => $"the function \"{FunctionName}\" was not found.";
+        public override string Description => $"the function \"{FunctionName}\" was not found";
     }
 }

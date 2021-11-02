@@ -22,7 +22,7 @@ namespace Volpe.Tests
         [Test]
         public void ParseVariable()
         {
-            Parser parser = new Parser(new Lexer("$test").ToImmutableArray());
+            Parser parser = new Parser(new Lexer("$test").GetTokenEnumerator().ToImmutableArray());
 
             Assert.AreEqual(parser.ParseNextExpression().Value, new ExpressionValue.Variable("test"));
         }
@@ -30,8 +30,8 @@ namespace Volpe.Tests
         [Test]
         public void ParseAssignment()
         {
-            Expression[] values = new Parser(new Lexer("$test = 2 * 4").ToImmutableArray())
-                .ToArray();
+            Expression[] values = new Parser(new Lexer("$test = 2 * 4").GetTokenEnumerator().ToImmutableArray())
+                .GetExpressionEnumerator().ToArray();
 
             Assert.AreEqual(values, new Expression[] {
                 new Expression {
@@ -49,8 +49,8 @@ namespace Volpe.Tests
         [Test]
         public void ParseAdd()
         {
-            Expression[] values = new Parser(new Lexer("2 + 2").ToImmutableArray())
-                .ToArray();
+            Expression[] values = new Parser(new Lexer("2 + 2").GetTokenEnumerator().ToImmutableArray())
+                .GetExpressionEnumerator().ToArray();
 
             Assert.AreEqual(values, new Expression[] {
                 new Expression {
@@ -65,8 +65,8 @@ namespace Volpe.Tests
         [Test]
         public void ParseAddSub()
         {
-            Expression[] values = new Parser(new Lexer("2 + 2 - 4").ToImmutableArray())
-                .ToArray();
+            Expression[] values = new Parser(new Lexer("2 + 2 - 4").GetTokenEnumerator().ToImmutableArray())
+                .GetExpressionEnumerator().ToArray();
 
             Assert.AreEqual(values, new Expression[]
             {
@@ -98,8 +98,8 @@ namespace Volpe.Tests
         [Test]
         public void ParseSubExpression()
         {
-            Expression[] values = new Parser(new Lexer("(2+2)*(2+2)").ToImmutableArray())
-                .ToArray();
+            Expression[] values = new Parser(new Lexer("(2+2)*(2+2)").GetTokenEnumerator().ToImmutableArray())
+                .GetExpressionEnumerator().ToArray();
 
             Assert.AreEqual(values, new Expression[]
             {
@@ -144,7 +144,10 @@ namespace Volpe.Tests
         [Test]
         public void ParseFunctionDefinition()
         {
-            Expression expr =new Parser(new Lexer("funcdef hi($testVariable, $testVariable2) {}").ToImmutableArray())
+            Expression expr =new Parser(
+                    new Lexer("funcdef hi($testVariable, $testVariable2) {}")
+                        .GetTokenEnumerator()
+                        .ToImmutableArray())
                 .ParseNextExpression();
 
             ExpressionValue.FunctionDefinition functionDefinition = (ExpressionValue.FunctionDefinition) expr.Value;
@@ -157,7 +160,7 @@ namespace Volpe.Tests
         [Test]
         public void ParseFunctionCall()
         {
-            Expression expr =new Parser(new Lexer("hi(2, 3)").ToImmutableArray())
+            Expression expr =new Parser(new Lexer("hi(2, 3)").GetTokenEnumerator().ToImmutableArray())
                 .ParseNextExpression();
 
             ExpressionValue.FunctionCall functionDefinition = (ExpressionValue.FunctionCall) expr.Value;
@@ -173,7 +176,7 @@ namespace Volpe.Tests
         [Test]
         public void ParseFunctionCallNoBracketsWithAFollowingExpression()
         {
-            Parser expr =new Parser(new Lexer("hi 2, 3; 2").ToImmutableArray());
+            Parser expr =new Parser(new Lexer("hi 2, 3; 2").GetTokenEnumerator().ToImmutableArray());
             
             ExpressionValue.FunctionCall functionDefinition = (ExpressionValue.FunctionCall) expr.ParseNextExpression().Value;
             

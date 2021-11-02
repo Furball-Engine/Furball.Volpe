@@ -7,7 +7,7 @@ using Volpe.Exceptions;
 
 namespace Volpe.LexicalAnalysis
 {
-    public class Lexer: IEnumerable<Token>
+    public class Lexer
     {
         private readonly TextConsumer _textConsumer;
 
@@ -155,22 +155,11 @@ namespace Volpe.LexicalAnalysis
             return true;
         }
 
-        public IEnumerator<Token> GetEnumerator()
+        public IEnumerable<Token> GetTokenEnumerator()
         {
             Token? token;
             while (TryConsumeNextToken(out token))
                 yield return token!;
         }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-        
-        // <variable_name> <value> 
-        // <value> : <number> | <"string">
-        // :<function_name> <value...>
-        // $<variable_name>
-        // #()
     }
 }

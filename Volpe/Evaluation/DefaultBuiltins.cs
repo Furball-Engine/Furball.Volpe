@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Volpe.Exceptions;
 
@@ -7,7 +8,7 @@ namespace Volpe.Evaluation
 {
     public static class DefaultBuiltins
     {
-        public static (string, int, Func<Evaluator.Context, Value[], Value>)[] Io = new (string, int, Func<Evaluator.Context, Value[], Value>)[]
+        public static (string, int, Func<EvaluatorContext, Value[], Value>)[] Core = new (string, int, Func<EvaluatorContext, Value[], Value>)[]
         {
             new ("int", 1, (context, values) =>
             {
@@ -20,7 +21,7 @@ namespace Volpe.Evaluation
                     return new Value.Number(converted);
 
                 throw new TypeConversionException(value, typeof(Value.Number),
-                    context.RootExpression.PositionInText);
+                    context.Expression.PositionInText);
             }),
             new ("string", 1, (context, values) =>
             {
@@ -33,9 +34,23 @@ namespace Volpe.Evaluation
                     return new Value.String(n.Value.ToString(CultureInfo.InvariantCulture));
 
                 throw new TypeConversionException(value, typeof(Value.Number),
-                    context.RootExpression.PositionInText);
+                    context.Expression.PositionInText);
             }),
-            new ("repr", 1, (context, values) => new Value.String(values[0].Representation))
+            new ("repr", 1, (context, values) => new Value.String(values[0].Representation)),
+            new ("invoke", 1, (context, values) =>
+            {
+                if (values[0] is not Value.FunctionReference functionReference)
+                    throw new InvalidValueTypeException(
+                        typeof(Value.FunctionReference), values[0].GetType(),
+                        context.Expression.PositionInText);
+
+                if (values.Length - 1 < functionReference.Function.ParameterCount)
+                        throw new ParamaterCountMismatchException(functionReference.Name, 
+                            functionReference.Function.ParameterCount, 
+                            values.Length - 1, context.Expression.PositionInText);
+
+                return functionReference.Function.Invoke(context, values[1..]);
+            })
         };
     }
 }

@@ -75,9 +75,14 @@ namespace Volpe.Evaluation
             
             new ("pow", 2, (context, values) =>
             {
-                if ((values[0], values[1]) is not (Value.Number(var x), Value.Number(var n)))
+                if (values[0] is not Value.Number(var x))
                     throw new InvalidValueTypeException(
                         typeof(Value.Number), values[0].GetType(), context.Expression.PositionInText);
+                
+                if (values[1] is not Value.Number(var n))
+                    throw new InvalidValueTypeException(
+                        typeof(Value.Number), values[1].GetType(), context.Expression.PositionInText);
+
 
                 return new Value.Number(System.Math.Pow(x, n));
             }),

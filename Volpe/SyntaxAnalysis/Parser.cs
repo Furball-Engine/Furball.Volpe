@@ -191,7 +191,10 @@ namespace Volpe.SyntaxAnalysis
 
                     switch (token!.Value)
                     {
-                        case TokenValue.SemiColon:
+                        case TokenValue.SemiColon 
+                            or TokenValue.RightRoundBracket 
+                            or TokenValue.RightCurlyBracket 
+                            or TokenValue.RightBracket: 
                             return actualParameters.ToArray();
                         
                         case { } when !needComma:

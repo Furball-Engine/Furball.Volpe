@@ -103,7 +103,7 @@ namespace Volpe.Evaluation
         public bool HasVariable(string variableName) => _variables.ContainsKey(variableName);
         public bool HasFunction(string functionName) => _functions.ContainsKey(functionName);
 
-        public void SetVariableValue(string variableName, Value value, bool shadowParentVariables = false)
+        public void SetVariableValue(string variableName, Value value, bool shadowParentVariables = true)
         {
             if (!shadowParentVariables && Parent is not null && Parent.HasVariable(variableName))
             {

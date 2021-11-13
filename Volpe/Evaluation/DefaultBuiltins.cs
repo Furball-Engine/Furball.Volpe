@@ -82,8 +82,7 @@ namespace Volpe.Evaluation
                 if (values[1] is not Value.Number(var n))
                     throw new InvalidValueTypeException(
                         typeof(Value.Number), values[1].GetType(), context.Expression.PositionInText);
-
-
+                
                 return new Value.Number(System.Math.Pow(x, n));
             }),
             
@@ -146,6 +145,24 @@ namespace Volpe.Evaluation
             }),
             
             new ("repr", 1, (context, values) => new Value.String(values[0].Representation)),
+            
+            new ("hook", 3, (context, values) =>
+            {
+                if (values[0] is not Value.String(var name))
+                    throw new InvalidValueTypeException(
+                        typeof(Value.FunctionReference), values[0].GetType(), context.Expression.PositionInText);
+                
+                if (values[1] is not Value.FunctionReference f1)
+                    throw new InvalidValueTypeException(
+                        typeof(Value.FunctionReference), values[0].GetType(), context.Expression.PositionInText);
+                
+                if (values[2] is not Value.FunctionReference f2)
+                    throw new InvalidValueTypeException(
+                        typeof(Value.FunctionReference), values[1].GetType(), context.Expression.PositionInText);
+
+                context.Scope.HookVariableToGetterAndSetter(name, (f1, f2));
+                return Value.DefaultVoid;
+            }),
             
             new ("invoke", 1, (context, values) =>
             {

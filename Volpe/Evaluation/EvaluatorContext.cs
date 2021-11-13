@@ -38,7 +38,12 @@ namespace Volpe.Evaluation
         private Value EvaluateAssignment(ExpressionValue.Assignment expr)
         {
             Value value = new EvaluatorContext(expr.Expression, Scope).Evaluate();
-            Scope.SetVariableValue(expr.VariableName, value);
+
+            Function? setter;
+            if (Scope.TryGetSetterFromHookedVariable(expr.VariableName, out setter))
+                setter!.Invoke(this, new Value[] { value });
+            else
+                Scope.SetVariableValue(expr.VariableName, value);
 
             return value;
         }
@@ -46,9 +51,13 @@ namespace Volpe.Evaluation
         private Value EvaluateVariable(ExpressionValue.Variable expr)
         {
             Value? value;
-            if (!Scope.TryGetVariableValue(expr.Name, out value))
+            
+            Function? getter;
+            if (Scope.TryGetGetterFromHookedVariable(expr.Name, out getter))
+                value = getter!.Invoke(this, Array.Empty<Value>());
+            else if (!Scope.TryGetVariableValue(expr.Name, out value))
                 throw new VariableNotFoundException(expr.Name, Expression.PositionInText);
-                
+            
             return value!;
         }
 
@@ -68,7 +77,7 @@ namespace Volpe.Evaluation
             Function? value;
             if (!Scope.TryGetFunctionReference(functionReference.Name, out value))
                 throw new FunctionNotFoundException(functionReference.Name, Expression.PositionInText);
-                
+            
             return new Value.FunctionReference(functionReference.Name, value!);
         }
 
@@ -86,11 +95,10 @@ namespace Volpe.Evaluation
 
             List<Value> values = new List<Value>();
             foreach (var expression in functionCall.Parameters)
-                values.Add(new EvaluatorContext(expression, Scope).Evaluate()); 
+                values.Add(new EvaluatorContext(expression, Scope).Evaluate());
 
             return function.Invoke(this, values.ToArray());
         }
-        
         
         private Value EvaluatePrefixExpression(ExpressionValue.PrefixExpression expr)
         {
@@ -120,8 +128,7 @@ namespace Volpe.Evaluation
                 ExpressionValue.FunctionReference expr => EvaluateFunctionReference(expr),
                 ExpressionValue.FunctionCall expr => EvaluateFunctionCall(expr),
                 ExpressionValue.String expr => new Value.String(expr.Value),
-                ExpressionValue.Return(var expr) => new Value.ToReturn(
-                    new EvaluatorContext(expr, Scope).Evaluate()),
+                ExpressionValue.Return(var expr) => new Value.ToReturn(new EvaluatorContext(expr, Scope).Evaluate()),
                 
                 _ => throw new ArgumentException()
             };

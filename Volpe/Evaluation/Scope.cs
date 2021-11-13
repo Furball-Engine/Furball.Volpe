@@ -9,11 +9,15 @@ namespace Volpe.Evaluation
         public Scope? Parent { get; }
         
         private readonly Dictionary<string, Value> _variables;
+        
+        private readonly Dictionary<string, (Function Getter, Function Setter)> _hookedVariables;
+        
         private readonly Dictionary<string, Function> _functions;
         
         public Scope((string name, int parameterCount, Func<EvaluatorContext, Value[], Value> del)[] builtins)
         {
             _variables = new Dictionary<string, Value>();
+            _hookedVariables = new Dictionary<string, (Function Getter, Function Setter)>();
             _functions = builtins.ToDictionary(b => b.name, b => (Function)new Function.Builtin(b.del, b.parameterCount));
         }
 
@@ -49,6 +53,41 @@ namespace Volpe.Evaluation
             
             return true;
         }
+
+        public bool TryGetGetterFromHookedVariable(string variableName, out Function? getter)
+        {
+            getter = null;
+            (Function Getter, Function Setter) pair;
+
+            if (_hookedVariables.TryGetValue(variableName, out pair))
+            {
+                getter = pair.Getter;
+                return true;
+            }
+
+            if (Parent is not null)
+                return Parent.TryGetGetterFromHookedVariable(variableName, out getter);
+
+            return false;
+        }
+        
+        public bool TryGetSetterFromHookedVariable(string variableName, out Function? setter)
+        {
+            setter = null;
+            (Function Getter, Function Setter) pair;
+
+            if (_hookedVariables.TryGetValue(variableName, out pair))
+            {
+                setter = pair.Setter;
+                return true;
+            }
+            
+            if (Parent is not null)
+                return Parent.TryGetSetterFromHookedVariable(variableName, out setter);
+            
+            return false;
+        }
+
         
         public bool TryGetVariableValue(string variableName, out Value? value)
         {
@@ -63,8 +102,8 @@ namespace Volpe.Evaluation
 
         public bool HasVariable(string variableName) => _variables.ContainsKey(variableName);
         public bool HasFunction(string functionName) => _functions.ContainsKey(functionName);
-        
-        public void SetVariableValue(string variableName, Value value, bool shadowParentVariables = true)
+
+        public void SetVariableValue(string variableName, Value value, bool shadowParentVariables = false)
         {
             if (!shadowParentVariables && Parent is not null && Parent.HasVariable(variableName))
             {
@@ -78,5 +117,19 @@ namespace Volpe.Evaluation
                 _variables.Add(variableName, value);
         }
         
+        public void HookVariableToGetterAndSetter(string variableName, 
+            (Value.FunctionReference Getter, Value.FunctionReference Setter) value, bool shadowParentVariables = true)
+        {
+            if (!shadowParentVariables && Parent is not null && Parent.HasVariable(variableName))
+            {
+                Parent.HookVariableToGetterAndSetter(variableName, value);
+                return;
+            }
+
+            if (_variables.ContainsKey(variableName))
+                _hookedVariables[variableName] = (value.Getter.Function, value.Setter.Function);
+            else
+                _hookedVariables.Add(variableName, (value.Getter.Function, value.Setter.Function));
+        }
     }
 }

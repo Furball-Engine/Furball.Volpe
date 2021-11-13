@@ -115,15 +115,16 @@ namespace Volpe.Evaluation
             };
         }
 
-        public static Value[] EvaluateAll(string source)
+        public static Value[] EvaluateAll(string source) => EvaluateAll(source, new Scope());
+
+        public static Value[] EvaluateAll(string source, Scope scope)
         {
             IEnumerable<Expression> expressions = new Parser(new Lexer(source).GetTokenEnumerator().ToImmutableArray())
                 .GetExpressionEnumerator();
 
-            Scope scope = new Scope();
             return expressions.Select(expression => new EvaluatorContext(expression, scope).Evaluate()).ToArray();
         }
-
+        
         public Value Evaluate()
         {
             return Expression.Value switch

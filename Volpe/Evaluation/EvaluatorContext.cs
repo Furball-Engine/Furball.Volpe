@@ -2,8 +2,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Volpe.Exceptions;
+using Volpe.LexicalAnalysis;
 using Volpe.SyntaxAnalysis;
 
 namespace Volpe.Evaluation
@@ -112,7 +114,15 @@ namespace Volpe.Evaluation
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
-        
+
+        public static Value[] EvaluateAll(string source)
+        {
+            IEnumerable<Expression> expressions = new Parser(new Lexer(source).GetTokenEnumerator().ToImmutableArray())
+                .GetExpressionEnumerator();
+
+            Scope scope = new Scope();
+            return expressions.Select(expression => new EvaluatorContext(expression, scope).Evaluate()).ToArray();
+        }
 
         public Value Evaluate()
         {

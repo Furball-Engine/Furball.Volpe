@@ -10,11 +10,11 @@ namespace Volpe.SyntaxAnalysis
 {
     public class Parser
     {
-        private ArrayConsumer<Token> _tokenConsumer;
+        private Consumer<Token> _tokenConsumer;
 
-        public Parser(ImmutableArray<Token> tokens)
+        public Parser(IEnumerable<Token> tokens)
         {
-            _tokenConsumer = new ArrayConsumer<Token>(tokens);
+            _tokenConsumer = new Consumer<Token>(tokens);
         }
 
         private PositionInText GetLastConsumedTokenPositionOrZero() => _tokenConsumer.LastConsumed?.PositionInText

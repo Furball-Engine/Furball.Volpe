@@ -13,7 +13,7 @@ namespace Volpe.LexicalAnalysis
 
         public Lexer(string source)
         {
-            _textConsumer = new TextConsumer(source.ToImmutableArray());
+            _textConsumer = new TextConsumer(source);
         }
 
         private string ConsumeNextString()

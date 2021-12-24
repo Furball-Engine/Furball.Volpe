@@ -192,5 +192,45 @@ namespace Volpe.Tests
             Assert.AreEqual(v, new ExpressionValue.Number(2));
         }
         
+        [Test]
+        public void ParseIf()
+        {
+            var expr =new Parser(new Lexer("if (2 > 3) { $a = 2 } elif (1 == 1) { $a = 3 } else { $a = 4 }").GetTokenEnumerator()).ParseNextExpression();
+            
+            ExpressionValue.IfExpression ifExpr = (ExpressionValue.IfExpression) expr.Value;
+            CollectionAssert.AreEqual(ifExpr.Conditions, new Expression[]
+            {
+                new Expression
+                {
+                    Value = new ExpressionValue.InfixExpression(
+                        new ExpressionOperator.GreaterThan(),
+                        new Expression {Value = new ExpressionValue.Number(2)},
+                        new Expression {Value = new ExpressionValue.Number(3)})
+                },
+                new Expression
+                {
+                    Value = new ExpressionValue.InfixExpression(
+                        new ExpressionOperator.Eq(),
+                        new Expression {Value = new ExpressionValue.Number(1)},
+                        new Expression {Value = new ExpressionValue.Number(1)})
+                },
+            });
+
+            CollectionAssert.AreEqual(ifExpr.Blocks[0], new Expression[]
+            {
+                new Expression{Value = new ExpressionValue.Assignment("a", new Expression{Value = new ExpressionValue.Number(2)})},
+            });
+            
+            CollectionAssert.AreEqual(ifExpr.Blocks[1], new Expression[]
+            {
+                new Expression{Value = new ExpressionValue.Assignment("a", new Expression{Value = new ExpressionValue.Number(3)})},
+            });
+
+            CollectionAssert.AreEqual(ifExpr.ElseBlock, new Expression[]
+            {
+                new Expression{Value = new ExpressionValue.Assignment("a", new Expression{Value = new ExpressionValue.Number(4)})},
+            });
+        }
+        
     }
 }

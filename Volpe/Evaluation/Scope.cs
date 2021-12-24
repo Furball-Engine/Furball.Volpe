@@ -14,14 +14,14 @@ namespace Volpe.Evaluation
         
         private readonly Dictionary<string, Function> _functions;
         
-        public Scope((string name, int parameterCount, Func<EvaluatorContext, Value[], Value> del)[] builtins)
+        public Scope(BuiltinFunction[] builtins)
         {
             _variables = new Dictionary<string, Value>();
             _hookedVariables = new Dictionary<string, (Function Getter, Function Setter)>();
-            _functions = builtins.ToDictionary(b => b.name, b => (Function)new Function.Builtin(b.del, b.parameterCount));
+            _functions = builtins.ToDictionary(b => b.Identifier, b => (Function)new Function.Builtin(b.Callback, b.ParamCount));
         }
 
-        public Scope() : this(Array.Empty<(string, int, Func<EvaluatorContext, Value[], Value>)>())
+        public Scope() : this(Array.Empty<BuiltinFunction>())
         {
         }
         

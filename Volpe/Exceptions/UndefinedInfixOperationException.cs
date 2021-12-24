@@ -17,6 +17,6 @@ namespace Volpe.Exceptions
         }
 
         public override string Description =>
-            $"no {OperationName} infix operation is defined for the pair {LOperandType.Name}/{ROperandType.Name}";
+            $"no \"{OperationName}\" infix operation is defined for the pair {LOperandType.Name}/{ROperandType.Name}";
     }
 }

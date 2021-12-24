@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Volpe.LexicalAnalysis;
 
 namespace Volpe.SyntaxAnalysis
@@ -17,7 +18,11 @@ namespace Volpe.SyntaxAnalysis
         public record FunctionCall(string Name, Expression[] Parameters) : ExpressionValue;
         public record FunctionReference(string Name) : ExpressionValue;
         public record Return(Expression Expression) : ExpressionValue;
+        public record IfExpression(Expression[] Conditions, Expression[][] Blocks, Expression[]? ElseBlock) : ExpressionValue;
+        public record WhileExpression(Expression Conditions, Expression[] Block) : ExpressionValue;
         public record Void : ExpressionValue;
+        public record True : ExpressionValue;
+        public record False : ExpressionValue;
     }
     
     public class Expression : IPositionableInText, IEquatable<Expression>

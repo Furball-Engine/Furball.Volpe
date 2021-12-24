@@ -2,7 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Text;
+using Volpe.Evaluation;
 using Volpe.Exceptions;
 
 namespace Volpe.LexicalAnalysis
@@ -50,7 +52,7 @@ namespace Volpe.LexicalAnalysis
                 if (!_textConsumer.TryPeekNext(out char character))
                     break;
                 
-                if (character is ((>= '¡' or (>= 'a' and <= 'z') or (>= '@' and <= 'Z') or (>= '0' and <= '9')) or '_' and not '$'))
+                if (character.CanBeInVolpeLiteral())
                 {
                     stringBuilder.Append(character);
                     _textConsumer.SkipOne();
@@ -73,7 +75,7 @@ namespace Volpe.LexicalAnalysis
                 if (!_textConsumer.TryPeekNext(out char character))
                     break;
 
-                if (character is ( >= '0' and <= '9'))
+                if (character.IsVolpeDigit())
                 {
                     num = num * 10 + (character - '0');
 
@@ -104,6 +106,44 @@ namespace Volpe.LexicalAnalysis
                 _textConsumer.TryConsumeNext(out _);
         }
 
+        private TokenValue ConsumeOperator()
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            
+            for(;;)
+            {
+                if (!_textConsumer.TryPeekNext(out char character))
+                    break;
+                
+                if (character.IsVolpeOperator())
+                {
+                    stringBuilder.Append(character);
+                    _textConsumer.SkipOne();
+                } 
+                else 
+                    break;
+            }
+
+            string op = stringBuilder.ToString();
+            
+            return op switch
+            {
+                "=" => new TokenValue.Assign(),
+                "==" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.Eq()),
+                ">" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.GreaterThan()),
+                "<" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.LessThan()),
+                ">=" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.GreaterThanOrEqual()),
+                "<=" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.LessThanOrEqual()),
+                "&&" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.And()),
+                "||" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.Or()),
+                
+                _ when op.EndsWith('=') => 
+                    new TokenValue.OperatorWithAssignment(TokenValueOperator.FromCharacter(op[0])),
+                
+                _ => new TokenValue.ArithmeticalOperator(TokenValueOperator.FromCharacter(op[0])),
+            };
+        }
+
         public bool TryConsumeNextToken(out Token? token)
         {
             token = null;
@@ -128,21 +168,22 @@ namespace Volpe.LexicalAnalysis
                 '{' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.LeftCurlyBracket()),
                 '}' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.RightCurlyBracket()),
                 '$' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Dollar()),
-                '=' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Assign()),
-                '+' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Operator(new TokenValueOperator.Add())),
-                '-' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Operator(new TokenValueOperator.Sub())),
-                '/' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Operator(new TokenValueOperator.Div())),
-                '*' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Operator(new TokenValueOperator.Mul())),
                 ';' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.SemiColon()),
+                _ when character.IsVolpeOperator() => ConsumeOperator(),
 
-                >= '0' and <= '9' => new TokenValue.Number(ConsumeNextNumber()),
+                _ when character.IsVolpeDigit() => new TokenValue.Number(ConsumeNextNumber()),
 
-                ((>= '¡' or (>= 'a' and <= 'z') or (>= '@' and <= 'Z') or (>= '0' and <= '9')) or '_' and not '$') => ConsumeNextLiteral() switch 
+                _ when character.CanBeInVolpeLiteral() => ConsumeNextLiteral() switch 
                 {
                     "true" => new TokenValue.True(),
                     "false" => new TokenValue.False(),
                     "funcdef" => new TokenValue.FuncDef(),
+                    "func" => new TokenValue.Func(),
                     "ret" => new TokenValue.Return(),
+                    "if" => new TokenValue.If(),
+                    "elif" => new TokenValue.Elif(),
+                    "else" => new TokenValue.Else(),
+                    "while" => new TokenValue.While(),
                     
                     {} value => new TokenValue.Literal(value) 
                 },

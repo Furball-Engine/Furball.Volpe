@@ -16,6 +16,11 @@ namespace Volpe.Evaluation
             public override string Representation => Value.ToString(CultureInfo.InvariantCulture);
         }
 
+        public record Boolean(bool Value) : Value
+        {
+            public override string Representation => Value ? "true" : "false";
+        }
+        
         public record String(string Value) : Value
         {
             public override string Representation => '"' + Value + '"';
@@ -32,6 +37,8 @@ namespace Volpe.Evaluation
         }
 
         public static readonly Void DefaultVoid = new Void();
+        public static readonly Boolean DefaultTrue = new Boolean(true);
+        public static readonly Boolean DefaultFalse = new Boolean(false);
         
         public abstract string Representation { get; }
     }

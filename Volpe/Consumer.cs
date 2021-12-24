@@ -91,11 +91,9 @@ namespace Volpe
                 return true;
             }
 
-            Enumerator.MoveNext();
-
-            if (Enumerator.Current == null)
+            if (!Enumerator.MoveNext())
                 return false;
-
+            
             value = Enumerator.Current;
             
             LastConsumed = value;

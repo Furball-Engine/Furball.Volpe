@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using Volpe.Exceptions;
@@ -14,7 +15,86 @@ namespace Volpe.Evaluation
                 Value.Number(var n1) => new Value.Number(+n1),
                 
                 _ => throw new UndefinedPrefixOperationException(
-                    "positive", leftValue.GetType(), context.Expression.PositionInText)
+                    nameof(Positive), leftValue.GetType(), context.Expression.PositionInText)
+            };
+        }
+
+        public static Value LogicalAnd(Value leftValue, Value rightValue, EvaluatorContext context)
+        {
+            return (rightValue, leftValue) switch
+            {
+                (Value.Boolean(var n1), Value.Boolean(var n2)) => n1 && n2 ? Value.DefaultTrue : Value.DefaultFalse,
+                
+                _ => throw new UndefinedInfixOperationException(
+                    nameof(LogicalAnd), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
+            };
+        }
+        
+        public static Value LogicalOr(Value leftValue, Value rightValue, EvaluatorContext context)
+        {
+            return (rightValue, leftValue) switch
+            {
+                (Value.Boolean(var n1), Value.Boolean(var n2)) => n1 || n2 ? Value.DefaultTrue : Value.DefaultFalse,
+                
+                _ => throw new UndefinedInfixOperationException(
+                    nameof(LogicalOr), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
+            };
+        }
+        
+        public static Value Eq(Value leftValue, Value rightValue, EvaluatorContext context)
+        {
+            return leftValue == rightValue ? Value.DefaultTrue : Value.DefaultFalse;
+        }
+        
+        public static Value GreaterThan(Value leftValue, Value rightValue, EvaluatorContext context)
+        {
+            return (leftValue, rightValue) switch
+            {
+                (Value.Number(var n1), Value.Number(var n2)) => n1 > n2 ? Value.DefaultTrue : Value.DefaultFalse,
+                (Value.String(var n1), Value.String(var n2)) => 
+                    string.Compare(n1, n2, StringComparison.Ordinal) > 0 ? Value.DefaultTrue : Value.DefaultFalse,
+
+                _ => throw new UndefinedInfixOperationException(
+                    nameof(GreaterThan), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
+            };
+        }
+
+        public static Value LessThan(Value leftValue, Value rightValue, EvaluatorContext context)
+        {
+            return (leftValue, rightValue) switch
+            {
+                (Value.Number(var n1), Value.Number(var n2)) => n1 < n2 ? Value.DefaultTrue : Value.DefaultFalse,
+                (Value.String(var n1), Value.String(var n2)) => 
+                    string.Compare(n1, n2, StringComparison.Ordinal) < 0 ? Value.DefaultTrue : Value.DefaultFalse,
+
+                _ => throw new UndefinedInfixOperationException(
+                    nameof(LessThan), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
+            };
+        }
+        
+        public static Value GreaterThanOrEqual(Value leftValue, Value rightValue, EvaluatorContext context)
+        {
+            return (leftValue, rightValue) switch
+            {
+                (Value.Number(var n1), Value.Number(var n2)) => n1 >= n2 ? Value.DefaultTrue : Value.DefaultFalse,
+                (Value.String(var n1), Value.String(var n2)) => 
+                    string.Compare(n1, n2, StringComparison.Ordinal) >= 0 ? Value.DefaultTrue : Value.DefaultFalse,
+
+                _ => throw new UndefinedInfixOperationException(
+                    nameof(GreaterThanOrEqual), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
+            };
+        }
+        
+        public static Value LessThanOrEqual(Value leftValue, Value rightValue, EvaluatorContext context)
+        {
+            return (leftValue, rightValue) switch
+            {
+                (Value.Number(var n1), Value.Number(var n2)) => n1 <= n2 ? Value.DefaultTrue : Value.DefaultFalse,
+                (Value.String(var n1), Value.String(var n2)) => 
+                    string.Compare(n1, n2, StringComparison.Ordinal) <= 0 ? Value.DefaultTrue : Value.DefaultFalse,
+
+                _ => throw new UndefinedInfixOperationException(
+                    nameof(LessThanOrEqual), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
             };
         }
         
@@ -37,7 +117,7 @@ namespace Volpe.Evaluation
                 (Value.String(var n1), Value.String(var n2)) => new Value.String(n1 + n2),
                 
                 _ => throw new UndefinedInfixOperationException(
-                    "sum", rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
+                    nameof(Sum), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
             };
         }
         
@@ -49,7 +129,7 @@ namespace Volpe.Evaluation
                 (Value.String(var n1), Value.String(var n2)) => new Value.String(n1.Replace(n2, string.Empty)),
                 
                 _ => throw new UndefinedInfixOperationException(
-                    "subtraction", rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
+                    nameof(Subtract), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
             };
         }
         
@@ -75,7 +155,7 @@ namespace Volpe.Evaluation
                 (Value.String(var n1), Value.Number(var n2)) => new Value.String(MultiplyString(n1, (int)n2)),
                 
                 _ => throw new UndefinedInfixOperationException(
-                    "multiplication", rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
+                    nameof(Multiply), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
             };
         }
         
@@ -89,7 +169,7 @@ namespace Volpe.Evaluation
                 (Value.Number(var n1), Value.Number(var n2)) => new Value.Number(n1 / n2),
                 
                 _ => throw new UndefinedInfixOperationException(
-                    "division", rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
+                    nameof(Divide), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
             };
         }
     }

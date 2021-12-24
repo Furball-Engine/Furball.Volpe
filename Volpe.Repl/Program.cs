@@ -15,7 +15,14 @@ namespace Volpe.Repl
         {
             Console.WriteLine($"Volpe Language - REPL");
 
-            Scope scope = new Scope(DefaultBuiltins.Core.Concat(DefaultBuiltins.Math).ToArray());
+            Scope scope = new Scope(DefaultBuiltins.Core.Concat(DefaultBuiltins.Math).Concat(new BuiltinFunction[]
+            {
+                new BuiltinFunction("clear", 0, (_, _) =>
+                {
+                    Console.Clear();
+                    return Value.DefaultVoid;
+                })
+            }).ToArray());
             
             for (;;)
             {
@@ -24,7 +31,7 @@ namespace Volpe.Repl
 
                 try
                 {
-                    Parser parser = new Parser(new Lexer(input).GetTokenEnumerator().ToImmutableArray());
+                    Parser parser = new Parser(new Lexer(input!).GetTokenEnumerator());
                     Value[] results = parser.GetExpressionEnumerator()
                         .Select(expr => new EvaluatorContext(expr, scope).Evaluate()).ToArray();
 

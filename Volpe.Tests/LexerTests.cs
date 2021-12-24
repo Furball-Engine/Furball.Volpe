@@ -143,11 +143,11 @@ namespace Volpe.Tests
             Assert.AreEqual(tokens, new TokenValue[]
             {
                 new TokenValue.Number(2),
-                new TokenValue.Operator(new TokenValueOperator.Add()),
+                new TokenValue.ArithmeticalOperator(new TokenValueOperator.Add()),
                 new TokenValue.Number(1),
-                new TokenValue.Operator(new TokenValueOperator.Add()),
+                new TokenValue.ArithmeticalOperator(new TokenValueOperator.Add()),
                 new TokenValue.Number(3),
-                new TokenValue.Operator(new TokenValueOperator.Add()),
+                new TokenValue.ArithmeticalOperator(new TokenValueOperator.Add()),
                 new TokenValue.Number(4),
             });
         }

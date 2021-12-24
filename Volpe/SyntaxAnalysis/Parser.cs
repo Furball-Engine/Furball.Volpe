@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using Volpe.Evaluation;
 using Volpe.Exceptions;
 using Volpe.LexicalAnalysis;
@@ -42,10 +43,10 @@ namespace Volpe.SyntaxAnalysis
 
         private T GetAndAssertNextTokenType<T>() where T : TokenValue
         {
-            if (ForceGetNextToken().Value is not T value)
-                throw new InvalidOperationException();
+            TokenValue value = (T)ForceGetNextToken().Value;
+            Debug.Assert(value is T);
 
-            return value;
+            return (T)value;
         }
 
         private Expression ForceParseNextExpression(
@@ -85,9 +86,10 @@ namespace Volpe.SyntaxAnalysis
 
         private ExpressionValue.PrefixExpression ParsePrefixExpression()
         {
-            TokenValue.Operator tokenValueOperator = GetAndAssertNextTokenType<TokenValue.Operator>();
+            TokenValue value = ForceGetNextToken().Value;
+            Debug.Assert(value.IsOperator);
 
-            ExpressionOperator expressionOperator = ExpressionOperator.FromTokenOperator(tokenValueOperator.Value);
+            ExpressionOperator expressionOperator = ExpressionOperator.FromTokenValue(value);
 
             if ((expressionOperator.Type & ExpressionOperatorType.Prefix) == 0)
                 throw new InvalidPrefixOperatorException(expressionOperator, GetLastConsumedTokenPositionOrZero());
@@ -108,10 +110,35 @@ namespace Volpe.SyntaxAnalysis
             return new ExpressionValue.SubExpression(expression);
         }
 
+        private Expression[] ParseExpressionBlock()
+        {
+            List<Expression> expressions = new List<Expression>();
+            
+            ForceGetNextTokenValueWithType<TokenValue.LeftCurlyBracket>();
+
+            for (;;)
+            {
+                if (!_tokenConsumer.TryPeekNext(out _))
+                    throw new UnexpectedEofException(GetLastConsumedTokenPositionOrZero());
+
+                Expression expression = ForceParseNextExpression();
+                    
+                if (expression.Value is ExpressionValue.Void)
+                {
+                    _tokenConsumer.SkipOne();
+                    return expressions.ToArray();
+                }
+                
+                expressions.Add(expression);
+            }
+        }
+        
         private ExpressionValue.FunctionDefinition ParseFunctionDefinition()
         {
             string[] ParseFormalParameters()
             {
+                ForceGetNextTokenValueWithType<TokenValue.LeftRoundBracket>();
+                
                 List<string> variableNames = new List<string>();
                 bool needComma = false;
 
@@ -140,39 +167,56 @@ namespace Volpe.SyntaxAnalysis
                 }
             }
 
-            Expression[] ParseExpressionBlock()
-            {
-                List<Expression> expressions = new List<Expression>();
-
-                for (;;)
-                {
-                    if (!_tokenConsumer.TryPeekNext(out _))
-                        throw new UnexpectedEofException(GetLastConsumedTokenPositionOrZero());
-
-                    Expression expression = ForceParseNextExpression();
-
-                    if (expression.Value is ExpressionValue.Void)
-                    {
-                        _tokenConsumer.SkipOne();
-                        return expressions.ToArray();
-                    }
-
-                    expressions.Add(expression);
-                }
-            }
-
             GetAndAssertNextTokenType<TokenValue.FuncDef>();
 
             string functionName = ForceGetNextTokenValueWithType<TokenValue.Literal>().Value;
 
-            ForceGetNextTokenValueWithType<TokenValue.LeftRoundBracket>();
             string[] parametersName = ParseFormalParameters();
-
-            ForceGetNextTokenValueWithType<TokenValue.LeftCurlyBracket>();
-
             Expression[] expressions = ParseExpressionBlock();
 
             return new ExpressionValue.FunctionDefinition(functionName, parametersName, expressions);
+        }
+
+        private ExpressionValue.IfExpression ParseIfExpression()    
+        {
+            List<Expression> conditions = new List<Expression>();
+            List<Expression[]> blocks = new List<Expression[]>();
+            Expression[]? elseBlock = null;
+
+            // Parse first if
+            GetAndAssertNextTokenType<TokenValue.If>();
+            ForceGetNextTokenValueWithType<TokenValue.LeftRoundBracket>();
+            conditions.Add(ForceParseNextExpression());
+            ForceGetNextTokenValueWithType<TokenValue.RightRoundBracket>();
+            blocks.Add(ParseExpressionBlock());
+
+            for (;;)
+            {
+                Token? token;
+                
+                if (!_tokenConsumer.TryPeekNext(out token))
+                    break;
+
+                if (token!.Value is TokenValue.Elif)
+                {
+                    GetAndAssertNextTokenType<TokenValue.Elif>();
+                    ForceGetNextTokenValueWithType<TokenValue.LeftRoundBracket>();
+                    conditions.Add(ForceParseNextExpression());
+                    ForceGetNextTokenValueWithType<TokenValue.RightRoundBracket>();
+                    blocks.Add(ParseExpressionBlock());
+                }
+                else if (token.Value is TokenValue.Else)
+                {
+                    GetAndAssertNextTokenType<TokenValue.Else>();
+                    elseBlock = ParseExpressionBlock();
+                    
+                    break;
+                }
+                else
+                    break;
+            }
+
+            return new ExpressionValue.IfExpression(conditions.ToArray(), blocks.ToArray(), elseBlock);
         }
 
         private ExpressionValue.FunctionCall ParseFunctionCall(out bool canBeSubExpression)
@@ -292,7 +336,7 @@ namespace Volpe.SyntaxAnalysis
             switch (token.Value)
             {
                 case TokenValue.RightCurlyBracket:
-                    expression = new Expression {Value = new ExpressionValue.Void()};
+                    expression = new Expression { Value = new ExpressionValue.Void() };
                     break;
                 case TokenValue.Literal:
                     expression = new Expression {Value = ParseFunctionCall(out canBeSubExpression)};
@@ -303,6 +347,9 @@ namespace Volpe.SyntaxAnalysis
                 case TokenValue.Return:
                     expression = new Expression {Value = ParseReturnExpression()};
                     break;
+                case TokenValue.If:
+                    expression = new Expression {Value = ParseIfExpression()};
+                    break;
                 default:
                 {
                     canBeSubExpression = true;
@@ -311,7 +358,8 @@ namespace Volpe.SyntaxAnalysis
                     {
                         TokenValue.Dollar => ParseVariable(),
                         TokenValue.Hashtag => ParseFunctionReference(),
-                        TokenValue.Operator => ParsePrefixExpression(),
+                        
+                        {IsOperator: true} => ParsePrefixExpression(),
                         
                         TokenValue.String(var nValue) => 
                             _tokenConsumer.TryConsumeNextAndThen((_, _) => new ExpressionValue.String(nValue)),
@@ -319,6 +367,12 @@ namespace Volpe.SyntaxAnalysis
                         TokenValue.Number(var nValue) =>
                             _tokenConsumer.TryConsumeNextAndThen((_, _) => new ExpressionValue.Number(nValue)),
 
+                        TokenValue.True => 
+                            _tokenConsumer.TryConsumeNextAndThen((_, _) => new ExpressionValue.True()),
+                        
+                        TokenValue.False => 
+                            _tokenConsumer.TryConsumeNextAndThen((_, _) => new ExpressionValue.False()),
+                        
                         TokenValue.LeftRoundBracket => ParseSubExpression(),
 
                         _ => throw new UnexpectedTokenException(currentPositionInText, token)
@@ -337,9 +391,9 @@ namespace Volpe.SyntaxAnalysis
                     if (!_tokenConsumer.TryPeekNext(out token))
                         break;
 
-                    if (token is {Value: TokenValue.Operator {Value: var tokenOperator}})
+                    if (token!.Value.IsOperator)
                     {
-                        ExpressionOperator expressionOperator = ExpressionOperator.FromTokenOperator(tokenOperator);
+                        ExpressionOperator expressionOperator = ExpressionOperator.FromTokenValue(token.Value);
 
                         if ((expressionOperator.Type & ExpressionOperatorType.Infix) == 0)
                             throw new InvalidInfixOperatorException(expressionOperator, GetLastConsumedTokenPositionOrZero());

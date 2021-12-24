@@ -6,11 +6,27 @@ using Volpe.Exceptions;
 
 namespace Volpe.Evaluation
 {
+    public delegate Value FunctionInvokeCallback(EvaluatorContext context, Value[] parameters);
+        
+    public class BuiltinFunction
+    {
+        public string Identifier { get; }
+        public int ParamCount { get; }
+        public FunctionInvokeCallback Callback { get; }
+
+        public BuiltinFunction(string identifier, int paramCount, FunctionInvokeCallback cb)
+        {
+            Identifier = identifier;
+            ParamCount = paramCount;
+            Callback = cb;
+        }
+    }
+    
     public static class DefaultBuiltins
     {
-        public static (string, int, Func<EvaluatorContext, Value[], Value>)[] Math = new (string, int, Func<EvaluatorContext, Value[], Value>)[]
+        public static BuiltinFunction[] Math = new BuiltinFunction[]
         {
-            new ("abs", 1, (context, values) =>
+            new BuiltinFunction ("abs", 1, (context, values) =>
             {
                 if (values[0] is not Value.Number n)
                     throw new InvalidValueTypeException(
@@ -19,7 +35,7 @@ namespace Volpe.Evaluation
                 return new Value.Number(System.Math.Abs(n.Value));
             }),
             
-            new ("cos", 1, (context, values) =>
+            new BuiltinFunction ("cos", 1, (context, values) =>
             {
                 if (values[0] is not Value.Number n)
                     throw new InvalidValueTypeException(
@@ -28,7 +44,7 @@ namespace Volpe.Evaluation
                 return new Value.Number(System.Math.Cos(n.Value));
             }),
             
-            new ("sin", 1, (context, values) =>
+            new BuiltinFunction ("sin", 1, (context, values) =>
             {
                 if (values[0] is not Value.Number n)
                     throw new InvalidValueTypeException(
@@ -37,7 +53,7 @@ namespace Volpe.Evaluation
                 return new Value.Number(System.Math.Sin(n.Value));
             }),
             
-            new ("tan", 1, (context, values) =>
+            new BuiltinFunction ("tan", 1, (context, values) =>
             {
                 if (values[0] is not Value.Number n)
                     throw new InvalidValueTypeException(
@@ -46,7 +62,7 @@ namespace Volpe.Evaluation
                 return new Value.Number(System.Math.Tan(n.Value));
             }),
             
-            new ("log", 1, (context, values) =>
+            new BuiltinFunction ("log", 1, (context, values) =>
             {
                 if (values[0] is not Value.Number n)
                     throw new InvalidValueTypeException(
@@ -55,7 +71,7 @@ namespace Volpe.Evaluation
                 return new Value.Number(System.Math.Log(n.Value));
             }),
             
-            new ("log2", 1, (context, values) =>
+            new BuiltinFunction ("log2", 1, (context, values) =>
             {
                 if (values[0] is not Value.Number n)
                     throw new InvalidValueTypeException(
@@ -64,7 +80,7 @@ namespace Volpe.Evaluation
                 return new Value.Number(System.Math.Log2(n.Value));
             }),
             
-            new ("sqrt", 1, (context, values) =>
+            new BuiltinFunction ("sqrt", 1, (context, values) =>
             {
                 if (values[0] is not Value.Number(var n))
                     throw new InvalidValueTypeException(
@@ -73,7 +89,7 @@ namespace Volpe.Evaluation
                 return new Value.Number(System.Math.Sqrt(n));
             }),
             
-            new ("pow", 2, (context, values) =>
+            new BuiltinFunction ("pow", 2, (context, values) =>
             {
                 if (values[0] is not Value.Number(var x))
                     throw new InvalidValueTypeException(
@@ -86,7 +102,7 @@ namespace Volpe.Evaluation
                 return new Value.Number(System.Math.Pow(x, n));
             }),
             
-            new ("ceil", 1, (context, values) =>
+            new BuiltinFunction ("ceil", 1, (context, values) =>
             {
                 if (values[0] is not Value.Number(var x))
                     throw new InvalidValueTypeException(
@@ -95,7 +111,7 @@ namespace Volpe.Evaluation
                 return new Value.Number(System.Math.Ceiling(x));
             }),
             
-            new ("floor", 1, (context, values) =>
+            new BuiltinFunction ("floor", 1, (context, values) =>
             {
                 if (values[0] is not Value.Number(var x))
                     throw new InvalidValueTypeException(
@@ -104,7 +120,7 @@ namespace Volpe.Evaluation
                 return new Value.Number(System.Math.Floor(x));
             }),
             
-            new ("round", 1, (context, values) =>
+            new BuiltinFunction ("round", 1, (context, values) =>
             {
                 if (values[0] is not Value.Number(var x))
                     throw new InvalidValueTypeException(
@@ -114,9 +130,9 @@ namespace Volpe.Evaluation
             }),
         };
 
-        public static (string, int, Func<EvaluatorContext, Value[], Value>)[] Core = new (string, int, Func<EvaluatorContext, Value[], Value>)[]
+        public static BuiltinFunction[] Core = new BuiltinFunction[]
         {
-            new ("int", 1, (context, values) =>
+            new BuiltinFunction ("int", 1, (context, values) =>
             {
                 Value value = values[0];
 
@@ -130,7 +146,7 @@ namespace Volpe.Evaluation
                     context.Expression.PositionInText);
             }),
             
-            new ("string", 1, (context, values) =>/**/
+            new BuiltinFunction ("string", 1, (context, values) =>/**/
             {
                 Value value = values[0];
 
@@ -144,9 +160,9 @@ namespace Volpe.Evaluation
                     context.Expression.PositionInText);
             }),
             
-            new ("repr", 1, (context, values) => new Value.String(values[0].Representation)),
+            new BuiltinFunction ("repr", 1, (context, values) => new Value.String(values[0].Representation)),
             
-            new ("hook", 3, (context, values) =>
+            new BuiltinFunction ("hook", 3, (context, values) =>
             {
                 if (values[0] is not Value.String(var name))
                     throw new InvalidValueTypeException(
@@ -164,7 +180,20 @@ namespace Volpe.Evaluation
                 return Value.DefaultVoid;
             }),
             
-            new ("invoke", 1, (context, values) =>
+            new BuiltinFunction ("type", 1, (context, values) =>
+            {
+                return new Value.String(values[0] switch
+                {
+                    Value.Number => "number",
+                    Value.String => "string",
+                    Value.Void => "void",
+                    Value.FunctionReference => "function_reference",
+                    
+                    _ => throw new InvalidOperationException(values[0].GetType().ToString())
+                });
+            }),
+            
+            new BuiltinFunction ("invoke", 1, (context, values) =>
             {
                 if (values[0] is not Value.FunctionReference functionReference)
                     throw new InvalidValueTypeException(
@@ -177,7 +206,7 @@ namespace Volpe.Evaluation
                             values.Length - 1, context.Expression.PositionInText);
 
                 return functionReference.Function.Invoke(context, values[1..]);
-            })
+            }),
         };
     }
 }

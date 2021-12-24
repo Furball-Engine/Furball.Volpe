@@ -6,8 +6,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Volpe.Tests", "Volpe.Tests\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Volpe.Repl", "Volpe.Repl\Volpe.Repl.csproj", "{4E08E454-617A-4710-AF2D-84E32D440B80}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Volpe.Benchmarks", "Volpe.Benchmarks\Volpe.Benchmarks.csproj", "{5BAC0333-2569-448B-BDCF-819A08B08BA9}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,9 +24,5 @@ Global
 		{4E08E454-617A-4710-AF2D-84E32D440B80}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E08E454-617A-4710-AF2D-84E32D440B80}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E08E454-617A-4710-AF2D-84E32D440B80}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5BAC0333-2569-448B-BDCF-819A08B08BA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5BAC0333-2569-448B-BDCF-819A08B08BA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5BAC0333-2569-448B-BDCF-819A08B08BA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5BAC0333-2569-448B-BDCF-819A08B08BA9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

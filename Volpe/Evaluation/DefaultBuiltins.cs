@@ -156,7 +156,7 @@ namespace Volpe.Evaluation
                 if (value is Value.Number n)
                     return new Value.String(n.Value.ToString(CultureInfo.InvariantCulture));
 
-                throw new TypeConversionException(value, typeof(Value.Number),
+                throw new TypeConversionException(value, typeof(Value.String),
                     context.Expression.PositionInText);
             }),
             

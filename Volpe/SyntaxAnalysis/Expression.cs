@@ -11,7 +11,6 @@ namespace Volpe.SyntaxAnalysis
         public record Number(double Value) : ExpressionValue;
         public record InfixExpression(ExpressionOperator Operator, Expression Left, Expression Right): ExpressionValue;
         public record PrefixExpression(ExpressionOperator Operator, Expression Left) : ExpressionValue;
-        public record Assignment(string VariableName, Expression Expression) : ExpressionValue;
         public record SubExpression(Expression Expression) : ExpressionValue;
         public record FunctionDefinition
             (string Name, string[] ParameterNames, Expression[] Expressions) : ExpressionValue;
@@ -19,7 +18,7 @@ namespace Volpe.SyntaxAnalysis
         public record FunctionReference(string Name) : ExpressionValue;
         public record Return(Expression Expression) : ExpressionValue;
         public record IfExpression(Expression[] Conditions, Expression[][] Blocks, Expression[]? ElseBlock) : ExpressionValue;
-        public record WhileExpression(Expression Conditions, Expression[] Block) : ExpressionValue;
+        public record WhileExpression(Expression Condition, Expression[] Block) : ExpressionValue;
         public record Void : ExpressionValue;
         public record True : ExpressionValue;
         public record False : ExpressionValue;

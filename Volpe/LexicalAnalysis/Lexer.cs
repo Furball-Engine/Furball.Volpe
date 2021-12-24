@@ -121,7 +121,7 @@ namespace Volpe.LexicalAnalysis
                     _textConsumer.SkipOne();
                 } 
                 else 
-                    break;
+                    break; 
             }
 
             string op = stringBuilder.ToString();
@@ -140,7 +140,8 @@ namespace Volpe.LexicalAnalysis
                 _ when op.EndsWith('=') => 
                     new TokenValue.OperatorWithAssignment(TokenValueOperator.FromCharacter(op[0])),
                 
-                _ => new TokenValue.ArithmeticalOperator(TokenValueOperator.FromCharacter(op[0])),
+                _ when op.Length == 1 => new TokenValue.ArithmeticalOperator(TokenValueOperator.FromCharacter(op[0])),
+                _ => throw new InvalidOperatorStringException(op, _textConsumer.PositionInText),
             };
         }
 

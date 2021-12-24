@@ -1,5 +1,3 @@
-
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -29,7 +27,7 @@ namespace Volpe.Evaluation
             {
                 Value v = new EvaluatorContext(expression, Scope, InFunction).Evaluate();
 
-                if (v is Value.ToReturn value)
+                if (v is Value.ToReturn)
                     return v;
             }
             
@@ -50,12 +48,27 @@ namespace Volpe.Evaluation
         public Scope Scope { get; }
         public bool InFunction { get; }
         
-        private Value EvaluateInfixExpression(ExpressionValue.InfixExpression expr)
+        private Value EvaluateAssignment(string variableName, Expression right)
         {
-            Value leftValue = new EvaluatorContext(expr.Left, Scope).Evaluate();
-            Value rightValue = new EvaluatorContext(expr.Right, Scope).Evaluate();
+            Value value = new EvaluatorContext(right, Scope).Evaluate();
 
-            return expr.Operator switch
+            return AssignVariable(variableName, value);
+        }
+
+        private Value AssignVariable(string variableName, Value value)
+        {
+            Function? setter;
+            if (Scope.TryGetSetterFromHookedVariable(variableName, out setter))
+                setter!.Invoke(this, new Value[] { value });
+            else
+                Scope.SetVariableValue(variableName, value);
+
+            return value;
+        }
+        
+        private Value ApplyOperator(ExpressionOperator op, Value leftValue, Value rightValue)
+        {
+            return op switch
             {
                 ExpressionOperator.Add => Operators.Sum(leftValue, rightValue, this),
                 ExpressionOperator.Sub => Operators.Subtract(leftValue, rightValue, this),
@@ -73,6 +86,30 @@ namespace Volpe.Evaluation
                 
                 _ => throw new ArgumentOutOfRangeException()
             };
+        }
+
+        private Value EvaluateInfixExpression(ExpressionValue.InfixExpression expr)
+        {
+            if (expr.Operator is ExpressionOperator.Assign)
+            {
+                if (expr.Left.Value is not ExpressionValue.Variable(var variableName))
+                    throw new ExpectedExpressionException(expr.Left.PositionInText);
+                
+                return EvaluateAssignment(variableName, expr.Right);
+            }
+            
+            Value leftValue = new EvaluatorContext(expr.Left, Scope).Evaluate();
+            Value rightValue = new EvaluatorContext(expr.Right, Scope).Evaluate();
+            
+            if (expr.Operator is ExpressionOperator.OperatorWithAssignment opWithAssignment)
+            {
+                if (expr.Left.Value is not ExpressionValue.Variable(var variableName))
+                    throw new ExpectedExpressionException(expr.Left.PositionInText);
+                
+                return AssignVariable(variableName, ApplyOperator(opWithAssignment.Wrapped, leftValue, rightValue));
+            }
+
+            return ApplyOperator(expr.Operator, leftValue, rightValue);
         }
 
         private Value EvaluateIfExpression(ExpressionValue.IfExpression expr)
@@ -102,19 +139,24 @@ namespace Volpe.Evaluation
             return Value.DefaultVoid;
         }
 
-        private Value EvaluateAssignment(ExpressionValue.Assignment expr)
+        private Value EvaluateWhileExpression(ExpressionValue.WhileExpression expr)
         {
-            Value value = new EvaluatorContext(expr.Expression, Scope).Evaluate();
+            for (;;)
+            {
+                Value value = new EvaluatorContext(expr.Condition, Scope).Evaluate();
+                if (value is not Value.Boolean(var truthValue))
+                    throw new InvalidValueTypeException(typeof(Value.Boolean), value.GetType(), expr.Condition.PositionInText);
 
-            Function? setter;
-            if (Scope.TryGetSetterFromHookedVariable(expr.VariableName, out setter))
-                setter!.Invoke(this, new Value[] { value });
-            else
-                Scope.SetVariableValue(expr.VariableName, value);
+                if (!truthValue)
+                    break;
 
-            return value;
+                if (new BlockEvaluatorContext(expr.Block, Scope, InFunction).Evaluate() is Value.ToReturn v)
+                    return v;
+            }
+            
+            return Value.DefaultVoid;
         }
-        
+         
         private Value EvaluateVariable(ExpressionValue.Variable expr)
         {
             Value? value;
@@ -197,7 +239,6 @@ namespace Volpe.Evaluation
                 ExpressionValue.InfixExpression expr => EvaluateInfixExpression(expr),
                 ExpressionValue.PrefixExpression expr => EvaluatePrefixExpression(expr),
                 ExpressionValue.Number(var v) => new Value.Number(v),
-                ExpressionValue.Assignment expr => EvaluateAssignment(expr),
                 ExpressionValue.Variable expr => EvaluateVariable(expr),
                 ExpressionValue.FunctionDefinition expr => EvaluateFunctionDefinition(expr),
                 ExpressionValue.SubExpression(var expr) => new EvaluatorContext(expr, Scope).Evaluate(),
@@ -205,6 +246,7 @@ namespace Volpe.Evaluation
                 ExpressionValue.FunctionCall expr => EvaluateFunctionCall(expr),
                 ExpressionValue.String expr => new Value.String(expr.Value),
                 ExpressionValue.IfExpression expr => EvaluateIfExpression(expr),
+                ExpressionValue.WhileExpression expr => EvaluateWhileExpression(expr),
                 ExpressionValue.Return(var expr) when InFunction => new Value.ToReturn(new EvaluatorContext(expr, Scope).Evaluate()),
                 ExpressionValue.Return(_) when !InFunction => throw new ReturnNotAllowedOutsideFunctionsException(Expression.PositionInText),
                 ExpressionValue.True => Value.DefaultTrue,

@@ -68,7 +68,7 @@ namespace Volpe.LexicalAnalysis
         public record Return : TokenValue;
         
         public bool IsOperator => this is TokenValue.BooleanOperator or TokenValue.ArithmeticalOperator 
-            or TokenValue.OperatorWithAssignment;
+            or TokenValue.OperatorWithAssignment or TokenValue.Assign;
     }
     
     public class Token: IPositionableInText

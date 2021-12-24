@@ -6,6 +6,7 @@ namespace Volpe.SyntaxAnalysis
     public enum ExpressionOperatorPrecedence
     {
         Lowest = 1,
+        Assign,
         LogicalOr,
         LogicalAnd,
         BitwiseOr,
@@ -28,6 +29,19 @@ namespace Volpe.SyntaxAnalysis
         public abstract ExpressionOperatorPrecedence Precedence { get; }
         public abstract ExpressionOperatorType Type { get; }
 
+        public static ExpressionOperator FromArithmeticalOperatorTokenValue(TokenValueOperator v)
+        {
+            return v switch
+            {
+                TokenValueOperator.Add => new Add(),
+                TokenValueOperator.Sub => new Sub(),
+                TokenValueOperator.Mul => new Mul(),
+                TokenValueOperator.Div => new Div(),
+                
+                _ => throw new ArgumentOutOfRangeException(nameof(v)),
+            };
+        }
+
         public static ExpressionOperator FromTokenValue(TokenValue tokenOperator)
         {
             return tokenOperator switch
@@ -40,15 +54,26 @@ namespace Volpe.SyntaxAnalysis
                 TokenValue.BooleanOperator(TokenValueBooleanOperator.LessThan) => new LessThan(),
                 TokenValue.BooleanOperator(TokenValueBooleanOperator.LessThanOrEqual) => new LessThanOrEqual(),
                 
-                TokenValue.ArithmeticalOperator(TokenValueOperator.Add) => new Add(),
-                TokenValue.ArithmeticalOperator(TokenValueOperator.Sub) => new Sub(),
-                TokenValue.ArithmeticalOperator(TokenValueOperator.Mul) => new Mul(),
-                TokenValue.ArithmeticalOperator(TokenValueOperator.Div) => new Div(),
+                TokenValue.ArithmeticalOperator v => FromArithmeticalOperatorTokenValue(v.Value),
+                TokenValue.Assign => new Assign(),
+                TokenValue.OperatorWithAssignment v =>  new OperatorWithAssignment(FromArithmeticalOperatorTokenValue(v.Value)),
 
                 _ => throw new ArgumentOutOfRangeException(nameof(tokenOperator))
             };
         }
 
+        public record Assign : ExpressionOperator
+        {
+            public override ExpressionOperatorPrecedence Precedence => ExpressionOperatorPrecedence.Assign;
+            public override ExpressionOperatorType Type => ExpressionOperatorType.Infix;
+        }
+        
+        public record OperatorWithAssignment(ExpressionOperator Wrapped) : ExpressionOperator
+        {
+            public override ExpressionOperatorPrecedence Precedence => ExpressionOperatorPrecedence.Assign;
+            public override ExpressionOperatorType Type => ExpressionOperatorType.Infix;
+        }
+        
         public record Add : ExpressionOperator
         {
             public override ExpressionOperatorPrecedence Precedence => ExpressionOperatorPrecedence.Add;

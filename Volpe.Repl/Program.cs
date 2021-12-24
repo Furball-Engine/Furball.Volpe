@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Volpe.Evaluation;
@@ -21,7 +22,18 @@ namespace Volpe.Repl
                 {
                     Console.Clear();
                     return Value.DefaultVoid;
-                })
+                }),
+                
+                new BuiltinFunction("println", 1, (context, values) =>
+                {
+                    if (values[0] is not Value.String(var str))
+                        throw new InvalidValueTypeException(
+                            typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
+                    
+                    Console.WriteLine(str);
+                    
+                    return Value.DefaultVoid;
+                }),
             }).ToArray());
             
             for (;;)

@@ -74,16 +74,6 @@ namespace Volpe.SyntaxAnalysis
             return new ExpressionValue.FunctionReference(ForceGetNextTokenValueWithType<TokenValue.Literal>().Value);
         }
 
-        private ExpressionValue.Assignment ParseAssign(Expression expression)
-        {
-            GetAndAssertNextTokenType<TokenValue.Assign>();
-
-            if (expression.Value is not ExpressionValue.Variable {Name: var variableName})
-                throw new ExpectedVariableException(expression.PositionInText);
-
-            return new ExpressionValue.Assignment(variableName, ForceParseNextExpression());
-        }
-
         private ExpressionValue.PrefixExpression ParsePrefixExpression()
         {
             TokenValue value = ForceGetNextToken().Value;
@@ -175,6 +165,18 @@ namespace Volpe.SyntaxAnalysis
             Expression[] expressions = ParseExpressionBlock();
 
             return new ExpressionValue.FunctionDefinition(functionName, parametersName, expressions);
+        }
+
+        private ExpressionValue.WhileExpression ParseWhileExpression()
+        {
+            GetAndAssertNextTokenType<TokenValue.While>();
+            ForceGetNextTokenValueWithType<TokenValue.LeftRoundBracket>();
+            Expression condExpression = ForceParseNextExpression();
+            ForceGetNextTokenValueWithType<TokenValue.RightRoundBracket>();
+
+            Expression[] block = ParseExpressionBlock();
+
+            return new ExpressionValue.WhileExpression(condExpression, block);
         }
 
         private ExpressionValue.IfExpression ParseIfExpression()    
@@ -350,6 +352,9 @@ namespace Volpe.SyntaxAnalysis
                 case TokenValue.If:
                     expression = new Expression {Value = ParseIfExpression()};
                     break;
+                case TokenValue.While:
+                    expression = new Expression {Value = ParseWhileExpression()};
+                    break;
                 default:
                 {
                     canBeSubExpression = true;
@@ -411,8 +416,6 @@ namespace Volpe.SyntaxAnalysis
                             PositionInText = currentPositionInText
                         };
                     }
-                    else if (token is {Value: TokenValue.Assign})
-                        expression.Value = ParseAssign(expression);
                     else if (token is
                     {
                         Value: TokenValue.Comma or TokenValue.RightCurlyBracket or TokenValue.RightRoundBracket or

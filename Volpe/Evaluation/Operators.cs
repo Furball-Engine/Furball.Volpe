@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using Volpe.Exceptions;
+using Volpe.Memory;
 
 namespace Volpe.Evaluation
 {
@@ -13,6 +15,25 @@ namespace Volpe.Evaluation
             return leftValue switch
             {
                 Value.Number(var n1) => new Value.Number(+n1),
+                
+                _ => throw new UndefinedPrefixOperationException(
+                    nameof(Positive), leftValue.GetType(), context.Expression.PositionInText)
+            };
+        }
+        
+        public static Value ArrayAccess(Value leftValue, Value rightValue, EvaluatorContext context)
+        {
+            CellSwap<Value> ElementAt(List<CellSwap<Value>> array, int index)
+            {
+                if (index >= array.Count || index < 0)
+                    throw new IndexOutOfBoundsException(array, index, context.Expression.PositionInText);
+
+                return array[index];
+            }
+            
+            return (leftValue, rightValue) switch
+            {
+                (Value.Array(var arr), Value.Number(var n1)) => new Value.ValueReference(ElementAt(arr, (int)n1)),
                 
                 _ => throw new UndefinedPrefixOperationException(
                     nameof(Positive), leftValue.GetType(), context.Expression.PositionInText)
@@ -111,10 +132,17 @@ namespace Volpe.Evaluation
         
         public static Value Sum(Value rightValue, Value leftValue, EvaluatorContext context)
         {
+            Value AppendArrayToArray(Value.Array arr1, Value.Array arr2)
+            {
+                arr1.Value.AddRange(arr2.Value);
+                return arr1;
+            }
+            
             return (rightValue, leftValue) switch
             {
                 (Value.Number(var n1), Value.Number(var n2)) => new Value.Number(n1 + n2),
                 (Value.String(var n1), Value.String(var n2)) => new Value.String(n1 + n2),
+                (Value.Array n1, Value.Array n2) => AppendArrayToArray(n1, n2),
                 
                 _ => throw new UndefinedInfixOperationException(
                     nameof(Sum), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)

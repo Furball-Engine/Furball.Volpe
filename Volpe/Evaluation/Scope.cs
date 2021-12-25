@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Volpe.Memory;
 
 namespace Volpe.Evaluation
 {
@@ -91,9 +92,11 @@ namespace Volpe.Evaluation
         
         public bool TryGetVariableValue(string variableName, out Value? value)
         {
+            value = null;
+            
             if (_variables.TryGetValue(variableName, out value))
                 return true;
-            
+
             if (Parent is not null)
                 return Parent.TryGetVariableValue(variableName, out value);
 
@@ -114,7 +117,7 @@ namespace Volpe.Evaluation
             if (_variables.ContainsKey(variableName))
                 _variables[variableName] = value;
             else
-                _variables.Add(variableName, value);
+                _variables.Add(variableName, new CellSwap<Value>(value));
         }
         
         public void HookVariableToGetterAndSetter(string variableName, 

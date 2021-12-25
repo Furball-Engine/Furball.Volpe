@@ -27,7 +27,7 @@ namespace Volpe.Tests
             Assert.AreEqual(parser.ParseNextExpression().Value, new ExpressionValue.Variable("test"));
         }
         
-        [Test]
+        /*[Test]
         public void ParseAssignment()
         {
             Expression[] values = new Parser(new Lexer("$test = 2 * 4").GetTokenEnumerator().ToImmutableArray())
@@ -35,7 +35,7 @@ namespace Volpe.Tests
 
             Assert.AreEqual(values, new Expression[] {
                 new Expression {
-                    Value = new ExpressionValue.Assignment(
+                    Value = new ExpressionValue.(
                         "test",
                         new Expression { Value = new ExpressionValue.InfixExpression(
                             new ExpressionOperator.Mul(),
@@ -44,7 +44,7 @@ namespace Volpe.Tests
                         })
                 }
             });
-        }
+        }*/
         
         [Test]
         public void ParseAdd()
@@ -214,21 +214,6 @@ namespace Volpe.Tests
                         new Expression {Value = new ExpressionValue.Number(1)},
                         new Expression {Value = new ExpressionValue.Number(1)})
                 },
-            });
-
-            CollectionAssert.AreEqual(ifExpr.Blocks[0], new Expression[]
-            {
-                new Expression{Value = new ExpressionValue.Assignment("a", new Expression{Value = new ExpressionValue.Number(2)})},
-            });
-            
-            CollectionAssert.AreEqual(ifExpr.Blocks[1], new Expression[]
-            {
-                new Expression{Value = new ExpressionValue.Assignment("a", new Expression{Value = new ExpressionValue.Number(3)})},
-            });
-
-            CollectionAssert.AreEqual(ifExpr.ElseBlock, new Expression[]
-            {
-                new Expression{Value = new ExpressionValue.Assignment("a", new Expression{Value = new ExpressionValue.Number(4)})},
             });
         }
         

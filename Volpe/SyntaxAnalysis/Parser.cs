@@ -221,6 +221,42 @@ namespace Volpe.SyntaxAnalysis
             return new ExpressionValue.IfExpression(conditions.ToArray(), blocks.ToArray(), elseBlock);
         }
 
+        private ExpressionValue.Array ParseArray()
+        {
+            GetAndAssertNextTokenType<TokenValue.LeftBracket>();
+
+            List<Expression> initialElements = new List<Expression>();
+            bool needComma = false;
+            
+            for (;;)
+            {
+                Token? token;
+
+                if (!_tokenConsumer.TryPeekNext(out token))
+                    throw new UnexpectedEofException(GetLastConsumedTokenPositionOrZero());
+                
+                switch (token!.Value)
+                {
+                    case TokenValue.RightBracket:
+                        _tokenConsumer.SkipOne();
+                        return new ExpressionValue.Array(initialElements.ToArray());
+                        
+                    case { } when !needComma:
+                        initialElements.Add(ForceParseNextExpression());
+                        needComma = true;
+                        break;
+
+                    case TokenValue.Comma when needComma:
+                        needComma = false;
+                        _tokenConsumer.SkipOne();
+                        break;
+
+                    default:
+                        throw new UnexpectedTokenException(GetLastConsumedTokenPositionOrZero(), token);
+                }
+            }
+        }
+
         private ExpressionValue.FunctionCall ParseFunctionCall(out bool canBeSubExpression)
         {
             Expression[] ParseActualParameterListWithoutBrackets()
@@ -380,6 +416,8 @@ namespace Volpe.SyntaxAnalysis
                         
                         TokenValue.LeftRoundBracket => ParseSubExpression(),
 
+                        TokenValue.LeftBracket => ParseArray(),
+                        
                         _ => throw new UnexpectedTokenException(currentPositionInText, token)
                     };
 
@@ -419,7 +457,7 @@ namespace Volpe.SyntaxAnalysis
                     else if (token is
                     {
                         Value: TokenValue.Comma or TokenValue.RightCurlyBracket or TokenValue.RightRoundBracket or
-                        TokenValue.Dollar or TokenValue.SemiColon
+                        TokenValue.Dollar or TokenValue.SemiColon or TokenValue.RightBracket
                     })
                         break;
                     else

@@ -22,6 +22,7 @@ namespace Volpe.SyntaxAnalysis
         public record Void : ExpressionValue;
         public record True : ExpressionValue;
         public record False : ExpressionValue;
+        public record Array(Expression[] InitialElements) : ExpressionValue;
     }
     
     public class Expression : IPositionableInText, IEquatable<Expression>

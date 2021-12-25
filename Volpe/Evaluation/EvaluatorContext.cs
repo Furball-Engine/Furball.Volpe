@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using Volpe.Exceptions;
 using Volpe.LexicalAnalysis;
+using Volpe.Memory;
 using Volpe.SyntaxAnalysis;
 
 namespace Volpe.Evaluation
@@ -34,7 +35,7 @@ namespace Volpe.Evaluation
             return Value.DefaultVoid;
         }
     }
-    
+
     public readonly struct EvaluatorContext
     {
         public EvaluatorContext(Expression expression, Scope scope, bool inFunction = false)
@@ -43,29 +44,22 @@ namespace Volpe.Evaluation
             Scope = scope;
             InFunction = inFunction;
         }
-        
+
         public Expression Expression { get; }
         public Scope Scope { get; }
         public bool InFunction { get; }
-        
-        private Value EvaluateAssignment(string variableName, Expression right)
-        {
-            Value value = new EvaluatorContext(right, Scope).Evaluate();
-
-            return AssignVariable(variableName, value);
-        }
 
         private Value AssignVariable(string variableName, Value value)
         {
             Function? setter;
             if (Scope.TryGetSetterFromHookedVariable(variableName, out setter))
-                setter!.Invoke(this, new Value[] { value });
+                setter!.Invoke(this, new Value[] {value});
             else
                 Scope.SetVariableValue(variableName, value);
 
             return value;
         }
-        
+
         private Value ApplyOperator(ExpressionOperator op, Value leftValue, Value rightValue)
         {
             return op switch
@@ -74,30 +68,44 @@ namespace Volpe.Evaluation
                 ExpressionOperator.Sub => Operators.Subtract(leftValue, rightValue, this),
                 ExpressionOperator.Mul => Operators.Multiply(leftValue, rightValue, this),
                 ExpressionOperator.Div => Operators.Divide(leftValue, rightValue, this),
-                
+
                 ExpressionOperator.LogicalAnd => Operators.LogicalAnd(leftValue, rightValue, this),
                 ExpressionOperator.LogicalOr => Operators.LogicalOr(leftValue, rightValue, this),
-                
+
                 ExpressionOperator.Eq => Operators.Eq(leftValue, rightValue, this),
                 ExpressionOperator.GreaterThan => Operators.GreaterThan(leftValue, rightValue, this),
                 ExpressionOperator.GreaterThanOrEqual => Operators.GreaterThanOrEqual(leftValue, rightValue, this),
                 ExpressionOperator.LessThan => Operators.LessThan(leftValue, rightValue, this),
                 ExpressionOperator.LessThanOrEqual => Operators.LessThanOrEqual(leftValue, rightValue, this),
-                
+
+                ExpressionOperator.ArrayAccess => Operators.ArrayAccess(leftValue, rightValue, this),
+
                 _ => throw new ArgumentOutOfRangeException()
             };
+        }
+
+        private Value EvaluateAssignment(Expression left, Expression right)
+        {
+            Value v = new EvaluatorContext(right, Scope).Evaluate();
+            
+            if (left.Value is ExpressionValue.Variable variable)
+                return AssignVariable(variable.Name, v);
+
+            if (left.Value is ExpressionValue.InfixExpression &&
+                new EvaluatorContext(left, Scope).Evaluate(forceInner: false) is Value.ValueReference reference)
+            {
+                reference.Value.Swap(v);
+                return reference.InnerOrSelf;
+            }
+            else
+                throw new ExpectedVariableException(Expression.PositionInText);
         }
 
         private Value EvaluateInfixExpression(ExpressionValue.InfixExpression expr)
         {
             if (expr.Operator is ExpressionOperator.Assign)
-            {
-                if (expr.Left.Value is not ExpressionValue.Variable(var variableName))
-                    throw new ExpectedExpressionException(expr.Left.PositionInText);
-                
-                return EvaluateAssignment(variableName, expr.Right);
-            }
-            
+                return EvaluateAssignment(expr.Left, expr.Right);
+
             Value leftValue = new EvaluatorContext(expr.Left, Scope).Evaluate();
             Value rightValue = new EvaluatorContext(expr.Right, Scope).Evaluate();
             
@@ -105,7 +113,7 @@ namespace Volpe.Evaluation
             {
                 if (expr.Left.Value is not ExpressionValue.Variable(var variableName))
                     throw new ExpectedExpressionException(expr.Left.PositionInText);
-                
+
                 return AssignVariable(variableName, ApplyOperator(opWithAssignment.Wrapped, leftValue, rightValue));
             }
 
@@ -117,10 +125,11 @@ namespace Volpe.Evaluation
             for (int i = 0; i < expr.Conditions.Length; i++)
             {
                 Expression condExpression = expr.Conditions[i];
-                
+
                 Value value = new EvaluatorContext(condExpression, Scope).Evaluate();
                 if (value is not Value.Boolean(var truthValue))
-                    throw new InvalidValueTypeException(typeof(Value.Boolean), value.GetType(), condExpression.PositionInText);
+                    throw new InvalidValueTypeException(typeof(Value.Boolean), value.GetType(),
+                        condExpression.PositionInText);
 
                 if (!truthValue)
                     continue;
@@ -145,7 +154,8 @@ namespace Volpe.Evaluation
             {
                 Value value = new EvaluatorContext(expr.Condition, Scope).Evaluate();
                 if (value is not Value.Boolean(var truthValue))
-                    throw new InvalidValueTypeException(typeof(Value.Boolean), value.GetType(), expr.Condition.PositionInText);
+                    throw new InvalidValueTypeException(typeof(Value.Boolean), value.GetType(),
+                        expr.Condition.PositionInText);
 
                 if (!truthValue)
                     break;
@@ -153,40 +163,40 @@ namespace Volpe.Evaluation
                 if (new BlockEvaluatorContext(expr.Block, Scope, InFunction).Evaluate() is Value.ToReturn v)
                     return v;
             }
-            
+
             return Value.DefaultVoid;
         }
-         
+
         private Value EvaluateVariable(ExpressionValue.Variable expr)
         {
             Value? value;
-            
+
             Function? getter;
             if (Scope.TryGetGetterFromHookedVariable(expr.Name, out getter))
                 value = getter!.Invoke(this, Array.Empty<Value>());
             else if (!Scope.TryGetVariableValue(expr.Name, out value))
                 throw new VariableNotFoundException(expr.Name, Expression.PositionInText);
-            
+
             return value!;
         }
 
         private Value EvaluateFunctionDefinition(ExpressionValue.FunctionDefinition functionDefinition)
         {
             if (!Scope.TrySetFunction(functionDefinition.Name,
-                new Function.Standard(functionDefinition.ParameterNames, functionDefinition.Expressions, Scope)))
+                    new Function.Standard(functionDefinition.ParameterNames, functionDefinition.Expressions, Scope)))
             {
                 throw new CannotRedefineFunctionsException(Expression.PositionInText);
             }
 
             return Value.DefaultVoid;
         }
-        
+
         private Value.FunctionReference EvaluateFunctionReference(ExpressionValue.FunctionReference functionReference)
         {
             Function? value;
             if (!Scope.TryGetFunctionReference(functionReference.Name, out value))
                 throw new FunctionNotFoundException(functionReference.Name, Expression.PositionInText);
-            
+
             return new Value.FunctionReference(functionReference.Name, value!);
         }
 
@@ -197,9 +207,9 @@ namespace Volpe.Evaluation
                 throw new FunctionNotFoundException(functionCall.Name, Expression.PositionInText);
 
             int parameterCount = function!.ParameterCount;
-            
+
             if (functionCall.Parameters.Length < parameterCount)
-                throw new ParamaterCountMismatchException(functionCall.Name, 
+                throw new ParamaterCountMismatchException(functionCall.Name,
                     parameterCount, functionCall.Parameters.Length, Expression.PositionInText);
 
             List<Value> values = new List<Value>();
@@ -208,7 +218,7 @@ namespace Volpe.Evaluation
 
             return function.Invoke(this, values.ToArray());
         }
-        
+
         private Value EvaluatePrefixExpression(ExpressionValue.PrefixExpression expr)
         {
             Value leftValue = new EvaluatorContext(expr.Left, Scope).Evaluate();
@@ -217,12 +227,20 @@ namespace Volpe.Evaluation
             {
                 ExpressionOperator.Add => Operators.Positive(leftValue, this),
                 ExpressionOperator.Sub => Operators.Negative(leftValue, this),
-                
+
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
 
         public static Value[] EvaluateAll(string source) => EvaluateAll(source, new Scope());
+
+        public Value EvaluateArray(Expression[] initialElements)
+        {
+            Scope scope = Scope;
+
+            return new Value.Array(
+                initialElements.Select(element => new CellSwap<Value>(new EvaluatorContext(element, scope, false).Evaluate())).ToList());
+        }
 
         public static Value[] EvaluateAll(string source, Scope scope)
         {
@@ -232,9 +250,9 @@ namespace Volpe.Evaluation
             return expressions.Select(expression => new EvaluatorContext(expression, scope).Evaluate()).ToArray();
         }
         
-        public Value Evaluate()
+        public Value Evaluate(bool forceInner = true)
         {
-            return Expression.Value switch
+            Value evaluated = Expression.Value switch
             {
                 ExpressionValue.InfixExpression expr => EvaluateInfixExpression(expr),
                 ExpressionValue.PrefixExpression expr => EvaluatePrefixExpression(expr),
@@ -251,9 +269,12 @@ namespace Volpe.Evaluation
                 ExpressionValue.Return(_) when !InFunction => throw new ReturnNotAllowedOutsideFunctionsException(Expression.PositionInText),
                 ExpressionValue.True => Value.DefaultTrue,
                 ExpressionValue.False => Value.DefaultFalse,
+                ExpressionValue.Array(var initialElements) => EvaluateArray(initialElements),
 
                 _ => throw new ArgumentException()
             };
+
+            return forceInner ? evaluated.InnerOrSelf : evaluated;
         }
 
     }

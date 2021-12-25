@@ -5,7 +5,7 @@ namespace Volpe.LexicalAnalysis
         public static bool IsVolpeOperator(this char character)
         {
             return character is ('+' or '-' or '/' or '*' or '!' or '&' or '|' or '~' or '^' or '.' or '='
-                or '>' or '<');
+                or '>' or '<' or ':');
         }
 
         public static bool IsVolpeDigit(this char character)

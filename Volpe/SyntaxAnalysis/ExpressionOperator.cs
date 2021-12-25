@@ -15,6 +15,7 @@ namespace Volpe.SyntaxAnalysis
         Relational,
         Add,
         Mul,
+        ArrayAccess
     }
 
     [Flags]
@@ -56,10 +57,17 @@ namespace Volpe.SyntaxAnalysis
                 
                 TokenValue.ArithmeticalOperator v => FromArithmeticalOperatorTokenValue(v.Value),
                 TokenValue.Assign => new Assign(),
+                TokenValue.ArrayAccess => new ArrayAccess(),
                 TokenValue.OperatorWithAssignment v =>  new OperatorWithAssignment(FromArithmeticalOperatorTokenValue(v.Value)),
 
                 _ => throw new ArgumentOutOfRangeException(nameof(tokenOperator))
             };
+        }
+
+        public record ArrayAccess : ExpressionOperator
+        {
+            public override ExpressionOperatorPrecedence Precedence => ExpressionOperatorPrecedence.ArrayAccess;
+            public override ExpressionOperatorType Type => ExpressionOperatorType.Infix;
         }
 
         public record Assign : ExpressionOperator

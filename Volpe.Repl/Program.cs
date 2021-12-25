@@ -12,6 +12,8 @@ namespace Volpe.Repl
 {
     class Program
     {
+        
+        
         static void Main(string[] args)
         {
             Console.WriteLine($"Volpe Language - REPL");

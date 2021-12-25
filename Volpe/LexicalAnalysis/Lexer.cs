@@ -125,7 +125,6 @@ namespace Volpe.LexicalAnalysis
             }
 
             string op = stringBuilder.ToString();
-            
             return op switch
             {
                 "=" => new TokenValue.Assign(),
@@ -141,6 +140,7 @@ namespace Volpe.LexicalAnalysis
                     new TokenValue.OperatorWithAssignment(TokenValueOperator.FromCharacter(op[0])),
                 
                 _ when op.Length == 1 => new TokenValue.ArithmeticalOperator(TokenValueOperator.FromCharacter(op[0])),
+                
                 _ => throw new InvalidOperatorStringException(op, _textConsumer.PositionInText),
             };
         }
@@ -160,6 +160,7 @@ namespace Volpe.LexicalAnalysis
             {
                 '"' => new TokenValue.String(ConsumeNextString()),
                 
+                ':' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.ArrayAccess()),
                 ',' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Comma()),
                 '#' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Hashtag()),
                 '[' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.LeftBracket()),

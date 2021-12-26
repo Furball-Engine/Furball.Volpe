@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <TargetFramework>net5.0</TargetFramework>
+        <AssemblyName>Furball.Volpe</AssemblyName>
+        <RootNamespace>Furball.Volpe</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Compile Remove="Compilation\Compiler.cs" />
+    </ItemGroup>
+
+</Project>

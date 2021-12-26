@@ -41,15 +41,21 @@ namespace Volpe.Evaluation
 
             return false;
         }
-        
-        public bool TrySetFunction(string functionName, Function.Standard function)
+
+        public bool TrySetFunction(string functionName, Function.Standard function, bool overwriteIfAlreadyDefined = false)
         {
             if (Parent?.HasFunction(functionName) ?? false)
                 return false;
 
             if (this.HasFunction(functionName))
-                return false;
-            
+            {
+                if (!overwriteIfAlreadyDefined) 
+                    return false;
+                
+                this._functions[functionName] = function;
+                return true;
+            }
+
             _functions.Add(functionName, function);
             
             return true;
@@ -89,7 +95,6 @@ namespace Volpe.Evaluation
             return false;
         }
 
-        
         public bool TryGetVariableValue(string variableName, out Value? value)
         {
             value = null;

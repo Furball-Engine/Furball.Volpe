@@ -12,13 +12,13 @@ namespace Furball.Volpe.Evaluation
     public readonly struct BlockEvaluatorContext
     {       
         public Expression[] Expressions { get; }
-        public Scope Scope { get; }
+        public Environment Environment { get; }
         public bool InFunction { get; }
         
-        public BlockEvaluatorContext(Expression[] expressions, Scope scope, bool inFunction = false)
+        public BlockEvaluatorContext(Expression[] expressions, Environment environment, bool inFunction = false)
         {
             Expressions = expressions;
-            Scope = scope;
+            Environment = environment;
             InFunction = inFunction;
         }
 
@@ -26,7 +26,7 @@ namespace Furball.Volpe.Evaluation
         {
             foreach (Expression expression in Expressions)
             {
-                Value v = new EvaluatorContext(expression, Scope, InFunction).Evaluate();
+                Value v = new EvaluatorContext(expression, Environment, InFunction).Evaluate();
 
                 if (v is Value.ToReturn)
                     return v;
@@ -38,24 +38,24 @@ namespace Furball.Volpe.Evaluation
 
     public readonly struct EvaluatorContext
     {
-        public EvaluatorContext(Expression expression, Scope scope, bool inFunction = false)
+        public Expression Expression { get; }
+        public Environment Environment { get; }
+        public bool InFunction { get; }
+
+        public EvaluatorContext(Expression expression, Environment environment, bool inFunction = false)
         {
             Expression = expression;
-            Scope = scope;
+            Environment = environment;
             InFunction = inFunction;
         }
-
-        public Expression Expression { get; }
-        public Scope Scope { get; }
-        public bool InFunction { get; }
 
         private Value AssignVariable(string variableName, Value value)
         {
             Function? setter;
-            if (Scope.TryGetSetterFromHookedVariable(variableName, out setter))
+            if (Environment.TryGetSetterFromHookedVariable(variableName, out setter))
                 setter!.Invoke(this, new Value[] {value});
             else
-                Scope.SetVariableValue(variableName, value);
+                Environment.SetVariableValue(variableName, value);
 
             return value;
         }
@@ -79,6 +79,7 @@ namespace Furball.Volpe.Evaluation
                 ExpressionOperator.LessThanOrEqual => Operators.LessThanOrEqual(leftValue, rightValue, this),
 
                 ExpressionOperator.ArrayAccess => Operators.ArrayAccess(leftValue, rightValue, this),
+                ExpressionOperator.NotEq => Operators.NotEq(leftValue, rightValue, this),
 
                 _ => throw new ArgumentOutOfRangeException()
             };
@@ -86,19 +87,19 @@ namespace Furball.Volpe.Evaluation
 
         private Value EvaluateAssignment(Expression left, Expression right)
         {
-            Value v = new EvaluatorContext(right, Scope).Evaluate();
+            Value v = new EvaluatorContext(right, Environment).Evaluate();
             
             if (left.Value is ExpressionValue.Variable variable)
                 return AssignVariable(variable.Name, v);
-
+            
             if (left.Value is ExpressionValue.InfixExpression &&
-                new EvaluatorContext(left, Scope).Evaluate(forceInner: false) is Value.ValueReference reference)
+                new EvaluatorContext(left, Environment).Evaluate(forceInner: false) is Value.ValueReference reference)
             {
                 reference.Value.Swap(v);
                 return reference.InnerOrSelf;
             }
-            else
-                throw new ExpectedVariableException(Expression.PositionInText);
+
+            throw new ExpectedVariableException(Expression.PositionInText);
         }
 
         private Value EvaluateInfixExpression(ExpressionValue.InfixExpression expr)
@@ -106,8 +107,8 @@ namespace Furball.Volpe.Evaluation
             if (expr.Operator is ExpressionOperator.Assign)
                 return EvaluateAssignment(expr.Left, expr.Right);
 
-            Value leftValue = new EvaluatorContext(expr.Left, Scope).Evaluate();
-            Value rightValue = new EvaluatorContext(expr.Right, Scope).Evaluate();
+            Value leftValue = new EvaluatorContext(expr.Left, Environment).Evaluate();
+            Value rightValue = new EvaluatorContext(expr.Right, Environment).Evaluate();
             
             if (expr.Operator is ExpressionOperator.OperatorWithAssignment opWithAssignment)
             {
@@ -126,7 +127,7 @@ namespace Furball.Volpe.Evaluation
             {
                 Expression condExpression = expr.Conditions[i];
 
-                Value value = new EvaluatorContext(condExpression, Scope).Evaluate();
+                Value value = new EvaluatorContext(condExpression, Environment).Evaluate();
                 if (value is not Value.Boolean(var truthValue))
                     throw new InvalidValueTypeException(typeof(Value.Boolean), value.GetType(),
                         condExpression.PositionInText);
@@ -135,13 +136,13 @@ namespace Furball.Volpe.Evaluation
                     continue;
 
                 Expression[] block = expr.Blocks[i];
-                if (new BlockEvaluatorContext(block, Scope, InFunction).Evaluate() is Value.ToReturn v)
+                if (new BlockEvaluatorContext(block, Environment, InFunction).Evaluate() is Value.ToReturn v)
                     return v;
             }
 
             if (expr.ElseBlock != null)
             {
-                if (new BlockEvaluatorContext(expr.ElseBlock, Scope, InFunction).Evaluate() is Value.ToReturn v)
+                if (new BlockEvaluatorContext(expr.ElseBlock, Environment, InFunction).Evaluate() is Value.ToReturn v)
                     return v;
             }
 
@@ -152,7 +153,7 @@ namespace Furball.Volpe.Evaluation
         {
             for (;;)
             {
-                Value value = new EvaluatorContext(expr.Condition, Scope).Evaluate();
+                Value value = new EvaluatorContext(expr.Condition, Environment).Evaluate();
                 if (value is not Value.Boolean(var truthValue))
                     throw new InvalidValueTypeException(typeof(Value.Boolean), value.GetType(),
                         expr.Condition.PositionInText);
@@ -160,7 +161,7 @@ namespace Furball.Volpe.Evaluation
                 if (!truthValue)
                     break;
 
-                if (new BlockEvaluatorContext(expr.Block, Scope, InFunction).Evaluate() is Value.ToReturn v)
+                if (new BlockEvaluatorContext(expr.Block, Environment, InFunction).Evaluate() is Value.ToReturn v)
                     return v;
             }
 
@@ -172,9 +173,9 @@ namespace Furball.Volpe.Evaluation
             Value? value;
 
             Function? getter;
-            if (Scope.TryGetGetterFromHookedVariable(expr.Name, out getter))
+            if (Environment.TryGetGetterFromHookedVariable(expr.Name, out getter))
                 value = getter!.Invoke(this, Array.Empty<Value>());
-            else if (!Scope.TryGetVariableValue(expr.Name, out value))
+            else if (!Environment.TryGetVariableValue(expr.Name, out value))
                 throw new VariableNotFoundException(expr.Name, Expression.PositionInText);
 
             return value!;
@@ -182,8 +183,8 @@ namespace Furball.Volpe.Evaluation
 
         private Value EvaluateFunctionDefinition(ExpressionValue.FunctionDefinition functionDefinition)
         {
-            if (!Scope.TrySetFunction(functionDefinition.Name,
-                    new Function.Standard(functionDefinition.ParameterNames, functionDefinition.Expressions, Scope)))
+            if (!Environment.TrySetFunction(functionDefinition.Name,
+                    new Function.Standard(functionDefinition.ParameterNames, functionDefinition.Expressions, Environment)))
             {
                 throw new CannotRedefineFunctionsException(Expression.PositionInText);
             }
@@ -194,7 +195,7 @@ namespace Furball.Volpe.Evaluation
         private Value.FunctionReference EvaluateFunctionReference(ExpressionValue.FunctionReference functionReference)
         {
             Function? value;
-            if (!Scope.TryGetFunctionReference(functionReference.Name, out value))
+            if (!Environment.TryGetFunctionReference(functionReference.Name, out value))
                 throw new FunctionNotFoundException(functionReference.Name, Expression.PositionInText);
 
             return new Value.FunctionReference(functionReference.Name, value!);
@@ -203,7 +204,7 @@ namespace Furball.Volpe.Evaluation
         private Value EvaluateFunctionCall(ExpressionValue.FunctionCall functionCall)
         {
             Function? function;
-            if (!Scope.TryGetFunctionReference(functionCall.Name, out function))
+            if (!Environment.TryGetFunctionReference(functionCall.Name, out function))
                 throw new FunctionNotFoundException(functionCall.Name, Expression.PositionInText);
 
             int parameterCount = function!.ParameterCount;
@@ -214,40 +215,41 @@ namespace Furball.Volpe.Evaluation
 
             List<Value> values = new List<Value>();
             foreach (var expression in functionCall.Parameters)
-                values.Add(new EvaluatorContext(expression, Scope).Evaluate());
+                values.Add(new EvaluatorContext(expression, Environment).Evaluate());
 
             return function.Invoke(this, values.ToArray());
         }
 
         private Value EvaluatePrefixExpression(ExpressionValue.PrefixExpression expr)
         {
-            Value leftValue = new EvaluatorContext(expr.Left, Scope).Evaluate();
+            Value leftValue = new EvaluatorContext(expr.Left, Environment).Evaluate();
 
             return expr.Operator switch
             {
                 ExpressionOperator.Add => Operators.Positive(leftValue, this),
                 ExpressionOperator.Sub => Operators.Negative(leftValue, this),
+                ExpressionOperator.Not => Operators.Not(leftValue, this),
 
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
 
-        public static Value[] EvaluateAll(string source) => EvaluateAll(source, new Scope());
+        public static Value[] EvaluateAll(string source) => EvaluateAll(source, new Environment());
 
         public Value EvaluateArray(Expression[] initialElements)
         {
-            Scope scope = Scope;
+            Environment environment = Environment;
 
             return new Value.Array(
-                initialElements.Select(element => new CellSwap<Value>(new EvaluatorContext(element, scope, false).Evaluate())).ToList());
+                initialElements.Select(element => new CellSwap<Value>(new EvaluatorContext(element, environment, false).Evaluate())).ToList());
         }
 
-        public static Value[] EvaluateAll(string source, Scope scope)
+        public static Value[] EvaluateAll(string source, Environment environment)
         {
             IEnumerable<Expression> expressions = new Parser(new Lexer(source).GetTokenEnumerator().ToImmutableArray())
                 .GetExpressionEnumerator();
 
-            return expressions.Select(expression => new EvaluatorContext(expression, scope).Evaluate()).ToArray();
+            return expressions.Select(expression => new EvaluatorContext(expression, environment).Evaluate()).ToArray();
         }
         
         public Value Evaluate(bool forceInner = true)
@@ -259,13 +261,13 @@ namespace Furball.Volpe.Evaluation
                 ExpressionValue.Number(var v) => new Value.Number(v),
                 ExpressionValue.Variable expr => EvaluateVariable(expr),
                 ExpressionValue.FunctionDefinition expr => EvaluateFunctionDefinition(expr),
-                ExpressionValue.SubExpression(var expr) => new EvaluatorContext(expr, Scope).Evaluate(),
+                ExpressionValue.SubExpression(var expr) => new EvaluatorContext(expr, Environment).Evaluate(),
                 ExpressionValue.FunctionReference expr => EvaluateFunctionReference(expr),
                 ExpressionValue.FunctionCall expr => EvaluateFunctionCall(expr),
                 ExpressionValue.String expr => new Value.String(expr.Value),
                 ExpressionValue.IfExpression expr => EvaluateIfExpression(expr),
                 ExpressionValue.WhileExpression expr => EvaluateWhileExpression(expr),
-                ExpressionValue.Return(var expr) when InFunction => new Value.ToReturn(new EvaluatorContext(expr, Scope).Evaluate()),
+                ExpressionValue.Return(var expr) when InFunction => new Value.ToReturn(new EvaluatorContext(expr, Environment).Evaluate()),
                 ExpressionValue.Return(_) when !InFunction => throw new ReturnNotAllowedOutsideFunctionsException(Expression.PositionInText),
                 ExpressionValue.True => Value.DefaultTrue,
                 ExpressionValue.False => Value.DefaultFalse,

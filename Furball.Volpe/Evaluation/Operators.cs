@@ -65,6 +65,11 @@ namespace Furball.Volpe.Evaluation
             return leftValue == rightValue ? Value.DefaultTrue : Value.DefaultFalse;
         }
         
+        public static Value NotEq(Value leftValue, Value rightValue, EvaluatorContext context)
+        {
+            return leftValue != rightValue ? Value.DefaultTrue : Value.DefaultFalse;
+        }
+        
         public static Value GreaterThan(Value leftValue, Value rightValue, EvaluatorContext context)
         {
             return (leftValue, rightValue) switch
@@ -117,6 +122,17 @@ namespace Furball.Volpe.Evaluation
             };
         }
         
+        public static Value Not(Value leftValue, EvaluatorContext context)
+        {
+            return leftValue switch
+            {
+                Value.Boolean(var n1) => new Value.Boolean(!n1),
+                
+                _ => throw new UndefinedPrefixOperationException(
+                    nameof(Not), leftValue.GetType(), context.Expression.PositionInText)
+            };
+        }
+        
         public static Value Negative(Value leftValue, EvaluatorContext context)
         {
             return leftValue switch
@@ -124,7 +140,7 @@ namespace Furball.Volpe.Evaluation
                 Value.Number(var n1) => new Value.Number(-n1),
                 
                 _ => throw new UndefinedPrefixOperationException(
-                    "negative", leftValue.GetType(), context.Expression.PositionInText)
+                    nameof(Negative), leftValue.GetType(), context.Expression.PositionInText)
             };
         }
         

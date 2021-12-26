@@ -14,7 +14,7 @@ namespace Furball.Volpe.Tests
             Expression expression = new Parser(new Lexer("2 + 2 + 3 + 4")
                 .GetTokenEnumerator().ToImmutableArray()).ParseNextExpression();
 
-            Value value = new EvaluatorContext(expression, new Scope()).Evaluate();
+            Value value = new EvaluatorContext(expression, new Environment()).Evaluate();
             Assert.AreEqual(value, new Value.Number(11));
         }
 
@@ -24,12 +24,12 @@ namespace Furball.Volpe.Tests
             Expression expression = new Parser(new Lexer("$test = 2 + 2 + 3 + 4")
                 .GetTokenEnumerator().ToImmutableArray()).ParseNextExpression();
 
-            Scope scope = new Scope();
+            Environment environment = new Environment();
 
-            Value value = new EvaluatorContext(expression, scope).Evaluate();
+            Value value = new EvaluatorContext(expression, environment).Evaluate();
             
             Assert.AreEqual(value, new Value.Number(11));
-            Assert.IsTrue(scope.TryGetVariableValue("test", out value));
+            Assert.IsTrue(environment.TryGetVariableValue("test", out value));
             Assert.AreEqual(value, new Value.Number(11));
         }
         
@@ -40,7 +40,7 @@ namespace Furball.Volpe.Tests
             Expression expression = new Parser(new Lexer("2 + 2 + 3 - 4 + 4 * 8 + 6 / 2")
                 .GetTokenEnumerator().ToImmutableArray()).ParseNextExpression();
 
-            Value value = new EvaluatorContext(expression, new Scope()).Evaluate();
+            Value value = new EvaluatorContext(expression, new Environment()).Evaluate();
             Assert.AreEqual(value, new Value.Number(38));
         }
         
@@ -50,7 +50,7 @@ namespace Furball.Volpe.Tests
             Expression expression = new Parser(new Lexer("(2+2)*(2+2)")
                 .GetTokenEnumerator().ToImmutableArray()).ParseNextExpression();
 
-            Value value = new EvaluatorContext(expression, new Scope()).Evaluate();
+            Value value = new EvaluatorContext(expression, new Environment()).Evaluate();
             Assert.AreEqual(value, new Value.Number(16));
         }
         
@@ -60,13 +60,13 @@ namespace Furball.Volpe.Tests
             Parser parser = new Parser(new Lexer("$test = 2 + 2 + 3 - 4 + 4 * 8 + 6 / 2; $test")
                 .GetTokenEnumerator().ToImmutableArray());
 
-            Scope scope = new Scope();
+            Environment environment = new Environment();
             
             Assert.AreEqual(
                 new Value[]
                 {
-                    new EvaluatorContext(parser.ParseNextExpression(), scope).Evaluate(),
-                    new EvaluatorContext(parser.ParseNextExpression(), scope).Evaluate()
+                    new EvaluatorContext(parser.ParseNextExpression(), environment).Evaluate(),
+                    new EvaluatorContext(parser.ParseNextExpression(), environment).Evaluate()
                 }, 
                 new Value[]
                 {
@@ -81,12 +81,12 @@ namespace Furball.Volpe.Tests
             Parser parser = new Parser(new Lexer(
                 "funcdef hi($testVariable) {}").GetTokenEnumerator().ToImmutableArray());
 
-            Scope scope = new Scope();
+            Environment environment = new Environment();
 
-            new EvaluatorContext(parser.ParseNextExpression(), scope).Evaluate();
+            new EvaluatorContext(parser.ParseNextExpression(), environment).Evaluate();
 
             Function function;
-            scope.TryGetFunctionReference("hi", out function);
+            environment.TryGetFunctionReference("hi", out function);
 
             Function.Standard standardFunction = (Function.Standard)function;
             
@@ -101,10 +101,10 @@ namespace Furball.Volpe.Tests
                 new Lexer("funcdef hi($testVariable) { $testVariable2 = $testVariable; ret $testVariable2; } hi(2) + 2")
                     .GetTokenEnumerator().ToImmutableArray());
 
-            Scope scope = new Scope();
-            new EvaluatorContext(parser.ParseNextExpression(), scope).Evaluate();
+            Environment environment = new Environment();
+            new EvaluatorContext(parser.ParseNextExpression(), environment).Evaluate();
             
-            Assert.AreEqual(new EvaluatorContext(parser.ParseNextExpression(), scope).Evaluate(), new Value.Number(4));
+            Assert.AreEqual(new EvaluatorContext(parser.ParseNextExpression(), environment).Evaluate(), new Value.Number(4));
         }
         
         [Test]
@@ -112,9 +112,9 @@ namespace Furball.Volpe.Tests
         {
             Parser parser = new Parser(new Lexer("int \"2\";").GetTokenEnumerator().ToImmutableArray());
 
-            Scope scope = new Scope(DefaultBuiltins.Core);
+            Environment environment = new Environment(DefaultBuiltins.Core);
 
-            Assert.AreEqual(new EvaluatorContext(parser.ParseNextExpression(), scope).Evaluate(), new Value.Number(2));
+            Assert.AreEqual(new EvaluatorContext(parser.ParseNextExpression(), environment).Evaluate(), new Value.Number(2));
         }
         
         
@@ -123,9 +123,9 @@ namespace Furball.Volpe.Tests
         {
             Parser parser = new Parser(new Lexer("string 2;").GetTokenEnumerator().ToImmutableArray());
 
-            Scope scope = new Scope(DefaultBuiltins.Core);
+            Environment environment = new Environment(DefaultBuiltins.Core);
 
-            Assert.AreEqual(new EvaluatorContext(parser.ParseNextExpression(), scope).Evaluate(), new Value.String("2"));
+            Assert.AreEqual(new EvaluatorContext(parser.ParseNextExpression(), environment).Evaluate(), new Value.String("2"));
         }
     }
 }

@@ -10,7 +10,6 @@ namespace Furball.Volpe.LexicalAnalysis
         public record Div : TokenValueOperator;
         public record And : TokenValueOperator;
         public record Or : TokenValueOperator;
-        public record Not : TokenValueOperator;
 
         public static TokenValueOperator FromCharacter(char c) => c switch
         {
@@ -20,7 +19,6 @@ namespace Furball.Volpe.LexicalAnalysis
             '/' => new Div(),
             '&' => new And(),
             '|' => new Or(),
-            '!' => new Not(),
 
             _ => throw new ArgumentOutOfRangeException(nameof(c), c, null)
         };
@@ -35,6 +33,8 @@ namespace Furball.Volpe.LexicalAnalysis
         public record GreaterThanOrEqual : TokenValueBooleanOperator;
         public record LessThan : TokenValueBooleanOperator;
         public record LessThanOrEqual : TokenValueBooleanOperator;
+        public record Not : TokenValueBooleanOperator;
+        public record NotEq : TokenValueBooleanOperator;
     }
 
     public abstract record TokenValue

@@ -155,8 +155,7 @@ namespace Furball.Volpe.Evaluation
                 if (value is Value.Number n)
                     return new Value.String(n.Value.ToString(CultureInfo.InvariantCulture));
 
-                throw new TypeConversionException(value, typeof(Value.String),
-                    context.Expression.PositionInText);
+                return new Value.String(value.Representation);
             }),
             
             new BuiltinFunction ("repr", 1, (context, values) => new Value.String(values[0].Representation)),
@@ -175,7 +174,7 @@ namespace Furball.Volpe.Evaluation
                     throw new InvalidValueTypeException(
                         typeof(Value.FunctionReference), values[1].GetType(), context.Expression.PositionInText);
 
-                context.Scope.HookVariableToGetterAndSetter(name, (f1, f2));
+                context.Environment.HookVariableToGetterAndSetter(name, (f1, f2));
                 return Value.DefaultVoid;
             }),
             
@@ -187,6 +186,8 @@ namespace Furball.Volpe.Evaluation
                     Value.String => "string",
                     Value.Void => "void",
                     Value.FunctionReference => "function_reference",
+                    Value.Array => "array",
+                    Value.Boolean => "boolean",
                     
                     _ => throw new InvalidOperationException(values[0].GetType().ToString())
                 });

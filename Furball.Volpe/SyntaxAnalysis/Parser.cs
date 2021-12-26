@@ -81,7 +81,7 @@ namespace Furball.Volpe.SyntaxAnalysis
             if ((expressionOperator.Type & ExpressionOperatorType.Prefix) == 0)
                 throw new InvalidPrefixOperatorException(expressionOperator, GetLastConsumedTokenPositionOrZero());
 
-            Expression leftExpression = ForceParseNextExpression();
+            Expression leftExpression = ForceParseNextExpression(expressionOperator.Precedence);
 
             return new ExpressionValue.PrefixExpression(expressionOperator, leftExpression);
         }
@@ -438,7 +438,8 @@ namespace Furball.Volpe.SyntaxAnalysis
                         if ((expressionOperator.Type & ExpressionOperatorType.Infix) == 0)
                             throw new InvalidInfixOperatorException(expressionOperator, GetLastConsumedTokenPositionOrZero());
 
-                        if (precedence >= expressionOperator.Precedence)
+                        if (precedence >= expressionOperator.Precedence && 
+                            expressionOperator.AssociationDirection == ExpressionOperatorAssociationDirection.Left)
                             break;
 
                         _tokenConsumer.SkipOne();

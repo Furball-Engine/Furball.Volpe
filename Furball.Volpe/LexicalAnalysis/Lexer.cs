@@ -131,6 +131,8 @@ namespace Furball.Volpe.LexicalAnalysis
                 "<=" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.LessThanOrEqual()),
                 "&&" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.And()),
                 "||" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.Or()),
+                "!=" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.NotEq()),
+                "!" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.Not()),
                 
                 _ when op.EndsWith('=') => 
                     new TokenValue.OperatorWithAssignment(TokenValueOperator.FromCharacter(op[0])),

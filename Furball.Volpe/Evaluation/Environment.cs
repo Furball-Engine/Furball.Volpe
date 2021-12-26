@@ -1,32 +1,33 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Furball.Volpe.Memory;
 
 namespace Furball.Volpe.Evaluation
 {
-    public class Scope
+    public class Environment
     {
-        public Scope? Parent { get; }
+        public Environment? Parent { get; }
         
         private readonly Dictionary<string, Value> _variables;
-        
         private readonly Dictionary<string, (Function Getter, Function Setter)> _hookedVariables;
-        
         private readonly Dictionary<string, Function> _functions;
-        
-        public Scope(BuiltinFunction[] builtins)
+
+        public Environment(BuiltinFunction[] builtins)
         {
             _variables = new Dictionary<string, Value>();
             _hookedVariables = new Dictionary<string, (Function Getter, Function Setter)>();
             _functions = builtins.ToDictionary(b => b.Identifier, b => (Function)new Function.Builtin(b.Callback, b.ParamCount));
         }
 
-        public Scope() : this(Array.Empty<BuiltinFunction>())
-        {
-        }
+        public void AddBuiltin(BuiltinFunction function) =>
+            _functions.Add(function.Identifier, new Function.Builtin(function.Callback, function.ParamCount));
+
+        public void RemoveBuiltin(BuiltinFunction function) =>
+            _functions.Remove(function.Identifier);
         
-        public Scope(Scope? parent) : this()
+        public Environment(Environment? parent = null) : this(Array.Empty<BuiltinFunction>())
         {
             Parent = parent;
         }

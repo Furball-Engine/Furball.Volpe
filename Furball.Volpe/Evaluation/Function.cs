@@ -11,16 +11,16 @@ namespace Furball.Volpe.Evaluation
                 Delegate(context, actualParameters);
         }
 
-        public record Standard(string[] ParameterNames, Expression[] Expressions, Scope ParentScope) : Function
+        public record Standard(string[] ParameterNames, Expression[] Expressions, Environment ParentEnvironment) : Function
         {
             public override Value Invoke(EvaluatorContext context, Value[] actualParameters)
             {
-                Scope scope = new Scope(this.ParentScope);
+                Environment environment = new Environment(this.ParentEnvironment);
 
                 for (int i = 0; i < ParameterCount; i++)
-                    scope.SetVariableValue(ParameterNames[i], actualParameters[i]);
+                    environment.SetVariableValue(ParameterNames[i], actualParameters[i]);
 
-                Value v = new BlockEvaluatorContext(Expressions, scope, inFunction: true).Evaluate();
+                Value v = new BlockEvaluatorContext(Expressions, environment, inFunction: true).Evaluate();
 
                 if (v is Value.ToReturn(var returnedValue))
                     return returnedValue;

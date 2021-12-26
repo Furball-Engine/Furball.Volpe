@@ -75,6 +75,5 @@ namespace Furball.Volpe.LexicalAnalysis
     {
         public PositionInText PositionInText { get; set; }
         public TokenValue Value { get; set; } = null!;
-        
     }
 }

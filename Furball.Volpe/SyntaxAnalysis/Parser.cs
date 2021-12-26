@@ -438,8 +438,7 @@ namespace Furball.Volpe.SyntaxAnalysis
                         if ((expressionOperator.Type & ExpressionOperatorType.Infix) == 0)
                             throw new InvalidInfixOperatorException(expressionOperator, GetLastConsumedTokenPositionOrZero());
 
-                        if (precedence >= expressionOperator.Precedence && 
-                            expressionOperator.AssociationDirection == ExpressionOperatorAssociationDirection.Left)
+                        if (precedence >= expressionOperator.Precedence)
                             break;
 
                         _tokenConsumer.SkipOne();

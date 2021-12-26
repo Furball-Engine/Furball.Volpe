@@ -37,9 +37,6 @@ namespace Furball.Volpe.SyntaxAnalysis
         public abstract ExpressionOperatorPrecedence Precedence { get; }
         public abstract ExpressionOperatorType Type { get; }
 
-        public virtual ExpressionOperatorAssociationDirection AssociationDirection =>
-            ExpressionOperatorAssociationDirection.Left;
-
         public static ExpressionOperator FromArithmeticalOperatorTokenValue(TokenValueOperator v)
         {
             return v switch
@@ -84,9 +81,6 @@ namespace Furball.Volpe.SyntaxAnalysis
 
         public record Assign : ExpressionOperator
         {
-            public override ExpressionOperatorAssociationDirection AssociationDirection =>
-                ExpressionOperatorAssociationDirection.Right;
-            
             public override ExpressionOperatorPrecedence Precedence => ExpressionOperatorPrecedence.Assign;
             public override ExpressionOperatorType Type => ExpressionOperatorType.Infix;
         }

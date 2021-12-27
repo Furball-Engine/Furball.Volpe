@@ -138,6 +138,8 @@ namespace Furball.Volpe.Evaluation
                 Expression[] block = expr.Blocks[i];
                 if (new BlockEvaluatorContext(block, Environment, InFunction).Evaluate() is Value.ToReturn v)
                     return v;
+
+                return Value.DefaultVoid;
             }
 
             if (expr.ElseBlock != null)

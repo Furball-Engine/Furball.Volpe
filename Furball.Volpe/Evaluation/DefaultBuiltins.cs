@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using System.Reflection;
 using Furball.Volpe.Exceptions;
 using Furball.Volpe.Memory;
 
@@ -19,235 +22,38 @@ namespace Furball.Volpe.Evaluation
             ParamCount = paramCount;
             Callback = cb;
         }
+
+        public override string ToString() => $"{Identifier}";
     }
     
     public static class DefaultBuiltins
     {
-        public static BuiltinFunction[] Math = new BuiltinFunction[]
-        {
-            new BuiltinFunction ("abs", 1, (context, values) =>
-            {
-                if (values[0] is not Value.Number n)
-                    throw new InvalidValueTypeException(
-                        typeof(Value.Number), values[0].GetType(), context.Expression.PositionInText);
+        /// <summary>
+        /// Gets the Entire CoreLib while allowing to exclude certain CoreLib Extensions
+        /// </summary>
+        /// <param name="except"></param>
+        /// <returns></returns>
+        public static BuiltinFunction[] GetAll(string[] except = null!) {
+            List<BuiltinFunction> functions = new();
 
-                return new Value.Number(System.Math.Abs(n.Value));
-            }),
-            
-            new BuiltinFunction ("cos", 1, (context, values) =>
-            {
-                if (values[0] is not Value.Number n)
-                    throw new InvalidValueTypeException(
-                        typeof(Value.Number), values[0].GetType(), context.Expression.PositionInText);
+            List<Type> types = Assembly.GetAssembly(typeof(BuiltinFunction))!
+                .GetTypes()
+                .Where(
+                    type => type.IsSubclassOf(typeof(CoreLibExtension))
+                ).ToList();
 
-                return new Value.Number(System.Math.Cos(n.Value));
-            }),
-            
-            new BuiltinFunction ("sin", 1, (context, values) =>
-            {
-                if (values[0] is not Value.Number n)
-                    throw new InvalidValueTypeException(
-                        typeof(Value.Number), values[0].GetType(), context.Expression.PositionInText);
+            foreach (Type type in types) {
+                if (except != null) {
+                    if (except.Contains(type.Name))
+                        continue;
+                }
 
-                return new Value.Number(System.Math.Sin(n.Value));
-            }),
-            
-            new BuiltinFunction ("tan", 1, (context, values) =>
-            {
-                if (values[0] is not Value.Number n)
-                    throw new InvalidValueTypeException(
-                        typeof(Value.Number), values[0].GetType(), context.Expression.PositionInText);
+                CoreLibExtension extension = (CoreLibExtension) Activator.CreateInstance(type)!;
 
-                return new Value.Number(System.Math.Tan(n.Value));
-            }),
-            
-            new BuiltinFunction ("log", 1, (context, values) =>
-            {
-                if (values[0] is not Value.Number n)
-                    throw new InvalidValueTypeException(
-                        typeof(Value.Number), values[0].GetType(), context.Expression.PositionInText);
+                functions.AddRange(extension.FunctionExports());
+            }
 
-                return new Value.Number(System.Math.Log(n.Value));
-            }),
-            
-            new BuiltinFunction ("log2", 1, (context, values) =>
-            {
-                if (values[0] is not Value.Number n)
-                    throw new InvalidValueTypeException(
-                        typeof(Value.Number), values[0].GetType(), context.Expression.PositionInText);
-
-                return new Value.Number(System.Math.Log2(n.Value));
-            }),
-            
-            new BuiltinFunction ("sqrt", 1, (context, values) =>
-            {
-                if (values[0] is not Value.Number(var n))
-                    throw new InvalidValueTypeException(
-                        typeof(Value.Number), values[0].GetType(), context.Expression.PositionInText);
-
-                return new Value.Number(System.Math.Sqrt(n));
-            }),
-            
-            new BuiltinFunction ("pow", 2, (context, values) =>
-            {
-                if (values[0] is not Value.Number(var x))
-                    throw new InvalidValueTypeException(
-                        typeof(Value.Number), values[0].GetType(), context.Expression.PositionInText);
-                
-                if (values[1] is not Value.Number(var n))
-                    throw new InvalidValueTypeException(
-                        typeof(Value.Number), values[1].GetType(), context.Expression.PositionInText);
-                
-                return new Value.Number(System.Math.Pow(x, n));
-            }),
-            
-            new BuiltinFunction ("ceil", 1, (context, values) =>
-            {
-                if (values[0] is not Value.Number(var x))
-                    throw new InvalidValueTypeException(
-                        typeof(Value.Number), values[0].GetType(), context.Expression.PositionInText);
-
-                return new Value.Number(System.Math.Ceiling(x));
-            }),
-            
-            new BuiltinFunction ("floor", 1, (context, values) =>
-            {
-                if (values[0] is not Value.Number(var x))
-                    throw new InvalidValueTypeException(
-                        typeof(Value.Number), values[0].GetType(), context.Expression.PositionInText);
-
-                return new Value.Number(System.Math.Floor(x));
-            }),
-            
-            new BuiltinFunction ("round", 1, (context, values) =>
-            {
-                if (values[0] is not Value.Number(var x))
-                    throw new InvalidValueTypeException(
-                        typeof(Value.Number), values[0].GetType(), context.Expression.PositionInText);
-
-                return new Value.Number(System.Math.Round(x));
-            }),
-        };
-
-        public static BuiltinFunction[] Core = new BuiltinFunction[]
-        {
-            new BuiltinFunction ("int", 1, (context, values) =>
-            {
-                Value value = values[0];
-
-                if (value is Value.Number)
-                    return value;
-                
-                if (value is Value.String str && double.TryParse(str.Value, out double converted))
-                    return new Value.Number(converted);
-
-                throw new TypeConversionException(value, typeof(Value.Number),
-                    context.Expression.PositionInText);
-            }),
-            
-            new BuiltinFunction ("string", 1, (context, values) =>/**/
-            {
-                Value value = values[0];
-
-                if (value is Value.String)
-                    return value;
-                
-                if (value is Value.Number n)
-                    return new Value.String(n.Value.ToString(CultureInfo.InvariantCulture));
-
-                return new Value.String(value.Representation);
-            }),
-            
-            new BuiltinFunction ("repr", 1, (context, values) => new Value.String(values[0].Representation)),
-            
-            new BuiltinFunction ("hook", 3, (context, values) =>
-            {
-                if (values[0] is not Value.String(var name))
-                    throw new InvalidValueTypeException(
-                        typeof(Value.FunctionReference), values[0].GetType(), context.Expression.PositionInText);
-                
-                if (values[1] is not Value.FunctionReference f1)
-                    throw new InvalidValueTypeException(
-                        typeof(Value.FunctionReference), values[0].GetType(), context.Expression.PositionInText);
-                
-                if (values[2] is not Value.FunctionReference f2)
-                    throw new InvalidValueTypeException(
-                        typeof(Value.FunctionReference), values[1].GetType(), context.Expression.PositionInText);
-
-                context.Environment.HookVariableToGetterAndSetter(name, (f1, f2));
-                return Value.DefaultVoid;
-            }),
-            
-            new BuiltinFunction ("type", 1, (context, values) =>
-            {
-                return new Value.String(values[0] switch
-                {
-                    Value.Number => "number",
-                    Value.String => "string",
-                    Value.Void => "void",
-                    Value.FunctionReference => "function_reference",
-                    Value.Array => "array",
-                    Value.Boolean => "boolean",
-                    
-                    _ => throw new InvalidOperationException(values[0].GetType().ToString())
-                });
-            }),
-            
-            new BuiltinFunction ("len", 1, (context, values) =>
-            {
-                if (values[0] is not Value.Array(var arr))
-                    throw new InvalidValueTypeException(
-                        typeof(Value.FunctionReference), values[0].GetType(), context.Expression.PositionInText);
-
-                return new Value.Number(arr.Count);
-            }),
-            
-            new BuiltinFunction("append", 2, (context, values) =>
-            {
-                if (values[0] is not Value.Array(var arr))
-                    throw new InvalidValueTypeException(
-                        typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
-
-                arr.Add(new CellSwap<Value>(values[1]));
-                
-                return values[0];
-            }),
-            
-            new BuiltinFunction("remove_at", 2, (context, values) =>
-            {
-                if (values[0] is not Value.Array(var arr))
-                    throw new InvalidValueTypeException(
-                        typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
-
-                if (values[1] is not Value.Number(var fIndex))
-                    throw new InvalidValueTypeException(
-                        typeof(Value.Number), values[0].GetType(), context.Expression.PositionInText);
-
-                int index = (int) fIndex;
-                
-                if (index >= arr.Count || index < 0)
-                    throw new IndexOutOfBoundsException(arr, index, context.Expression.PositionInText);
-
-                Value oldValue = arr[index];
-                arr.RemoveAt(index);
-
-                return oldValue;
-            }),
-
-            new BuiltinFunction ("invoke", 1, (context, values) =>
-            {
-                if (values[0] is not Value.FunctionReference functionReference)
-                    throw new InvalidValueTypeException(
-                        typeof(Value.FunctionReference), values[0].GetType(),
-                        context.Expression.PositionInText);
-
-                if (values.Length - 1 < functionReference.Function.ParameterCount)
-                        throw new ParamaterCountMismatchException(functionReference.Name, 
-                            functionReference.Function.ParameterCount, 
-                            values.Length - 1, context.Expression.PositionInText);
-
-                return functionReference.Function.Invoke(context, values[1..]);
-            }),
-        };
+            return functions.ToArray();
+        }
     }
 }

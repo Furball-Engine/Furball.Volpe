@@ -112,7 +112,7 @@ namespace Furball.Volpe.Tests
         {
             Parser parser = new Parser(new Lexer("int \"2\";").GetTokenEnumerator().ToImmutableArray());
 
-            Environment environment = new Environment(DefaultBuiltins.Core);
+            Environment environment = new Environment(DefaultBuiltins.GetAll());
 
             Assert.AreEqual(new EvaluatorContext(parser.ParseNextExpression(), environment).Evaluate(), new Value.Number(2));
         }
@@ -123,7 +123,7 @@ namespace Furball.Volpe.Tests
         {
             Parser parser = new Parser(new Lexer("string 2;").GetTokenEnumerator().ToImmutableArray());
 
-            Environment environment = new Environment(DefaultBuiltins.Core);
+            Environment environment = new Environment(DefaultBuiltins.GetAll());
 
             Assert.AreEqual(new EvaluatorContext(parser.ParseNextExpression(), environment).Evaluate(), new Value.String("2"));
         }

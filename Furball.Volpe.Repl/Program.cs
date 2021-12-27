@@ -13,8 +13,6 @@ namespace Furball.Volpe.Repl
 {
     class Program
     {
-        
-        
         static void Main(string[] args)
         {
             Stream inputStream = Console.OpenStandardInput();
@@ -22,7 +20,7 @@ namespace Furball.Volpe.Repl
             
             Console.WriteLine($"Volpe Language - REPL");
             
-            Environment environment = new Environment(DefaultBuiltins.Core.Concat(DefaultBuiltins.Math).Concat(new BuiltinFunction[]
+            Environment environment = new Environment(DefaultBuiltins.GetAll().Concat(new BuiltinFunction[]
             {
                 new BuiltinFunction("clear", 0, (_, _) =>
                 {
@@ -44,11 +42,6 @@ namespace Furball.Volpe.Repl
             
             for (;;)
             {
-                List<string> gay = new List<string>();
-                IList gay2 = (IList)gay;
-
-                List<string> gay3 = (List<string>) gay2;
-
                 Console.Write(">> ");
                 string input = Console.ReadLine();
 

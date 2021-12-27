@@ -248,10 +248,19 @@ namespace Furball.Volpe.Evaluation
 
         public static Value[] EvaluateAll(string source, Environment environment)
         {
-            IEnumerable<Expression> expressions = new Parser(new Lexer(source).GetTokenEnumerator().ToImmutableArray())
+            IEnumerable<Expression> expressions = new Parser(new Lexer(source).GetTokenEnumerator())
                 .GetExpressionEnumerator();
 
             return expressions.Select(expression => new EvaluatorContext(expression, environment).Evaluate()).ToArray();
+        }
+        
+        public static void EvaluateAllNoReturn(string source, Environment environment)
+        {
+            IEnumerable<Expression> expressions = new Parser(new Lexer(source).GetTokenEnumerator())
+                .GetExpressionEnumerator();
+
+            foreach (var expression in expressions)
+                new EvaluatorContext(expression, environment).Evaluate();
         }
         
         public Value Evaluate(bool forceInner = true)

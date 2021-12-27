@@ -1,3 +1,4 @@
+using System;
 using Furball.Volpe.Exceptions;
 
 namespace Furball.Volpe.Evaluation.CoreLib {
@@ -106,6 +107,17 @@ namespace Furball.Volpe.Evaluation.CoreLib {
                         typeof(Value.Number), values[0].GetType(), context.Expression.PositionInText);
 
                 return new Value.Number(System.Math.Round(x));
+            }),
+
+            new BuiltinFunction("random", 0, (_, _) => new Value.Number(new Random().NextDouble())),
+
+            new BuiltinFunction("random_range", 2, (context, values) => {
+                if (values[0] is not Value.Number(var first))
+                    throw new InvalidValueTypeException(typeof(Value.Number), values[0].GetType(), context.Expression.PositionInText);
+                if (values[1] is not Value.Number(var second))
+                    throw new InvalidValueTypeException(typeof(Value.Number), values[1].GetType(), context.Expression.PositionInText);
+
+                return new Value.Number(new Random().NextDouble() * (second - first) + first);
             }),
         };
     }

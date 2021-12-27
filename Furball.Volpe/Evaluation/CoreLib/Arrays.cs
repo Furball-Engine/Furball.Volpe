@@ -8,7 +8,7 @@ namespace Furball.Volpe.Evaluation.CoreLib {
         public override BuiltinFunction[] FunctionExports() => new BuiltinFunction[] {
             new BuiltinFunction("arr_len", 1, (context, values) => {
                 if (values[0] is not Value.Array(var arr))
-                    throw new InvalidValueTypeException(typeof(Value.FunctionReference), values[0].GetType(), context.Expression.PositionInText);
+                    throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
 
                 return new Value.Number(arr.Count);
             }),
@@ -43,7 +43,6 @@ namespace Furball.Volpe.Evaluation.CoreLib {
             new BuiltinFunction("arr_remove_at", 2, (context, values) => {
                 if (values[0] is not Value.Array(var arr))
                     throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
-
                 if (values[1] is not Value.Number(var fIndex))
                     throw new InvalidValueTypeException(typeof(Value.Number), values[1].GetType(), context.Expression.PositionInText);
 
@@ -83,9 +82,9 @@ namespace Furball.Volpe.Evaluation.CoreLib {
             }),
             new BuiltinFunction("arr_concat", 2, (context, values) => {
                 if(values[0] is not Value.Array(var first))
-                    throw new InvalidValueTypeException(typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
+                    throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
                 if(values[1] is not Value.Array(var second))
-                    throw new InvalidValueTypeException(typeof(Value.String), values[1].GetType(), context.Expression.PositionInText);
+                    throw new InvalidValueTypeException(typeof(Value.Array), values[1].GetType(), context.Expression.PositionInText);
 
                 return new Value.Array(first.Concat(second).ToList());
             }),

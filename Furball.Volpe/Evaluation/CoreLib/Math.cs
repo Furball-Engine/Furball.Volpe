@@ -74,7 +74,6 @@ namespace Furball.Volpe.Evaluation.CoreLib {
                 if (values[0] is not Value.Number(var x))
                     throw new InvalidValueTypeException(
                         typeof(Value.Number), values[0].GetType(), context.Expression.PositionInText);
-
                 if (values[1] is not Value.Number(var n))
                     throw new InvalidValueTypeException(
                         typeof(Value.Number), values[1].GetType(), context.Expression.PositionInText);

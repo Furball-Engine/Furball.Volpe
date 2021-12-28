@@ -30,18 +30,21 @@ namespace Furball.Volpe.Evaluation.CoreLib {
 
                 return values[0];
             }),
-            //new BuiltinFunction("arr_remove_range", 2, (context, values) => {
-            //    if (values[0] is not Value.Array(var first))
-            //        throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
-            //    if (values[1] is not Value.Array(var second))
-            //        throw new InvalidValueTypeException(typeof(Value.Array), values[1].GetType(), context.Expression.PositionInText);
-//
-            //    foreach (CellSwap<Value> value in second) {
-            //        first.Remove(value);
-            //    }
-//
-            //    return values[0];
-            //}),
+            
+            new BuiltinFunction("arr_remove_range", 2, (context, values) => {
+                if (values[0] is not Value.Array(var first))
+                    throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
+                if (values[1] is not Value.Array(var second))
+                    throw new InvalidValueTypeException(typeof(Value.Array), values[1].GetType(), context.Expression.PositionInText);
+
+                foreach (CellSwap<Value> value in second) {
+                    int index = first.FindIndex(x=> x.Value == value.Value);
+                    first.RemoveAt(index);
+                }
+
+                return values[0];
+            }),
+            
             new BuiltinFunction("arr_remove_at", 2, (context, values) => {
                 if (values[0] is not Value.Array(var arr))
                     throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
@@ -58,14 +61,17 @@ namespace Furball.Volpe.Evaluation.CoreLib {
 
                 return oldValue;
             }),
-            //new BuiltinFunction("arr_remove", 2, (context, values) => {
-            //    if (values[0] is not Value.Array(var first))
-            //        throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
-//
-            //    first.Remove(new CellSwap<Value>(values[1]));
-//
-            //    return values[0];
-            //}),
+            
+            new BuiltinFunction("arr_remove", 2, (context, values) => {
+                if (values[0] is not Value.Array(var first))
+                    throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
+
+                int index = first.FindIndex(x=> x.Value == values[1]);
+                first.RemoveAt(index);
+                
+                return values[0];
+            }),
+            
             new BuiltinFunction("arr_insert_at", 3, (context, values) => {
                 if (values[0] is not Value.Array(var arr))
                     throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
@@ -82,6 +88,7 @@ namespace Furball.Volpe.Evaluation.CoreLib {
 
                 return values[0];
             }),
+            
             new BuiltinFunction("arr_concat", 2, (context, values) => {
                 if(values[0] is not Value.Array(var first))
                     throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);

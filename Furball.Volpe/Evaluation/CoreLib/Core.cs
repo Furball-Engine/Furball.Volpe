@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Furball.Volpe.Exceptions;
+using Furball.Volpe.Memory;
 
 namespace Furball.Volpe.Evaluation.CoreLib {
     public class Core : CoreLibExtension {
@@ -83,6 +86,23 @@ namespace Furball.Volpe.Evaluation.CoreLib {
 
                 throw new UserThrownException(context.Expression.PositionInText, first);
             }),
+            
+            new BuiltinFunction("clone", 1, (context, values) =>
+            {
+                switch (values[0])
+                {
+                    case Value.Array arr:
+                        List<CellSwap<Value>> newArray = new List<CellSwap<Value>>(arr.Value.Count);
+
+                        for (int i = 0; i < arr.Value.Count; i++)
+                            newArray.Add(new CellSwap<Value>(arr.Value[i].Value));
+
+                        return new Value.Array(newArray);
+                    
+                    default:
+                        return values[0] with { };
+                }
+            })
         };
     }
 }

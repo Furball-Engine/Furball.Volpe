@@ -10,7 +10,7 @@ namespace Furball.Volpe.LexicalAnalysis
         public record Div : TokenValueOperator;
         public record And : TokenValueOperator;
         public record Or : TokenValueOperator;
-
+        
         public static TokenValueOperator FromCharacter(char c) => c switch
         {
             '+' => new Add(),
@@ -66,9 +66,9 @@ namespace Furball.Volpe.LexicalAnalysis
         public record Comma : TokenValue;
         public record Hashtag : TokenValue;
         public record Return : TokenValue;
-        
+        public record Append : TokenValue;
         public bool IsOperator => this is TokenValue.BooleanOperator or TokenValue.ArithmeticalOperator 
-            or TokenValue.OperatorWithAssignment or TokenValue.Assign or TokenValue.ArrayAccess;
+            or TokenValue.OperatorWithAssignment or TokenValue.Assign or TokenValue.ArrayAccess or TokenValue.Append;
     }
     
     public class Token: IPositionableInText

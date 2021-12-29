@@ -20,6 +20,7 @@ namespace Furball.Volpe.Evaluation.CoreLib {
 
                 return values[0];
             }),
+            
             new BuiltinFunction("arr_append_range", 2, (context, values) => {
                 if (values[0] is not Value.Array(var first))
                     throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
@@ -87,6 +88,24 @@ namespace Furball.Volpe.Evaluation.CoreLib {
                 arr.Insert(index, new CellSwap<Value>(values[2]));
 
                 return values[0];
+            }),
+            
+            new BuiltinFunction("arr_map", 2, (context, values) =>
+            {
+                if(values[0] is not Value.Array(var first))
+                    throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
+                if(values[1] is not Value.FunctionReference(_, var function))
+                    throw new InvalidValueTypeException(typeof(Value.FunctionReference), values[1].GetType(), context.Expression.PositionInText);
+
+                List<CellSwap<Value>> newArray = new List<CellSwap<Value>>(first.Count);
+
+                for (int i = 0; i < first.Count; i++)
+                {
+                    Value value = function.Invoke(context, new Value[] {first[i].Value});
+                    newArray.Add(new CellSwap<Value>(value));
+                }
+
+                return new Value.Array(newArray);   
             }),
             
             new BuiltinFunction("arr_concat", 2, (context, values) => {

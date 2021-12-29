@@ -21,6 +21,7 @@ namespace Furball.Volpe.SyntaxAnalysis
         public record True : ExpressionValue;
         public record False : ExpressionValue;
         public record Array(Expression[] InitialElements) : ExpressionValue;
+        public record Lambda(string[] ParameterNames, Expression[] Expressions) : ExpressionValue;
     }
     
     public class Expression : IPositionableInText, IEquatable<Expression>

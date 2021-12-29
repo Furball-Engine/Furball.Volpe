@@ -80,6 +80,7 @@ namespace Furball.Volpe.Evaluation
 
                 ExpressionOperator.ArrayAccess => Operators.ArrayAccess(leftValue, rightValue, this),
                 ExpressionOperator.NotEq => Operators.NotEq(leftValue, rightValue, this),
+                ExpressionOperator.Append => Operators.Append(leftValue, rightValue, this),
 
                 _ => throw new ArgumentOutOfRangeException()
             };
@@ -183,6 +184,11 @@ namespace Furball.Volpe.Evaluation
             return value!;
         }
 
+        private Value EvaluateLambda(ExpressionValue.Lambda lambda) =>
+            new Value.FunctionReference("<lambda>",
+                new Function.Standard(lambda.ParameterNames, lambda.Expressions, Environment));
+        
+        
         private Value EvaluateFunctionDefinition(ExpressionValue.FunctionDefinition functionDefinition)
         {
             if (!Environment.TrySetFunction(functionDefinition.Name,
@@ -283,6 +289,7 @@ namespace Furball.Volpe.Evaluation
                 ExpressionValue.True => Value.DefaultTrue,
                 ExpressionValue.False => Value.DefaultFalse,
                 ExpressionValue.Array(var initialElements) => EvaluateArray(initialElements),
+                ExpressionValue.Lambda lambda => EvaluateLambda(lambda),
 
                 _ => throw new ArgumentException()
             };

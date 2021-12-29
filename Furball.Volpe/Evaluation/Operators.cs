@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using System.Text;
 using Furball.Volpe.Exceptions;
 using Furball.Volpe.Memory;
@@ -10,9 +12,20 @@ namespace Furball.Volpe.Evaluation
     {
         public static Value Positive(Value leftValue, EvaluatorContext context)
         {
+            Value.Array PositiveArray(Value.Array source)
+            {
+                List<CellSwap<Value>> newArray = new List<CellSwap<Value>>(source.Value.Count);
+
+                for (int i = 0; i < source.Value.Count; i++)
+                    newArray.Add(new CellSwap<Value>(Positive(source.Value[i].Value, context)));
+
+                return new Value.Array(newArray);
+            }
+            
             return leftValue switch
             {
                 Value.Number(var n1) => new Value.Number(+n1),
+                Value.Array n1 => PositiveArray(n1),
                 
                 _ => throw new UndefinedPrefixOperationException(
                     nameof(Positive), leftValue.GetType(), context.Expression.PositionInText)
@@ -135,16 +148,27 @@ namespace Furball.Volpe.Evaluation
         
         public static Value Negative(Value leftValue, EvaluatorContext context)
         {
+            Value NegateArray(Value.Array arr1)
+            {
+                List<CellSwap<Value>> newArray = new List<CellSwap<Value>>(arr1.Value.Count);
+
+                for (int i = 0; i < arr1.Value.Count; i++)
+                    newArray.Add(new CellSwap<Value>(Negative(arr1.Value[i].Value, context)));
+                
+                return new Value.Array(newArray);
+            }
+            
             return leftValue switch
             {
                 Value.Number(var n1) => new Value.Number(-n1),
+                Value.Array n1 => NegateArray(n1),
                 
                 _ => throw new UndefinedPrefixOperationException(
                     nameof(Negative), leftValue.GetType(), context.Expression.PositionInText)
             };
         }
         
-        public static Value Sum(Value rightValue, Value leftValue, EvaluatorContext context)
+        public static Value Append(Value rightValue, Value leftValue, EvaluatorContext context)
         {
             Value AppendArrayToArray(Value.Array arr1, Value.Array arr2)
             {
@@ -154,15 +178,42 @@ namespace Furball.Volpe.Evaluation
             
             return (rightValue, leftValue) switch
             {
-                (Value.Number(var n1), Value.Number(var n2)) => new Value.Number(n1 + n2),
                 (Value.String(var n1), Value.String(var n2)) => new Value.String(n1 + n2),
                 (Value.Array n1, Value.Array n2) => AppendArrayToArray(n1, n2),
+                
+                _ => throw new UndefinedInfixOperationException(
+                    nameof(Append), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
+            };
+        }
+        
+        public static Value Sum(Value rightValue, Value leftValue, EvaluatorContext context)
+        {
+            Value.Array AddTwoArrays(Value.Array n1, Value.Array n2)
+            {
+                if (n1.Value.Count != n2.Value.Count)
+                    throw new OperatorDomainException(context.Expression.PositionInText,
+                        "The arrays do not have the same length");
+                    
+                int length = n1.Value.Count;
+                List<CellSwap<Value>> newArray = new List<CellSwap<Value>>(length);
+
+                for (int i = 0; i < length; i++)
+                    newArray.Add(new CellSwap<Value>(Sum(n1.Value[i].Value, n2.Value[i].Value, context)));
+
+                return new Value.Array(newArray);
+            }
+
+            return (rightValue, leftValue) switch
+            {
+                (Value.Number(var n1), Value.Number(var n2)) => new Value.Number(n1 + n2),
+                (Value.Array n1, Value.Array n2) => AddTwoArrays(n1, n2),
                 
                 _ => throw new UndefinedInfixOperationException(
                     nameof(Sum), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
             };
         }
-        
+
+
         public static Value Subtract(Value rightValue, Value leftValue, EvaluatorContext context)
         {
             return (rightValue, leftValue) switch
@@ -191,10 +242,22 @@ namespace Furball.Volpe.Evaluation
                 return stringBuilder.ToString();
             }
             
+            Value.Array MultiplyArray(Value.Array source, Value left)
+            {
+                List<CellSwap<Value>> newArray = new List<CellSwap<Value>>(source.Value.Count);
+
+                for (int i = 0; i < source.Value.Count; i++)
+                    newArray.Add(new CellSwap<Value>(Multiply(source.Value[i].Value, left, context)));
+
+                return new Value.Array(newArray);
+            }
+            
             return (rightValue, leftValue) switch
             {
                 (Value.Number(var n1), Value.Number(var n2)) => new Value.Number(n1 * n2),
                 (Value.String(var n1), Value.Number(var n2)) => new Value.String(MultiplyString(n1, (int)n2)),
+                (Value.Array n1, var n2) => MultiplyArray(n1, n2),
+                (var n2, Value.Array n1) => MultiplyArray(n1, n2),
                 
                 _ => throw new UndefinedInfixOperationException(
                     nameof(Multiply), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)

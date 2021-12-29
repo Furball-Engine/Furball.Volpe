@@ -119,6 +119,48 @@ namespace Furball.Volpe.SyntaxAnalysis
                 expressions.Add(expression);
             }
         }
+
+        private ExpressionValue.Lambda ParseLambda()
+        {
+            string[] ParseFormalParameters()
+            {
+                ForceGetNextTokenValueWithType<TokenValue.LeftRoundBracket>();
+                
+                List<string> variableNames = new List<string>();
+                bool needComma = false;
+
+                for (;;)
+                {
+                    Token token = ForceGetNextToken();
+
+                    switch (token.Value)
+                    {
+                        case TokenValue.Dollar when !needComma:
+                            TokenValue.Literal identifier = ForceGetNextTokenValueWithType<TokenValue.Literal>();
+                            variableNames.Add(identifier.Value);
+                            needComma = true;
+                            break;
+
+                        case TokenValue.Comma when needComma:
+                            needComma = false;
+                            break;
+
+                        case TokenValue.RightRoundBracket:
+                            return variableNames.ToArray();
+
+                        default:
+                            throw new UnexpectedTokenException(GetLastConsumedTokenPositionOrZero(), token);
+                    }
+                }
+            }
+
+            GetAndAssertNextTokenType<TokenValue.Func>();
+
+            string[] parametersName = ParseFormalParameters();
+            Expression[] expressions = ParseExpressionBlock();
+
+            return new ExpressionValue.Lambda(parametersName, expressions);
+        }
         
         private ExpressionValue.FunctionDefinition ParseFunctionDefinition()
         {
@@ -387,6 +429,9 @@ namespace Furball.Volpe.SyntaxAnalysis
                     break;
                 case TokenValue.While:
                     expression = new Expression {Value = ParseWhileExpression()};
+                    break;
+                case TokenValue.Func:
+                    expression = new Expression {Value = ParseLambda()};
                     break;
                 default:
                 {

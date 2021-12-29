@@ -124,6 +124,7 @@ namespace Furball.Volpe.LexicalAnalysis
             return op switch
             {
                 "=" => new TokenValue.Assign(),
+                "++" => new TokenValue.Append(),
                 "==" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.Eq()),
                 ">" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.GreaterThan()),
                 "<" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.LessThan()),

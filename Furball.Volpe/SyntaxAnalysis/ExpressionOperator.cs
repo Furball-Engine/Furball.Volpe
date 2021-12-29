@@ -64,6 +64,8 @@ namespace Furball.Volpe.SyntaxAnalysis
                 TokenValue.BooleanOperator(TokenValueBooleanOperator.Not) => new Not(),
                 TokenValue.BooleanOperator(TokenValueBooleanOperator.NotEq) => new NotEq(),
 
+                TokenValue.Append => new Append(),
+                
                 TokenValue.ArithmeticalOperator v => FromArithmeticalOperatorTokenValue(v.Value),
                 TokenValue.Assign => new Assign(),
                 TokenValue.ArrayAccess => new ArrayAccess(),
@@ -95,6 +97,12 @@ namespace Furball.Volpe.SyntaxAnalysis
         {
             public override ExpressionOperatorPrecedence Precedence => ExpressionOperatorPrecedence.Add;
             public override ExpressionOperatorType Type => ExpressionOperatorType.Infix | ExpressionOperatorType.Prefix;
+        }
+        
+        public record Append : ExpressionOperator
+        {
+            public override ExpressionOperatorPrecedence Precedence => ExpressionOperatorPrecedence.Add;
+            public override ExpressionOperatorType Type => ExpressionOperatorType.Infix;
         }
 
         public record Sub : ExpressionOperator

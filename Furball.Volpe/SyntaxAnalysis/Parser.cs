@@ -296,6 +296,55 @@ namespace Furball.Volpe.SyntaxAnalysis
             }
         }
 
+        private ExpressionValue.Object ParseObject()
+        {
+            GetAndAssertNextTokenType<TokenValue.LeftCurlyBracket>();
+
+            bool needComma = false;
+            
+            List<string> keys = new List<string>();
+            List<Expression> expressions = new List<Expression>();
+
+            for (;;)
+            {
+                Token? token;
+
+                if (!_tokenConsumer.TryPeekNext(out token))
+                    throw new UnexpectedEofException(GetLastConsumedTokenPositionOrZero());
+                
+                switch (token!.Value)
+                {
+                    case TokenValue.RightCurlyBracket:
+                        _tokenConsumer.SkipOne();
+                        return new ExpressionValue.Object(keys.ToArray(), expressions.ToArray());
+                        
+                    case TokenValue.String when !needComma:
+                        TokenValue.String keyId = ForceGetNextTokenValueWithType<TokenValue.String>();
+                        keys.Add(keyId.Value);
+                        ForceGetNextTokenValueWithType<TokenValue.Assign>();
+                        expressions.Add(ForceParseNextExpression());
+                        needComma = true;
+                        break;
+                    
+                    case TokenValue.Literal when !needComma:
+                        TokenValue.Literal keyIdLit = ForceGetNextTokenValueWithType<TokenValue.Literal>();
+                        keys.Add(keyIdLit.Value);
+                        ForceGetNextTokenValueWithType<TokenValue.Assign>();
+                        expressions.Add(ForceParseNextExpression());
+                        needComma = true;
+                        break;
+
+                    case TokenValue.Comma when needComma:
+                        needComma = false;
+                        _tokenConsumer.SkipOne();
+                        break;
+
+                    default:
+                        throw new UnexpectedTokenException(GetLastConsumedTokenPositionOrZero(), token);
+                }
+            }
+        }
+        
         private ExpressionValue.FunctionCall ParseFunctionCall(out bool canBeSubExpression)
         {
             Expression[] ParseActualParameterListWithoutBrackets()
@@ -393,6 +442,59 @@ namespace Furball.Volpe.SyntaxAnalysis
             return new ExpressionValue.FunctionCall(functionName, actualParameters);
         }
 
+        public Expression ParseEventualAccessOperators(Expression expr)
+        {
+            for (;;)
+            {
+                Token token;
+                if (!_tokenConsumer.TryPeekNext(out token))
+                    break;
+
+                switch (token!.Value)
+                {
+                    case TokenValue.Dot:
+                        _tokenConsumer.SkipOne();
+
+                        TokenValue.Literal literal = ForceGetNextTokenValueWithType<TokenValue.Literal>();
+
+                        expr =
+                            new Expression(
+                                new ExpressionValue.InfixExpression(
+                                    new ExpressionOperator.ArrayAccess(), 
+                                    expr, 
+                                    new Expression 
+                                    (
+                                        new ExpressionValue.String(literal.Value), 
+                                        GetLastConsumedTokenPositionOrZero()
+                                    )),
+                                expr.PositionInText
+                            );
+                        break;
+                    
+                    case TokenValue.LeftBracket:
+                        _tokenConsumer.SkipOne();
+                        
+                        Expression indexExpr = ForceParseNextExpression();
+                        ForceGetNextTokenValueWithType<TokenValue.RightBracket>();
+
+                        expr =
+                            new Expression(
+                                new ExpressionValue.InfixExpression(
+                                    new ExpressionOperator.ArrayAccess(), 
+                                    expr, 
+                                    indexExpr),
+                                expr.PositionInText
+                            );
+                        break;
+                        
+                    default:
+                        return expr;
+                }
+            }
+
+            return expr;
+        }
+        
         // https://en.wikipedia.org/wiki/Operator-precedence_parser for reference
         public bool TryParseNextExpression(
             out Expression? expression,
@@ -401,7 +503,7 @@ namespace Furball.Volpe.SyntaxAnalysis
             expression = default;
 
             _tokenConsumer.SkipTill(t => t.Value is TokenValue.SemiColon);
-
+            
             // Parse the first expression that comes in, if any
             Token? token;
             if (!_tokenConsumer.TryPeekNext(out token))
@@ -413,25 +515,25 @@ namespace Furball.Volpe.SyntaxAnalysis
             switch (token.Value)
             {
                 case TokenValue.RightCurlyBracket:
-                    expression = new Expression { Value = new ExpressionValue.Void() };
+                    expression = new Expression(new ExpressionValue.Void());
                     break;
                 case TokenValue.Literal:
-                    expression = new Expression {Value = ParseFunctionCall(out canBeSubExpression)};
+                    expression = new Expression(ParseFunctionCall(out canBeSubExpression));
                     break;
                 case TokenValue.FuncDef:
-                    expression = new Expression {Value = ParseFunctionDefinition()};
+                    expression = new Expression(ParseFunctionDefinition());
                     break;
                 case TokenValue.Return:
-                    expression = new Expression {Value = ParseReturnExpression()};
+                    expression = new Expression(ParseReturnExpression());
                     break;
                 case TokenValue.If:
-                    expression = new Expression {Value = ParseIfExpression()};
+                    expression = new Expression(ParseIfExpression());
                     break;
                 case TokenValue.While:
-                    expression = new Expression {Value = ParseWhileExpression()};
+                    expression = new Expression(ParseWhileExpression());
                     break;
                 case TokenValue.Func:
-                    expression = new Expression {Value = ParseLambda()};
+                    expression = new Expression(ParseLambda());
                     break;
                 default:
                 {
@@ -458,12 +560,13 @@ namespace Furball.Volpe.SyntaxAnalysis
                         
                         TokenValue.LeftRoundBracket => ParseSubExpression(),
 
+                        TokenValue.LeftCurlyBracket => ParseObject(),
                         TokenValue.LeftBracket => ParseArray(),
                         
                         _ => throw new UnexpectedTokenException(currentPositionInText, token)
                     };
 
-                    expression = new Expression {Value = value};
+                    expression = new Expression(value);
                     break;
                 }
             }
@@ -471,6 +574,8 @@ namespace Furball.Volpe.SyntaxAnalysis
             // Try to parse an infix expression if there is an operator after it.
             if (canBeSubExpression)
             {
+                expression = ParseEventualAccessOperators(expression);
+
                 for (;;)
                 {
                     if (!_tokenConsumer.TryPeekNext(out token))
@@ -489,17 +594,18 @@ namespace Furball.Volpe.SyntaxAnalysis
                         _tokenConsumer.SkipOne();
 
                         expression = new Expression
-                        {
-                            Value = new ExpressionValue.InfixExpression(
+                        (
+                            new ExpressionValue.InfixExpression(
                                 expressionOperator, expression,
                                 ForceParseNextExpression(expressionOperator.Precedence)),
-                            PositionInText = currentPositionInText
-                        };
+                            
+                            currentPositionInText
+                        );
                     }
                     else if (token is
                     {
                         Value: TokenValue.Comma or TokenValue.RightCurlyBracket or TokenValue.RightRoundBracket or
-                        TokenValue.Dollar or TokenValue.SemiColon or TokenValue.RightBracket
+                        TokenValue.Dollar or TokenValue.SemiColon or TokenValue.RightBracket or TokenValue.Dot
                     })
                         break;
                     else

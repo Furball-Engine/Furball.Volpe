@@ -4,6 +4,7 @@ namespace Furball.Volpe.SyntaxAnalysis
 {
     public abstract record ExpressionValue
     {
+        public record Object(string[] Keys, Expression[] Values) : ExpressionValue;
         public record Variable(string Name) : ExpressionValue;
         public record String(string Value) : ExpressionValue;
         public record Number(double Value) : ExpressionValue;
@@ -26,10 +27,15 @@ namespace Furball.Volpe.SyntaxAnalysis
     
     public class Expression : IPositionableInText, IEquatable<Expression>
     {
-        public ExpressionValue Value { get; set; } = null!;
+        public ExpressionValue Value { get; set; }
         public PositionInText PositionInText { get; set; }
 
         #region IEquatable implementation
+
+        public Expression(ExpressionValue value, PositionInText position = default)
+        {
+            Value = value;
+        }
         
         public bool Equals(Expression? other)
         {

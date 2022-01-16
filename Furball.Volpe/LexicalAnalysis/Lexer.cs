@@ -159,7 +159,7 @@ namespace Furball.Volpe.LexicalAnalysis
             {
                 '"' => new TokenValue.String(ConsumeNextString()),
                 
-                ':' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.ArrayAccess()),
+                ':' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Colon()),
                 ',' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Comma()),
                 '#' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Hashtag()),
                 '[' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.LeftBracket()),
@@ -170,6 +170,8 @@ namespace Furball.Volpe.LexicalAnalysis
                 '}' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.RightCurlyBracket()),
                 '$' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Dollar()),
                 ';' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.SemiColon()),
+                '.' => _textConsumer.TryConsumeNextAndThen((_, _) => new TokenValue.Dot()),
+                
                 _ when character.IsVolpeOperator() => ConsumeOperator(),
 
                 _ when character.IsVolpeDigit() => new TokenValue.Number(ConsumeNextNumber()),

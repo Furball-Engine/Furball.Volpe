@@ -39,7 +39,8 @@ namespace Furball.Volpe.LexicalAnalysis
 
     public abstract record TokenValue
     {
-        public record ArrayAccess : TokenValue;
+        public record Dot : TokenValue;
+        public record Colon : TokenValue;
         public record While : TokenValue;
         public record If : TokenValue;
         public record Elif : TokenValue;
@@ -68,7 +69,7 @@ namespace Furball.Volpe.LexicalAnalysis
         public record Return : TokenValue;
         public record Append : TokenValue;
         public bool IsOperator => this is TokenValue.BooleanOperator or TokenValue.ArithmeticalOperator 
-            or TokenValue.OperatorWithAssignment or TokenValue.Assign or TokenValue.ArrayAccess or TokenValue.Append;
+            or TokenValue.OperatorWithAssignment or TokenValue.Assign or TokenValue.Append;
     }
     
     public class Token: IPositionableInText

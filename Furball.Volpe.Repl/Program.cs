@@ -84,7 +84,11 @@ namespace Furball.Volpe.Repl
                 }
                 catch (VolpeException ex)
                 {
+#if DEBUG
+                    Console.WriteLine(ex);
+#else
                     Console.WriteLine(ex.Message);
+#endif
                 }
             }
         }

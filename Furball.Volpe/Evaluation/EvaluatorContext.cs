@@ -86,17 +86,15 @@ namespace Furball.Volpe.Evaluation
             };
         }
 
-        private Value EvaluateAssignment(Expression left, Expression right)
+        private Value EvaluateAssignment(Expression left, Value rightV)
         {
-            Value v = new EvaluatorContext(right, Environment).Evaluate();
-            
             if (left.Value is ExpressionValue.Variable variable)
-                return AssignVariable(variable.Name, v);
+                return AssignVariable(variable.Name, rightV);
             
             if (left.Value is ExpressionValue.InfixExpression &&
                 new EvaluatorContext(left, Environment).Evaluate(forceInner: false) is Value.ValueReference reference)
             {
-                reference.Value.Swap(v);
+                reference.Value.Swap(rightV);
                 return reference.InnerOrSelf;
             }
 
@@ -105,18 +103,17 @@ namespace Furball.Volpe.Evaluation
 
         private Value EvaluateInfixExpression(ExpressionValue.InfixExpression expr)
         {
+            Value rightValue = new EvaluatorContext(expr.Right, Environment).Evaluate();
+            
             if (expr.Operator is ExpressionOperator.Assign)
-                return EvaluateAssignment(expr.Left, expr.Right);
+                return EvaluateAssignment(expr.Left, rightValue);
 
             Value leftValue = new EvaluatorContext(expr.Left, Environment).Evaluate();
-            Value rightValue = new EvaluatorContext(expr.Right, Environment).Evaluate();
             
             if (expr.Operator is ExpressionOperator.OperatorWithAssignment opWithAssignment)
             {
-                if (expr.Left.Value is not ExpressionValue.Variable(var variableName))
-                    throw new ExpectedExpressionException(expr.Left.PositionInText);
-
-                return AssignVariable(variableName, ApplyOperator(opWithAssignment.Wrapped, leftValue, rightValue));
+                Value value = ApplyOperator(opWithAssignment.Wrapped, leftValue, rightValue);
+                return EvaluateAssignment(expr.Left, value);
             }
 
             return ApplyOperator(expr.Operator, leftValue, rightValue);
@@ -251,6 +248,22 @@ namespace Furball.Volpe.Evaluation
             return new Value.Array(
                 initialElements.Select(element => new CellSwap<Value>(new EvaluatorContext(element, environment, false).Evaluate())).ToList());
         }
+        
+        public Value EvaluateObject(string[] keys, Expression[] expressions)
+        {
+            Dictionary<string, CellSwap<Value>> dict = new Dictionary<string, CellSwap<Value>>();
+
+            for (int i = 0; i < keys.Length; i++)
+            {
+                if (dict.ContainsKey(keys[i]))
+                    throw new KeyAlreadyDefinedException(keys[i], Expression.PositionInText);
+                
+                dict.Add(keys[i],
+                    new CellSwap<Value>(new EvaluatorContext(expressions[i], Environment, false).Evaluate()));
+            }
+
+            return new Value.Object(dict);
+        }
 
         public static Value[] EvaluateAll(string source, Environment environment)
         {
@@ -290,12 +303,12 @@ namespace Furball.Volpe.Evaluation
                 ExpressionValue.False => Value.DefaultFalse,
                 ExpressionValue.Array(var initialElements) => EvaluateArray(initialElements),
                 ExpressionValue.Lambda lambda => EvaluateLambda(lambda),
+                ExpressionValue.Object(var keys, var expressions) => EvaluateObject(keys, expressions),
 
                 _ => throw new ArgumentException()
             };
 
             return forceInner ? evaluated.InnerOrSelf : evaluated;
         }
-
     }
 }

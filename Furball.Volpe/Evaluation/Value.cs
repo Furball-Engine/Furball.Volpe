@@ -67,6 +67,34 @@ namespace Furball.Volpe.Evaluation
             }
         }
         
+        public record Object(Dictionary<string, CellSwap<Value>> Value) : Value
+        {
+            public override string Representation
+            {
+                get
+                {
+                    StringBuilder stringBuilder = new StringBuilder();
+
+                    stringBuilder.Append('{');
+
+                    int i = 0;
+                    foreach (var key in Value.Keys)
+                    {
+                        stringBuilder.Append($"\"{key}\" = {Value[key].Value.Representation}");
+                        
+                        if (i != Value.Count - 1)
+                            stringBuilder.Append(',');
+                        
+                        ++i;
+                    }
+                    
+                    stringBuilder.Append('}');
+
+                    return stringBuilder.ToString();
+                }
+            }
+        }
+        
         public record FunctionReference(string Name, Function Function) : Value
         {
             public override string Representation => $"<Function \"{Name}\", {Function.GetHashCode()}>";

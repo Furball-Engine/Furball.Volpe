@@ -60,6 +60,7 @@ namespace Furball.Volpe.Evaluation.CoreLib {
                     Value.Void => "void",
                     Value.FunctionReference => "function_reference",
                     Value.Array => "array",
+                    Value.Object => "object",
                     Value.Boolean => "boolean",
 
                     _ => throw new InvalidOperationException(values[0].GetType().ToString())

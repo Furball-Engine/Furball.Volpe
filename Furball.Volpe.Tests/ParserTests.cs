@@ -53,12 +53,13 @@ namespace Furball.Volpe.Tests
                 .GetExpressionEnumerator().ToArray();
 
             Assert.AreEqual(values, new Expression[] {
-                new Expression {
-                    Value = new ExpressionValue.InfixExpression(
+                new Expression(
+                    new ExpressionValue.InfixExpression(
                         new ExpressionOperator.Add(),
-                        new Expression { Value = new ExpressionValue.Number(2) },
-                        new Expression { Value = new ExpressionValue.Number(2) })
-                }
+                        new Expression(new ExpressionValue.Number(2)),
+                        new Expression(new ExpressionValue.Number(2))
+                    )
+                )
             });
         }
         
@@ -71,26 +72,20 @@ namespace Furball.Volpe.Tests
             Assert.AreEqual(values, new Expression[]
             {
                 new Expression
-                {
-                    Value = new ExpressionValue.InfixExpression(
+                (
+                    new ExpressionValue.InfixExpression(
                         new ExpressionOperator.Sub(),
-                        new Expression { 
-                            Value = new ExpressionValue.InfixExpression(
+                        new Expression (
+                            new ExpressionValue.InfixExpression(
                                 new ExpressionOperator.Add(), 
-                                new Expression
-                                {
-                                    Value = new ExpressionValue.Number(2)
-                                },
-                                new Expression
-                                {
-                                    Value = new ExpressionValue.Number(2)
-                                })
-                        },
-                        new Expression
-                        {
-                            Value = new ExpressionValue.Number(4)
-                        })
-                }
+                                new Expression(new ExpressionValue.Number(2)),
+                                new Expression(new ExpressionValue.Number(2)))
+                        ),
+                        new Expression(
+                            new ExpressionValue.Number(4)
+                        )
+                    )
+                )
             });
         }
         
@@ -103,41 +98,27 @@ namespace Furball.Volpe.Tests
 
             Assert.AreEqual(values, new Expression[]
             {
-                new Expression
-                {
-                    Value = new ExpressionValue.InfixExpression(
+                new Expression(
+                    new ExpressionValue.InfixExpression(
                         new ExpressionOperator.Mul(),
-                        new Expression
-                        {
-                            Value = new ExpressionValue.SubExpression(new Expression { 
-                                Value = new ExpressionValue.InfixExpression(
+                        new Expression(
+                            new ExpressionValue.SubExpression(new Expression(
+                                new ExpressionValue.InfixExpression(
                                     new ExpressionOperator.Add(), 
-                                    new Expression
-                                    {
-                                        Value = new ExpressionValue.Number(2)
-                                    },
-                                    new Expression
-                                    {
-                                        Value = new ExpressionValue.Number(2)
-                                    })
-                            })
-                        },
-                        new Expression
-                        {
-                            Value = new ExpressionValue.SubExpression(new Expression { 
-                                Value = new ExpressionValue.InfixExpression(
+                                    new Expression(new ExpressionValue.Number(2)),
+                                    new Expression(new ExpressionValue.Number(2))
+                                )
+                            )
+                        )),
+                        new Expression(
+                            new ExpressionValue.SubExpression(new Expression(
+                                new ExpressionValue.InfixExpression(
                                     new ExpressionOperator.Add(), 
-                                    new Expression
-                                    {
-                                        Value = new ExpressionValue.Number(2)
-                                    },
-                                    new Expression
-                                    {
-                                        Value = new ExpressionValue.Number(2)
-                                    })
-                            })
-                        })
-                }
+                                    new Expression(new ExpressionValue.Number(2)),
+                                    new Expression(new ExpressionValue.Number(2))
+                                )
+                        )))
+                ))
             });
         }
 
@@ -168,8 +149,8 @@ namespace Furball.Volpe.Tests
             Assert.AreEqual(functionDefinition.Name, "hi");
             CollectionAssert.AreEqual(functionDefinition.Parameters, new Expression[]
             {
-                new Expression {Value = new ExpressionValue.Number(2)},
-                new Expression {Value = new ExpressionValue.Number(3)}
+                new Expression(new ExpressionValue.Number(2)),
+                new Expression(new ExpressionValue.Number(3))
             });
         }
         
@@ -183,8 +164,8 @@ namespace Furball.Volpe.Tests
             Assert.AreEqual(functionDefinition.Name, "hi");
             CollectionAssert.AreEqual(functionDefinition.Parameters, new Expression[]
             {
-                new Expression {Value = new ExpressionValue.Number(2)},
-                new Expression {Value = new ExpressionValue.Number(3)}
+                new Expression (new ExpressionValue.Number(2)),
+                new Expression (new ExpressionValue.Number(3))
             });
             
             ExpressionValue v = expr.ParseNextExpression().Value;
@@ -201,19 +182,19 @@ namespace Furball.Volpe.Tests
             CollectionAssert.AreEqual(ifExpr.Conditions, new Expression[]
             {
                 new Expression
-                {
-                    Value = new ExpressionValue.InfixExpression(
+                (
+                    new ExpressionValue.InfixExpression(
                         new ExpressionOperator.GreaterThan(),
-                        new Expression {Value = new ExpressionValue.Number(2)},
-                        new Expression {Value = new ExpressionValue.Number(3)})
-                },
+                        new Expression (new ExpressionValue.Number(2)),
+                        new Expression (new ExpressionValue.Number(3)))
+                ),
                 new Expression
-                {
-                    Value = new ExpressionValue.InfixExpression(
+                (
+                    new ExpressionValue.InfixExpression(
                         new ExpressionOperator.Eq(),
-                        new Expression {Value = new ExpressionValue.Number(1)},
-                        new Expression {Value = new ExpressionValue.Number(1)})
-                },
+                        new Expression(new ExpressionValue.Number(1)),
+                        new Expression(new ExpressionValue.Number(1)))
+                ),
             });
         }
         

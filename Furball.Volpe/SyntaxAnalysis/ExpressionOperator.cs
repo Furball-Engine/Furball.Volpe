@@ -68,7 +68,7 @@ namespace Furball.Volpe.SyntaxAnalysis
                 
                 TokenValue.ArithmeticalOperator v => FromArithmeticalOperatorTokenValue(v.Value),
                 TokenValue.Assign => new Assign(),
-                TokenValue.ArrayAccess => new ArrayAccess(),
+                TokenValue.Colon => new ArrayAccess(),
                 TokenValue.OperatorWithAssignment v =>  new OperatorWithAssignment(FromArithmeticalOperatorTokenValue(v.Value)),
 
                 _ => throw new ArgumentOutOfRangeException(nameof(tokenOperator))

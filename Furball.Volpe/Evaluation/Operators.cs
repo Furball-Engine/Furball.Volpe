@@ -42,9 +42,18 @@ namespace Furball.Volpe.Evaluation
                 return array[index];
             }
             
+            CellSwap<Value> ObjectElementAt(Dictionary<string, CellSwap<Value>> dict, string key)
+            {
+                if (!dict.ContainsKey(key))
+                    throw new Exceptions.KeyNotFoundException(key, context.Expression.PositionInText);
+                
+                return dict[key];
+            }
+            
             return (leftValue, rightValue) switch
             {
                 (Value.Array(var arr), Value.Number(var n1)) => new Value.ValueReference(ElementAt(arr, (int)n1)),
+                (Value.Object(var arr), Value.String(var n1)) => new Value.ValueReference(ObjectElementAt(arr, n1)),
                 
                 _ => throw new UndefinedPrefixOperationException(
                     nameof(Positive), leftValue.GetType(), context.Expression.PositionInText)

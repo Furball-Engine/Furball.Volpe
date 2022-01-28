@@ -24,8 +24,7 @@ namespace Furball.Volpe.Evaluation.CoreLib
         
             public StringClass() : base("string", new (string, Function)[]
             {
-                ("format", new Function.Builtin((context, values) =>
-                {
+                ("format", new Function.Builtin((context, values) => {
                     if(values[0] is not Value.String(var formatString))
                         throw new InvalidValueTypeException(typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
                     if(values[1] is not Value.Array(var paramArray))
@@ -51,7 +50,72 @@ namespace Furball.Volpe.Evaluation.CoreLib
                     }
 
                     return new Value.String(string.Format(formatString, parameters.ToArray()));
-                }, 2))
+                }, 2)),
+                ("length", new Function.Builtin((context, parameters) => {
+                    Value.String str = parameters[0] as Value.String;
+
+                    return new Value.Number(str.Value.Length);
+                }, 0)),
+                ("to_upper", new Function.Builtin((context, parameters) => {
+                        Value.String str = parameters[0] as Value.String;
+
+                        return new Value.String(str.Value.ToUpper());
+                    }, 0)),
+                ("to_lower", new Function.Builtin((context, parameters) => {
+                        Value.String str = parameters[0] as Value.String;
+
+                        return new Value.String(str.Value.ToLower());
+                    }, 0)),
+                ("substr", new Function.Builtin((context, parameters) => {
+                        Value.String str = parameters[0] as Value.String;
+
+                        if (parameters[1] is not Value.Number(var begin))
+                            throw new InvalidValueTypeException(typeof(Value.Number), parameters[1].GetType(), context.Expression.PositionInText);
+                        if (parameters[2] is not Value.Number(var length))
+                            throw new InvalidValueTypeException(typeof(Value.Number), parameters[2].GetType(), context.Expression.PositionInText);
+
+                        string substring = str.Value.Substring((int) begin, (int) length);
+
+                        return new Value.String(substring);
+                    }, 3)),
+                ("split", new Function.Builtin((context, parameters) => {
+                        Value.String str = parameters[0] as Value.String;
+
+                        if (parameters[1] is not Value.String(var delimiter))
+                            throw new InvalidValueTypeException(typeof(Value.Number), parameters[1].GetType(), context.Expression.PositionInText);
+
+                        List<CellSwap<Value>> split = new();
+
+                        foreach (string s in str.Value.Split(delimiter)) {
+                            split.Add(new CellSwap<Value>(new Value.String(s)));
+                        }
+
+                        return new Value.Array(split);
+                    }, 2)),
+                ("contains", new Function.Builtin((context, parameters) => {
+                        Value.String str = parameters[0] as Value.String;
+
+                        if (parameters[1] is not Value.String(var what))
+                            throw new InvalidValueTypeException(typeof(Value.Number), parameters[1].GetType(), context.Expression.PositionInText);
+
+                        return new Value.Boolean(str.Value.Contains(what));
+
+                    }, 1)),
+                ("replace", new Function.Builtin((context, parameters) => {
+                        Value.String str = parameters[0] as Value.String;
+
+                        if (parameters[1] is not Value.String(var what))
+                            throw new InvalidValueTypeException(typeof(Value.Number), parameters[1].GetType(), context.Expression.PositionInText);
+                        if (parameters[2] is not Value.String(var with))
+                            throw new InvalidValueTypeException(typeof(Value.Number), parameters[2].GetType(), context.Expression.PositionInText);
+
+                        return new Value.String(str.Value.Replace(what, with));
+                    }, 2)),
+                ("trim", new Function.Builtin((context, parameters) => {
+                        Value.String str = parameters[0] as Value.String;
+
+                        return new Value.String(str.Value.Trim());
+                    }, 0)),
             }) { }
         }
     
@@ -79,7 +143,7 @@ namespace Furball.Volpe.Evaluation.CoreLib
         {
             public static readonly BooleanClass Default = new BooleanClass();
         
-            public BooleanClass() : base("string", new (string, Function)[]
+            public BooleanClass() : base("bool", new (string, Function)[]
             {
                 
             }) { }

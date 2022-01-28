@@ -41,22 +41,22 @@ namespace Furball.Volpe.Evaluation
 
                 return array[index];
             }
-            
-            CellSwap<Value> ObjectElementAt(Dictionary<string, CellSwap<Value>> dict, string key)
+
+            CellSwap<Value> ObjectElementAt(Value.Object dict, string key)
             {
-                if (!dict.ContainsKey(key))
+                if (!dict.Value.ContainsKey(key))
                     throw new Exceptions.KeyNotFoundException(key, context.Expression.PositionInText);
                 
-                return dict[key];
+                return dict.Value[key];
             }
             
             return (leftValue, rightValue) switch
             {
                 (Value.Array(var arr), Value.Number(var n1)) => new Value.ValueReference(ElementAt(arr, (int)n1)),
-                (Value.Object(var arr), Value.String(var n1)) => new Value.ValueReference(ObjectElementAt(arr, n1)),
+                (Value.Object arr, Value.String(var n1)) => new Value.ValueReference(ObjectElementAt(arr, n1)),
                 
                 _ => throw new UndefinedPrefixOperationException(
-                    nameof(Positive), leftValue.GetType(), context.Expression.PositionInText)
+                    nameof(ArrayAccess), leftValue.GetType(), context.Expression.PositionInText)
             };
         }
 
@@ -181,14 +181,34 @@ namespace Furball.Volpe.Evaluation
         {
             Value AppendArrayToArray(Value.Array arr1, Value.Array arr2)
             {
-                arr1.Value.AddRange(arr2.Value);
+                arr1 = arr1.Copy();
+
+                for (int i = 0; i < arr2.Value.Count; i++)
+                    arr1.Value.Add(new CellSwap<Value>(arr2.Value[i].Value));
+
                 return arr1;
+            }
+            
+            Value AppendObjectToObject(Value.Object obj1, Value.Object obj2)
+            {
+                obj1 = obj1.Copy();
+
+                foreach (var key in obj2.Value.Keys)
+                {
+                    if (obj1.Value.ContainsKey(key))
+                        throw new KeyAlreadyDefinedException(key, context.Expression.PositionInText);
+                    
+                    obj1.Value.Add(key, new CellSwap<Value>(obj2.Value[key].Value));
+                }
+
+                return obj1;
             }
             
             return (rightValue, leftValue) switch
             {
                 (Value.String(var n1), Value.String(var n2)) => new Value.String(n1 + n2),
                 (Value.Array n1, Value.Array n2) => AppendArrayToArray(n1, n2),
+                (Value.Object n1, Value.Object n2) => AppendObjectToObject(n1, n2),
                 
                 _ => throw new UndefinedInfixOperationException(
                     nameof(Append), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)

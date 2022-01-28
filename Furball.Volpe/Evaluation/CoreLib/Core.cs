@@ -6,6 +6,8 @@ using Furball.Volpe.Exceptions;
 using Furball.Volpe.Memory;
 
 namespace Furball.Volpe.Evaluation.CoreLib {
+   
+    
     public class Core : CoreLibExtension {
         public override BuiltinFunction[] FunctionExports() => new BuiltinFunction[] {
             new BuiltinFunction ("int", 1, (context, values) => {
@@ -21,7 +23,7 @@ namespace Furball.Volpe.Evaluation.CoreLib {
                     context.Expression.PositionInText);
             }),
 
-            new BuiltinFunction ("string", 1, (context, values) =>/**/ {
+            new BuiltinFunction ("string", 1, (context, values) => {
                 Value value = values[0];
 
                 if (value is Value.String)
@@ -93,13 +95,11 @@ namespace Furball.Volpe.Evaluation.CoreLib {
                 switch (values[0])
                 {
                     case Value.Array arr:
-                        List<CellSwap<Value>> newArray = new List<CellSwap<Value>>(arr.Value.Count);
-
-                        for (int i = 0; i < arr.Value.Count; i++)
-                            newArray.Add(new CellSwap<Value>(arr.Value[i].Value));
-
-                        return new Value.Array(newArray);
+                        return arr.Copy();
                     
+                    case Value.Object obj:
+                        return obj.Copy();
+
                     default:
                         return values[0] with { };
                 }

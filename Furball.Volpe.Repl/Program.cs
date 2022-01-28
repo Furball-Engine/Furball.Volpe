@@ -80,7 +80,7 @@ namespace Furball.Volpe.Repl
                         .Select(expr => new EvaluatorContext(expr, environment).Evaluate()).ToArray();
 
                     for (int i = 0; i < results.Length; i++)
-                        Console.WriteLine($"[{i}] {results[i].Representation}");
+                        Console.WriteLine($"[{i}] {results[i].RepresentationWithClass}");
                 }
                 catch (VolpeException ex)
                 {

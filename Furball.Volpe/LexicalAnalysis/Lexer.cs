@@ -127,6 +127,7 @@ namespace Furball.Volpe.LexicalAnalysis
                 "++" => new TokenValue.Append(),
                 "==" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.Eq()),
                 ">" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.GreaterThan()),
+                "->" => new TokenValue.ClassAccess(),
                 "<" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.LessThan()),
                 ">=" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.GreaterThanOrEqual()),
                 "<=" => new TokenValue.BooleanOperator(new TokenValueBooleanOperator.LessThanOrEqual()),
@@ -187,6 +188,8 @@ namespace Furball.Volpe.LexicalAnalysis
                     "elif" => new TokenValue.Elif(),
                     "else" => new TokenValue.Else(),
                     "while" => new TokenValue.While(),
+                    "class" => new TokenValue.Class(),
+                    "extends" => new TokenValue.Extends(),
                     
                     {} value => new TokenValue.Literal(value) 
                 },

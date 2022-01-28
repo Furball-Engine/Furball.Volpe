@@ -13,12 +13,14 @@ namespace Furball.Volpe.Evaluation
         private readonly Dictionary<string, Value> _variables;
         private readonly Dictionary<string, (Function Getter, Function Setter)> _hookedVariables;
         private readonly Dictionary<string, Function> _functions;
+        private readonly Dictionary<string, Class> _classes;
 
         public Environment(BuiltinFunction[] builtins)
         {
             _variables = new Dictionary<string, Value>();
             _hookedVariables = new Dictionary<string, (Function Getter, Function Setter)>();
             _functions = builtins.ToDictionary(b => b.Identifier, b => (Function)new Function.Builtin(b.Callback, b.ParamCount));
+            _classes = new Dictionary<string, Class>();
         }
 
         public void AddBuiltin(BuiltinFunction function) =>
@@ -30,6 +32,30 @@ namespace Furball.Volpe.Evaluation
         public Environment(Environment? parent = null) : this(Array.Empty<BuiltinFunction>())
         {
             Parent = parent;
+        }
+
+        public bool TrySetClass(string className, Class classRef)
+        {
+            if (_classes.ContainsKey(className))
+                return false;
+            
+            if (Parent is not null)
+                return Parent._classes.ContainsKey(className);
+            
+            _classes.Add(className, classRef);
+
+            return true;
+        }
+        
+        public bool TryGetClass(string className, out Class? classRef)
+        {
+            if (_classes.TryGetValue(className, out classRef))
+                return true;
+            
+            if (Parent is not null)
+                return Parent.TryGetClass(className, out classRef);
+
+            return false;
         }
         
         public bool TryGetFunctionReference(string functionName, out Function? function)

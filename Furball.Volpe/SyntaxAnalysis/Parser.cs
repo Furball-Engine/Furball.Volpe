@@ -37,6 +37,37 @@ namespace Furball.Volpe.SyntaxAnalysis
 
             return tokenValue;
         }
+        
+        private bool TryPeekNextTokenWithType<T>(out T? value) where T : TokenValue
+        {
+            value = null;
+
+            Token? token;
+
+            if (!_tokenConsumer.TryPeekNext(out token))
+                return false;
+
+            if (token!.Value is not T tokenValue)
+                return false;
+
+            value = tokenValue;
+            
+            return true;
+        }
+        
+        private bool TryGetNextTokenWithType<T>(out T? value) where T : TokenValue
+        {
+            value = null;
+            
+            Token token = ForceGetNextToken();
+
+            if (token.Value is not T tokenValue)
+                return false;
+
+            value = tokenValue;
+            
+            return true;
+        }
 
         private T GetAndAssertNextTokenType<T>() where T : TokenValue
         {
@@ -56,6 +87,7 @@ namespace Furball.Volpe.SyntaxAnalysis
 
             return expression!;
         }
+
 
         private ExpressionValue.Variable ParseVariable()
         {
@@ -442,11 +474,44 @@ namespace Furball.Volpe.SyntaxAnalysis
             return new ExpressionValue.FunctionCall(functionName, actualParameters);
         }
 
-        public Expression ParseEventualAccessOperators(Expression expr)
+        public ExpressionValue.ClassDefinition ParseClass()
         {
+            GetAndAssertNextTokenType<TokenValue.Class>();
+            string className = ForceGetNextTokenValueWithType<TokenValue.Literal>().Value;
+            string? extendsClassName = null;
+
+            if (TryPeekNextTokenWithType<TokenValue.Extends>(out _))
+            {
+                _tokenConsumer.SkipOne();
+                extendsClassName = ForceGetNextTokenValueWithType<TokenValue.Literal>().Value;
+            }
+
+            List<ExpressionValue.FunctionDefinition> methodDefinition = new List<ExpressionValue.FunctionDefinition>();
+
+            ForceGetNextTokenValueWithType<TokenValue.LeftCurlyBracket>();
+            
+            Token? token;
+            while (_tokenConsumer.TryPeekNext(out token))
+            {
+                if (token!.Value is TokenValue.FuncDef)
+                    methodDefinition.Add(ParseFunctionDefinition());
+                else
+                {
+                    ForceGetNextTokenValueWithType<TokenValue.RightCurlyBracket>();
+                    break;
+                }
+            }
+
+            return new ExpressionValue.ClassDefinition(className, extendsClassName, methodDefinition.ToArray());
+        }
+
+        public Expression ParseEventualAccessOperators(Expression expr, out bool canBeInSubExpression)
+        {
+            canBeInSubExpression = true;
+            
             for (;;)
             {
-                Token token;
+                Token? token;
                 if (!_tokenConsumer.TryPeekNext(out token))
                     break;
 
@@ -486,6 +551,26 @@ namespace Furball.Volpe.SyntaxAnalysis
                                 expr.PositionInText
                             );
                         break;
+                    
+                    
+                    case TokenValue.ClassAccess:
+                        _tokenConsumer.SkipOne();
+                        
+                        ExpressionValue.FunctionCall callExpr = ParseFunctionCall(out canBeInSubExpression);
+
+                        expr =
+                            new Expression(
+                                new ExpressionValue.MethodCall(
+                                    expr, 
+                                    callExpr.Name,
+                                    callExpr.Parameters),
+                                expr.PositionInText
+                            );
+
+                        if (!canBeInSubExpression)
+                            return expr;
+                        
+                        break;
                         
                     default:
                         return expr;
@@ -514,6 +599,9 @@ namespace Furball.Volpe.SyntaxAnalysis
 
             switch (token.Value)
             {
+                case TokenValue.Class:
+                    expression = new Expression(ParseClass());
+                    break;
                 case TokenValue.RightCurlyBracket:
                     expression = new Expression(new ExpressionValue.Void());
                     break;
@@ -571,10 +659,11 @@ namespace Furball.Volpe.SyntaxAnalysis
                 }
             }
 
+            expression = ParseEventualAccessOperators(expression, out canBeSubExpression);
+            
             // Try to parse an infix expression if there is an operator after it.
             if (canBeSubExpression)
             {
-                expression = ParseEventualAccessOperators(expression);
 
                 for (;;)
                 {

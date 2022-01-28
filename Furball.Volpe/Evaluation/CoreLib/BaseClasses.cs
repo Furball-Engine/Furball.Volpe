@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Furball.Volpe.Exceptions;
 using Furball.Volpe.Memory;
 
@@ -82,7 +83,7 @@ namespace Furball.Volpe.Evaluation.CoreLib
                         Value.String str = parameters[0] as Value.String;
 
                         if (parameters[1] is not Value.String(var delimiter))
-                            throw new InvalidValueTypeException(typeof(Value.Number), parameters[1].GetType(), context.Expression.PositionInText);
+                            throw new InvalidValueTypeException(typeof(Value.String), parameters[1].GetType(), context.Expression.PositionInText);
 
                         List<CellSwap<Value>> split = new();
 
@@ -96,7 +97,7 @@ namespace Furball.Volpe.Evaluation.CoreLib
                         Value.String str = parameters[0] as Value.String;
 
                         if (parameters[1] is not Value.String(var what))
-                            throw new InvalidValueTypeException(typeof(Value.Number), parameters[1].GetType(), context.Expression.PositionInText);
+                            throw new InvalidValueTypeException(typeof(Value.String), parameters[1].GetType(), context.Expression.PositionInText);
 
                         return new Value.Boolean(str.Value.Contains(what));
 
@@ -105,9 +106,9 @@ namespace Furball.Volpe.Evaluation.CoreLib
                         Value.String str = parameters[0] as Value.String;
 
                         if (parameters[1] is not Value.String(var what))
-                            throw new InvalidValueTypeException(typeof(Value.Number), parameters[1].GetType(), context.Expression.PositionInText);
+                            throw new InvalidValueTypeException(typeof(Value.String), parameters[1].GetType(), context.Expression.PositionInText);
                         if (parameters[2] is not Value.String(var with))
-                            throw new InvalidValueTypeException(typeof(Value.Number), parameters[2].GetType(), context.Expression.PositionInText);
+                            throw new InvalidValueTypeException(typeof(Value.String), parameters[2].GetType(), context.Expression.PositionInText);
 
                         return new Value.String(str.Value.Replace(what, with));
                     }, 2)),
@@ -125,7 +126,104 @@ namespace Furball.Volpe.Evaluation.CoreLib
         
             public ArrayClass() : base("array", new (string, Function)[]
             {
-            
+                ("length", new Function.Builtin((context, parameters) => {
+                        Value.Array arr = parameters[0] as Value.Array;
+
+                        return new Value.Number(arr.Value.Count);
+                    }, 0)),
+                ("append", new Function.Builtin((context, parameters) => {
+                        Value.Array arr = parameters[0] as Value.Array;
+
+                        arr.Value.Add(new CellSwap<Value>(parameters[1]));
+
+                        return new Value.Void();
+                    }, 1)),
+                ("append_range", new Function.Builtin((context, parameters) => {
+                        Value.Array arr = parameters[0] as Value.Array;
+
+                        if (parameters[1] is not Value.Array(var toAdd))
+                            throw new InvalidValueTypeException(typeof(Value.Array), parameters[1].GetType(), context.Expression.PositionInText);
+
+                        arr.Value.AddRange(toAdd);
+
+                        return new Value.Void();
+                    }, 1)),
+                ("remove_range", new Function.Builtin((context, parameters) => {
+                        Value.Array arr = parameters[0] as Value.Array;
+
+                        if (parameters[1] is not Value.Array(var toRemove))
+                            throw new InvalidValueTypeException(typeof(Value.Array), parameters[1].GetType(), context.Expression.PositionInText);
+
+                        foreach (CellSwap<Value> value in toRemove) {
+                            int index = arr.Value.FindIndex(x=> x.Value == value.Value);
+                            arr.Value.RemoveAt(index);
+                        }
+
+                        return new Value.Void();
+                    }, 1)),
+                ("remove_at", new Function.Builtin((context, parameters) => {
+                        Value.Array arr = parameters[0] as Value.Array;
+
+                        if (parameters[1] is not Value.Number(var fIndex))
+                            throw new InvalidValueTypeException(typeof(Value.Number), parameters[1].GetType(), context.Expression.PositionInText);
+
+                        int index = (int) fIndex;
+
+                        if (index >= arr.Value.Count || index < 0)
+                            throw new IndexOutOfBoundsException(arr.Value, index, context.Expression.PositionInText);
+
+                        Value oldValue = arr.Value[index];
+                        arr.Value.RemoveAt(index);
+
+                        return new Value.Void();
+                    }, 1)),
+                ("remove", new Function.Builtin((context, parameters) => {
+                        Value.Array arr = parameters[0] as Value.Array;
+
+                        int index = arr.Value.FindIndex(x=> x.Value == parameters[1]);
+                        arr.Value.RemoveAt(index);
+
+                        return new Value.Void();
+                    }, 1)),
+                ("insert_at", new Function.Builtin((context, parameters) => {
+                        Value.Array arr = parameters[0] as Value.Array;
+
+                        if (parameters[1] is not Value.Number(var fIndex))
+                            throw new InvalidValueTypeException(typeof(Value.Number), parameters[1].GetType(), context.Expression.PositionInText);
+
+                        int index = (int) fIndex;
+
+                        if (index >= arr.Value.Count || index < 0)
+                            throw new IndexOutOfBoundsException(arr.Value, index, context.Expression.PositionInText);
+
+                        arr.Value.Insert(index, new CellSwap<Value>(parameters[2]));
+
+                        return new Value.Void();
+                    }, 2)),
+                ("map", new Function.Builtin((context, parameters) => {
+                        Value.Array arr = parameters[0] as Value.Array;
+
+                        if (parameters[1] is not Value.FunctionReference(_, var function))
+                            throw new InvalidValueTypeException(typeof(Value.FunctionReference), parameters[1].GetType(), context.Expression.PositionInText);
+
+                        List<CellSwap<Value>> newArray = new List<CellSwap<Value>>(arr.Value.Count);
+
+                        for (int i = 0; i < arr.Value.Count; i++)
+                        {
+                            Value value = function.Invoke(context, new Value[] {arr.Value[i].Value});
+                            newArray.Add(new CellSwap<Value>(value));
+                        }
+
+                        return new Value.Array(newArray);
+                    }, 1)),
+                ("concat", new Function.Builtin((context, parameters) => {
+                        Value.Array arr = parameters[0] as Value.Array;
+
+                        if (parameters[1] is not Value.Array(var toConcat))
+                            throw new InvalidValueTypeException(typeof(Value.Array), parameters[1].GetType(), context.Expression.PositionInText);
+
+                        return new Value.Array(arr.Value.Concat(toConcat).ToList());
+                    }, 1)),
             }) { }
         }
     

@@ -53,23 +53,20 @@ namespace Furball.Volpe.Evaluation.CoreLib
                     return new Value.String(string.Format(formatString, parameters.ToArray()));
                 }, 2)),
                 ("length", new Function.Builtin((context, parameters) => {
-                    Value.String str = parameters[0] as Value.String;
-
+                    Value.String str = (Value.String)parameters[0];
                     return new Value.Number(str.Value.Length);
                 }, 0)),
                 ("to_upper", new Function.Builtin((context, parameters) => {
-                        Value.String str = parameters[0] as Value.String;
-
+                        Value.String str = (Value.String)parameters[0];
                         return new Value.String(str.Value.ToUpper());
                     }, 0)),
                 ("to_lower", new Function.Builtin((context, parameters) => {
-                        Value.String str = parameters[0] as Value.String;
-
+                        Value.String str = (Value.String)parameters[0];
                         return new Value.String(str.Value.ToLower());
                     }, 0)),
                 ("substr", new Function.Builtin((context, parameters) => {
-                        Value.String str = parameters[0] as Value.String;
-
+                        Value.String str = (Value.String)parameters[0];
+                        
                         if (parameters[1] is not Value.Number(var begin))
                             throw new InvalidValueTypeException(typeof(Value.Number), parameters[1].GetType(), context.Expression.PositionInText);
                         if (parameters[2] is not Value.Number(var length))
@@ -80,8 +77,7 @@ namespace Furball.Volpe.Evaluation.CoreLib
                         return new Value.String(substring);
                     }, 3)),
                 ("split", new Function.Builtin((context, parameters) => {
-                        Value.String str = parameters[0] as Value.String;
-
+                        Value.String str = (Value.String)parameters[0];
                         if (parameters[1] is not Value.String(var delimiter))
                             throw new InvalidValueTypeException(typeof(Value.String), parameters[1].GetType(), context.Expression.PositionInText);
 
@@ -94,8 +90,7 @@ namespace Furball.Volpe.Evaluation.CoreLib
                         return new Value.Array(split);
                     }, 2)),
                 ("contains", new Function.Builtin((context, parameters) => {
-                        Value.String str = parameters[0] as Value.String;
-
+                        Value.String str = (Value.String)parameters[0];
                         if (parameters[1] is not Value.String(var what))
                             throw new InvalidValueTypeException(typeof(Value.String), parameters[1].GetType(), context.Expression.PositionInText);
 
@@ -103,8 +98,7 @@ namespace Furball.Volpe.Evaluation.CoreLib
 
                     }, 1)),
                 ("replace", new Function.Builtin((context, parameters) => {
-                        Value.String str = parameters[0] as Value.String;
-
+                        Value.String str = (Value.String)parameters[0];
                         if (parameters[1] is not Value.String(var what))
                             throw new InvalidValueTypeException(typeof(Value.String), parameters[1].GetType(), context.Expression.PositionInText);
                         if (parameters[2] is not Value.String(var with))
@@ -113,8 +107,7 @@ namespace Furball.Volpe.Evaluation.CoreLib
                         return new Value.String(str.Value.Replace(what, with));
                     }, 2)),
                 ("trim", new Function.Builtin((context, parameters) => {
-                        Value.String str = parameters[0] as Value.String;
-
+                        Value.String str = (Value.String)parameters[0];
                         return new Value.String(str.Value.Trim());
                     }, 0)),
             }) { }
@@ -127,19 +120,19 @@ namespace Furball.Volpe.Evaluation.CoreLib
             public ArrayClass() : base("array", new (string, Function)[]
             {
                 ("length", new Function.Builtin((context, parameters) => {
-                        Value.Array arr = parameters[0] as Value.Array;
+                        Value.Array arr = (Value.Array)parameters[0];
 
                         return new Value.Number(arr.Value.Count);
                     }, 0)),
                 ("append", new Function.Builtin((context, parameters) => {
-                        Value.Array arr = parameters[0] as Value.Array;
+                        Value.Array arr = (Value.Array)parameters[0];
 
                         arr.Value.Add(new CellSwap<Value>(parameters[1]));
 
                         return new Value.Void();
                     }, 1)),
                 ("append_range", new Function.Builtin((context, parameters) => {
-                        Value.Array arr = parameters[0] as Value.Array;
+                        Value.Array arr = (Value.Array)parameters[0];
 
                         if (parameters[1] is not Value.Array(var toAdd))
                             throw new InvalidValueTypeException(typeof(Value.Array), parameters[1].GetType(), context.Expression.PositionInText);
@@ -149,7 +142,7 @@ namespace Furball.Volpe.Evaluation.CoreLib
                         return new Value.Void();
                     }, 1)),
                 ("remove_range", new Function.Builtin((context, parameters) => {
-                        Value.Array arr = parameters[0] as Value.Array;
+                        Value.Array arr = (Value.Array)parameters[0];
 
                         if (parameters[1] is not Value.Array(var toRemove))
                             throw new InvalidValueTypeException(typeof(Value.Array), parameters[1].GetType(), context.Expression.PositionInText);
@@ -162,7 +155,7 @@ namespace Furball.Volpe.Evaluation.CoreLib
                         return new Value.Void();
                     }, 1)),
                 ("remove_at", new Function.Builtin((context, parameters) => {
-                        Value.Array arr = parameters[0] as Value.Array;
+                        Value.Array arr = (Value.Array)parameters[0];
 
                         if (parameters[1] is not Value.Number(var fIndex))
                             throw new InvalidValueTypeException(typeof(Value.Number), parameters[1].GetType(), context.Expression.PositionInText);
@@ -178,15 +171,16 @@ namespace Furball.Volpe.Evaluation.CoreLib
                         return new Value.Void();
                     }, 1)),
                 ("remove", new Function.Builtin((context, parameters) => {
-                        Value.Array arr = parameters[0] as Value.Array;
+                        Value.Array arr = (Value.Array)parameters[0];
 
                         int index = arr.Value.FindIndex(x=> x.Value == parameters[1]);
                         arr.Value.RemoveAt(index);
 
                         return new Value.Void();
                     }, 1)),
-                ("insert_at", new Function.Builtin((context, parameters) => {
-                        Value.Array arr = parameters[0] as Value.Array;
+                ("insert_at", new Function.Builtin((context, parameters) =>
+                {
+                    Value.Array arr = (Value.Array) parameters[0];
 
                         if (parameters[1] is not Value.Number(var fIndex))
                             throw new InvalidValueTypeException(typeof(Value.Number), parameters[1].GetType(), context.Expression.PositionInText);
@@ -201,7 +195,7 @@ namespace Furball.Volpe.Evaluation.CoreLib
                         return new Value.Void();
                     }, 2)),
                 ("map", new Function.Builtin((context, parameters) => {
-                        Value.Array arr = parameters[0] as Value.Array;
+                        Value.Array arr = (Value.Array)parameters[0];
 
                         if (parameters[1] is not Value.FunctionReference(_, var function))
                             throw new InvalidValueTypeException(typeof(Value.FunctionReference), parameters[1].GetType(), context.Expression.PositionInText);
@@ -217,7 +211,7 @@ namespace Furball.Volpe.Evaluation.CoreLib
                         return new Value.Array(newArray);
                     }, 1)),
                 ("concat", new Function.Builtin((context, parameters) => {
-                        Value.Array arr = parameters[0] as Value.Array;
+                        Value.Array arr = (Value.Array)parameters[0];
 
                         if (parameters[1] is not Value.Array(var toConcat))
                             throw new InvalidValueTypeException(typeof(Value.Array), parameters[1].GetType(), context.Expression.PositionInText);

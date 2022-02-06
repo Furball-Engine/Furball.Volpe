@@ -505,10 +505,8 @@ namespace Furball.Volpe.SyntaxAnalysis
             return new ExpressionValue.ClassDefinition(className, extendsClassName, methodDefinition.ToArray());
         }
 
-        public Expression ParseEventualAccessOperators(Expression expr, out bool canBeInSubExpression)
+        public Expression ParseEventualAccessOperators(Expression expr, ref bool canBeInSubExpression)
         {
-            canBeInSubExpression = true;
-            
             for (;;)
             {
                 Token? token;
@@ -659,12 +657,11 @@ namespace Furball.Volpe.SyntaxAnalysis
                 }
             }
 
-            expression = ParseEventualAccessOperators(expression, out canBeSubExpression);
+            expression = ParseEventualAccessOperators(expression, ref canBeSubExpression);
             
             // Try to parse an infix expression if there is an operator after it.
             if (canBeSubExpression)
             {
-
                 for (;;)
                 {
                     if (!_tokenConsumer.TryPeekNext(out token))

@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Immutable;
 using Furball.Volpe.Evaluation;
 using Furball.Volpe.LexicalAnalysis;
 using Furball.Volpe.SyntaxAnalysis;
 using NUnit.Framework;
+using Environment = Furball.Volpe.Evaluation.Environment;
 
 namespace Furball.Volpe.Tests
 {
@@ -126,6 +128,48 @@ namespace Furball.Volpe.Tests
             Environment environment = new Environment(DefaultBuiltins.GetAll());
 
             Assert.AreEqual(new EvaluatorContext(parser.ParseNextExpression(), environment).Evaluate(), new Value.String("2"));
+        }
+        
+        
+        [Test]
+        public void AddTypedVariable()
+        {
+            TypedVariable<Value.Number> number = new TypedVariable<Value.Number>("abc", new Value.Number(1));
+
+            Parser parser = new Parser(new Lexer("$abc").GetTokenEnumerator().ToImmutableArray());
+
+            Environment environment = new Environment(DefaultBuiltins.GetAll());
+            environment.SetVariable(number);
+            
+            Assert.AreEqual(new EvaluatorContext(parser.ParseNextExpression(), environment).Evaluate(), new Value.Number(1));
+        }
+        
+        [Test]
+        public void ThrowErrorIfInvalidTypeForTypedValue()
+        {
+            TypedVariable<Value.Number> number = new TypedVariable<Value.Number>("abc", new Value.Number(1));
+
+            Parser parser = new Parser(new Lexer("$abc = \"ciao\"").GetTokenEnumerator().ToImmutableArray());
+
+            Environment environment = new Environment(DefaultBuiltins.GetAll());
+            environment.SetVariable(number);
+            
+            Assert.Throws<InvalidOperationException>(
+                () => new EvaluatorContext(parser.ParseNextExpression(), environment).Evaluate());
+        }
+        
+        [Test]
+        public void ChangeTypedVariable()
+        {
+            TypedVariable<Value.Number> number = new TypedVariable<Value.Number>("abc", new Value.Number(1));
+
+            Parser parser = new Parser(new Lexer("$abc = 2").GetTokenEnumerator().ToImmutableArray());
+
+            Environment environment = new Environment(DefaultBuiltins.GetAll());
+            environment.SetVariable(number);
+            
+            Assert.AreEqual(new EvaluatorContext(parser.ParseNextExpression(), environment).Evaluate(), new Value.Number(2));
+            Assert.AreEqual(number.Value.Value, 2);
         }
     }
 }

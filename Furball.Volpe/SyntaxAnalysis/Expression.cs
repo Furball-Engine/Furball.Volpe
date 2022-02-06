@@ -11,9 +11,11 @@ namespace Furball.Volpe.SyntaxAnalysis
         public record InfixExpression(ExpressionOperator Operator, Expression Left, Expression Right): ExpressionValue;
         public record PrefixExpression(ExpressionOperator Operator, Expression Left) : ExpressionValue;
         public record SubExpression(Expression Expression) : ExpressionValue;
+        public record ClassDefinition(string ClassName, string? ExtendsClassName, FunctionDefinition[] MethodDefinitions) : ExpressionValue;
         public record FunctionDefinition
             (string Name, string[] ParameterNames, Expression[] Expressions) : ExpressionValue;
         public record FunctionCall(string Name, Expression[] Parameters) : ExpressionValue;
+        public record MethodCall(Expression Expression, string Name, Expression[] Parameters) : ExpressionValue;
         public record FunctionReference(string Name) : ExpressionValue;
         public record Return(Expression Expression) : ExpressionValue;
         public record IfExpression(Expression[] Conditions, Expression[][] Blocks, Expression[]? ElseBlock) : ExpressionValue;

@@ -205,12 +205,44 @@ namespace Furball.Volpe.Evaluation
 
             return new Value.FunctionReference(functionReference.Name, value!);
         }
+        
+        private Value EvaluateMethodCall(ExpressionValue.MethodCall methodCall)
+        {
+            Function? function;
+            Value v = new EvaluatorContext(methodCall.Expression, Environment, true).Evaluate();
 
+            Class? cls = v.Class ?? v.BaseClass;
+            
+            if (cls == null)
+                throw new UnknownMethodException(methodCall.Name, "null", Expression.PositionInText);
+            
+            if (!cls.TryGetMethod(methodCall.Name, out function))
+                throw new UnknownMethodException(methodCall.Name, cls.Name, Expression.PositionInText);
+            
+            int parameterCount = function!.ParameterCount;
+
+            if (methodCall.Parameters.Length < parameterCount - 1)
+                throw new ParamaterCountMismatchException(methodCall.Name,
+                    parameterCount, methodCall.Parameters.Length, Expression.PositionInText);
+
+            List<Value> values = new List<Value>() {v};
+            
+            foreach (var expression in methodCall.Parameters)
+                values.Add(new EvaluatorContext(expression, Environment).Evaluate());
+
+            return function.Invoke(this, values.ToArray());
+        }
+        
         private Value EvaluateFunctionCall(ExpressionValue.FunctionCall functionCall)
         {
             Function? function;
+            Class? cls = null;
+
             if (!Environment.TryGetFunctionReference(functionCall.Name, out function))
-                throw new FunctionNotFoundException(functionCall.Name, Expression.PositionInText);
+            {
+                if (!Environment.TryGetClass(functionCall.Name, out cls) || !cls!.TryGetConstructor(out function))
+                    throw new FunctionNotFoundException(functionCall.Name, Expression.PositionInText);
+            }
 
             int parameterCount = function!.ParameterCount;
 
@@ -222,7 +254,10 @@ namespace Furball.Volpe.Evaluation
             foreach (var expression in functionCall.Parameters)
                 values.Add(new EvaluatorContext(expression, Environment).Evaluate());
 
-            return function.Invoke(this, values.ToArray());
+            Value v = function.Invoke(this, values.ToArray());
+            v.Class = cls;
+
+            return v;
         }
 
         private Value EvaluatePrefixExpression(ExpressionValue.PrefixExpression expr)
@@ -265,6 +300,27 @@ namespace Furball.Volpe.Evaluation
             return new Value.Object(dict);
         }
 
+        public Value EvaluateClassDef(ExpressionValue.ClassDefinition expr)
+        {
+            (string name, Function function)[] fns = new (string, Function)[expr.MethodDefinitions.Length];
+
+            for (int i = 0; i < expr.MethodDefinitions.Length; i++)
+            {
+                var (name, parameterNames, expressions) = expr.MethodDefinitions[i];
+                Function function = new Function.Standard(parameterNames, expressions, Environment);
+
+                fns[i] = (name, function);
+            }
+
+            Class? extendsClass = null;
+            if (expr.ExtendsClassName != null && !Environment.TryGetClass(expr.ExtendsClassName, out extendsClass))
+                throw new ClassNotFoundException(expr.ExtendsClassName, Expression.PositionInText);
+
+            Environment.TrySetClass(expr.ClassName, new Class(expr.ClassName, fns, extendsClass));
+
+            return Value.DefaultVoid;
+        }
+        
         public static Value[] EvaluateAll(string source, Environment environment)
         {
             IEnumerable<Expression> expressions = new Parser(new Lexer(source).GetTokenEnumerator())
@@ -304,8 +360,10 @@ namespace Furball.Volpe.Evaluation
                 ExpressionValue.Array(var initialElements) => EvaluateArray(initialElements),
                 ExpressionValue.Lambda lambda => EvaluateLambda(lambda),
                 ExpressionValue.Object(var keys, var expressions) => EvaluateObject(keys, expressions),
+                ExpressionValue.ClassDefinition def => EvaluateClassDef(def),
+                ExpressionValue.MethodCall methodCall => EvaluateMethodCall(methodCall),
 
-                _ => throw new ArgumentException()
+                _ => throw new ArgumentException(Expression.Value.GetType().ToString())
             };
 
             return forceInner ? evaluated.InnerOrSelf : evaluated;

@@ -68,6 +68,9 @@ namespace Furball.Volpe.LexicalAnalysis
         public record Hashtag : TokenValue;
         public record Return : TokenValue;
         public record Append : TokenValue;
+        public record Class : TokenValue;
+        public record Extends : TokenValue;
+        public record ClassAccess : TokenValue;
         public bool IsOperator => this is TokenValue.BooleanOperator or TokenValue.ArithmeticalOperator 
             or TokenValue.OperatorWithAssignment or TokenValue.Assign or TokenValue.Append;
     }

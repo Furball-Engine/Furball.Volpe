@@ -10,15 +10,17 @@ namespace Furball.Volpe.Evaluation
     {
         public Environment? Parent { get; }
         
-        private readonly Dictionary<string, Value> _variables;
+        private readonly Dictionary<string, Variable> _variables;
         private readonly Dictionary<string, (Function Getter, Function Setter)> _hookedVariables;
         private readonly Dictionary<string, Function> _functions;
+        private readonly Dictionary<string, Class> _classes;
 
         public Environment(BuiltinFunction[] builtins)
         {
-            _variables = new Dictionary<string, Value>();
+            _variables = new Dictionary<string, Variable>();
             _hookedVariables = new Dictionary<string, (Function Getter, Function Setter)>();
             _functions = builtins.ToDictionary(b => b.Identifier, b => (Function)new Function.Builtin(b.Callback, b.ParamCount));
+            _classes = new Dictionary<string, Class>();
         }
 
         public void AddBuiltin(BuiltinFunction function) =>
@@ -30,6 +32,30 @@ namespace Furball.Volpe.Evaluation
         public Environment(Environment? parent = null) : this(Array.Empty<BuiltinFunction>())
         {
             Parent = parent;
+        }
+
+        public bool TrySetClass(string className, Class classRef)
+        {
+            if (_classes.ContainsKey(className))
+                return false;
+            
+            if (Parent is not null)
+                return Parent._classes.ContainsKey(className);
+            
+            _classes.Add(className, classRef);
+
+            return true;
+        }
+        
+        public bool TryGetClass(string className, out Class? classRef)
+        {
+            if (_classes.TryGetValue(className, out classRef))
+                return true;
+            
+            if (Parent is not null)
+                return Parent.TryGetClass(className, out classRef);
+
+            return false;
         }
         
         public bool TryGetFunctionReference(string functionName, out Function? function)
@@ -96,12 +122,29 @@ namespace Furball.Volpe.Evaluation
             return false;
         }
 
+        public bool TryGetVariable(string variableName, out Variable? value)
+        {
+            value = null;
+
+            if (_variables.TryGetValue(variableName, out value))
+                return true;
+
+            if (Parent is not null)
+                return Parent.TryGetVariable(variableName, out value);
+
+            return false;
+        }
+        
         public bool TryGetVariableValue(string variableName, out Value? value)
         {
             value = null;
-            
-            if (_variables.TryGetValue(variableName, out value))
+
+            Variable? variable;
+            if (_variables.TryGetValue(variableName, out variable))
+            {
+                value = variable.RawValue;
                 return true;
+            }
 
             if (Parent is not null)
                 return Parent.TryGetVariableValue(variableName, out value);
@@ -112,18 +155,32 @@ namespace Furball.Volpe.Evaluation
         public bool HasVariable(string variableName) => _variables.ContainsKey(variableName);
         public bool HasFunction(string functionName) => _functions.ContainsKey(functionName);
 
+        public void SetVariable(Variable variable, bool shadowParentVariables = true)
+        {
+            if (!shadowParentVariables && Parent is not null && Parent.HasVariable(variable.Name))
+            {
+                Parent.SetVariable(variable, false);
+                return;
+            }
+
+            if (_variables.ContainsKey(variable.Name))
+                _variables[variable.Name] = variable;
+            else
+                _variables.Add(variable.Name, variable);
+        }
+        
         public void SetVariableValue(string variableName, Value value, bool shadowParentVariables = true)
         {
             if (!shadowParentVariables && Parent is not null && Parent.HasVariable(variableName))
             {
-                Parent.SetVariableValue(variableName, value);
+                Parent.SetVariableValue(variableName, value, false);
                 return;
             }
 
             if (_variables.ContainsKey(variableName))
-                _variables[variableName] = value;
+                _variables[variableName].RawValue = value;
             else
-                _variables.Add(variableName, new CellSwap<Value>(value));
+                _variables.Add(variableName, new Variable(variableName, value));
         }
         
         public void HookVariableToGetterAndSetter(string variableName, 

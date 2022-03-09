@@ -36,10 +36,12 @@ namespace Furball.Volpe.Evaluation
     {
         public new EventHandler<T>? OnChange;
 
-        public T Value
-        {
+        public T Value {
             get => (T)base.RawValue;
-            set => base.RawValue = value;
+            set {
+                base.RawValue = value;
+                this.OnChange?.Invoke(this, value);
+            }
         }
 
         public override Value RawValue
@@ -52,6 +54,7 @@ namespace Furball.Volpe.Evaluation
                     throw new InvalidOperationException($"This variable only supports ${value.GetType()} values.");
 
                 base.RawValue = castedValue;
+                this.OnChange?.Invoke(this, castedValue);
             }
         }
 

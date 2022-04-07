@@ -26,7 +26,8 @@ namespace Furball.Volpe.Evaluation
             {
                 Value.Number(var n1) => new Value.Number(+n1),
                 Value.Array n1 => PositiveArray(n1),
-                
+                Value.Zero zero => zero,
+
                 _ => throw new UndefinedPrefixOperationException(
                     nameof(Positive), leftValue.GetType(), context.Expression.PositionInText)
             };
@@ -171,7 +172,8 @@ namespace Furball.Volpe.Evaluation
             {
                 Value.Number(var n1) => new Value.Number(-n1),
                 Value.Array n1 => NegateArray(n1),
-                
+                Value.Zero => Value.DefaultZero,
+
                 _ => throw new UndefinedPrefixOperationException(
                     nameof(Negative), leftValue.GetType(), context.Expression.PositionInText)
             };
@@ -181,7 +183,7 @@ namespace Furball.Volpe.Evaluation
         {
             Value AppendArrayToArray(Value.Array arr1, Value.Array arr2)
             {
-                arr1 = arr1.Copy();
+                arr1 = (Value.Array)arr1.Copy();
 
                 for (int i = 0; i < arr2.Value.Count; i++)
                     arr1.Value.Add(new CellSwap<Value>(arr2.Value[i].Value));
@@ -191,7 +193,7 @@ namespace Furball.Volpe.Evaluation
             
             Value AppendObjectToObject(Value.Object obj1, Value.Object obj2)
             {
-                obj1 = obj1.Copy();
+                obj1 = (Value.Object)obj1.Copy();
 
                 foreach (var key in obj2.Value.Keys)
                 {
@@ -209,7 +211,7 @@ namespace Furball.Volpe.Evaluation
                 (Value.String(var n1), Value.String(var n2)) => new Value.String(n1 + n2),
                 (Value.Array n1, Value.Array n2) => AppendArrayToArray(n1, n2),
                 (Value.Object n1, Value.Object n2) => AppendObjectToObject(n1, n2),
-                
+
                 _ => throw new UndefinedInfixOperationException(
                     nameof(Append), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
             };
@@ -236,7 +238,11 @@ namespace Furball.Volpe.Evaluation
             {
                 (Value.Number(var n1), Value.Number(var n2)) => new Value.Number(n1 + n2),
                 (Value.Array n1, Value.Array n2) => AddTwoArrays(n1, n2),
-                
+
+                (var value, Value.Zero) when value is Value.Number or Value.Array => value.Copy(),
+                (Value.Zero, var value) when value is Value.Number or Value.Array => value.Copy(),
+                (Value.Boolean(bool b1), Value.Boolean(bool b2)) => b1 || b2 ? Value.DefaultTrue : Value.DefaultFalse,
+
                 _ => throw new UndefinedInfixOperationException(
                     nameof(Sum), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
             };
@@ -249,7 +255,8 @@ namespace Furball.Volpe.Evaluation
             {
                 (Value.Number(var n1), Value.Number(var n2)) => new Value.Number(n1 - n2),
                 (Value.String(var n1), Value.String(var n2)) => new Value.String(n1.Replace(n2, string.Empty)),
-                
+                (var value, Value.Zero) when value is Value.Number or Value.Array => value.Copy(),
+
                 _ => throw new UndefinedInfixOperationException(
                     nameof(Subtract), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
             };
@@ -287,7 +294,11 @@ namespace Furball.Volpe.Evaluation
                 (Value.String(var n1), Value.Number(var n2)) => new Value.String(MultiplyString(n1, (int)n2)),
                 (Value.Array n1, var n2) => MultiplyArray(n1, n2),
                 (var n2, Value.Array n1) => MultiplyArray(n1, n2),
-                
+                (Value.Boolean(bool b1), Value.Boolean(bool b2)) => b1 && b2 ? Value.DefaultTrue : Value.DefaultFalse,
+
+                (var value, Value.Zero) when value is Value.Number or Value.Array => Value.DefaultZero,
+                (Value.Zero, var value) when value is Value.Number or Value.Array => Value.DefaultZero,
+
                 _ => throw new UndefinedInfixOperationException(
                     nameof(Multiply), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)
             };

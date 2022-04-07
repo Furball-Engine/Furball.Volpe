@@ -131,6 +131,14 @@ namespace Furball.Volpe.Evaluation.CoreLib
 
                         return new Value.Void();
                     }, 1)),
+                ("iter", new Function.Builtin((context, parameters) =>
+                {
+                    Value.Array arr = (Value.Array)parameters[0];
+                    ArrayIteratorInstance.TryGetConstructor(out var function);
+                    Value value = function!.Invoke(context, new Value[] {arr});
+                    value.Class = ArrayIteratorInstance;
+                    return value;
+                }, 1)),
                 ("append_range", new Function.Builtin((context, parameters) => {
                         Value.Array arr = (Value.Array)parameters[0];
 
@@ -173,7 +181,8 @@ namespace Furball.Volpe.Evaluation.CoreLib
                 ("remove", new Function.Builtin((context, parameters) => {
                         Value.Array arr = (Value.Array)parameters[0];
 
-                        int index = arr.Value.FindIndex(x=> x.Value == parameters[1]);
+                        Value value = (Value) parameters[1];
+                        int index = arr.Value.FindIndex(x=> x.Value == value);
                         arr.Value.RemoveAt(index);
 
                         return new Value.Void();
@@ -220,7 +229,57 @@ namespace Furball.Volpe.Evaluation.CoreLib
                     }, 1)),
             }) { }
         }
-    
+
+        public class Iterator : Class
+        {
+            public Iterator() : base("iterator", new (string, Function)[]
+            {
+                ("next", new Function.Builtin((context, parameters) =>
+                {
+                    return Value.DefaultVoid;
+                }, 0))
+            }) {}
+        }
+
+        public class ArrayIterator : Class
+        {
+            public ArrayIterator() : base("iterator", new (string, Function)[]
+            {
+                ("init", new Function.Builtin((context, parameters) =>
+                {
+                    if (parameters[0] is not Value.Array array)
+                        throw new InvalidValueTypeException(typeof(Value.Array), parameters[0].GetType(), context.Expression.PositionInText);
+
+                    return new Value.Object(new Dictionary<string, CellSwap<Value>>
+                    {
+                        { "_position", new CellSwap<Value>(new Value.Number(0)) },
+                        { "_array", new CellSwap<Value>(array) }
+                    });
+                }, 1)),
+
+                ("next", new Function.Builtin((context, parameters) =>
+                {
+                    Value.Object obj = (Value.Object)parameters[0];
+
+                    Value.Number number = (Value.Number)obj.Value["_position"].Value;
+                    Value.Array array = (Value.Array)obj.Value["_array"].Value;
+
+                    if (number.Value >= array.Value.Count)
+                        return Value.DefaultVoid;
+
+                    Value value = array.Value[(int)number.Value];
+
+                    obj.Value["_position"].Swap(new Value.Number(number.Value + 1));
+                    return value;
+                }, 1))
+            },IteratorClassInstance)
+            { }
+        }
+
+
+        public static Iterator IteratorClassInstance = new Iterator();
+        public static ArrayIterator ArrayIteratorInstance = new ArrayIterator();
+
         public class ObjectClass : Class
         {
             public static readonly ObjectClass Default = new ObjectClass();

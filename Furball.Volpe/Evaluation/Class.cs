@@ -30,6 +30,19 @@ namespace Furball.Volpe.Evaluation
             ExtendedClass = extendedClass;
         }
 
+        public bool ExtendsClassWithName(string className)
+        {
+            if (ExtendedClass!.Name == className) 
+                return true;
+
+            return ExtendedClass.ExtendsClassWithName(className);
+        }
+
+        public void CallMethod(Value instance, string name)
+        {
+
+        }
+
         public Class(string name) : this(name, Array.Empty<(string, Function)>()){}
     }
 }

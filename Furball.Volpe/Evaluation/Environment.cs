@@ -20,7 +20,11 @@ namespace Furball.Volpe.Evaluation
             _variables = new Dictionary<string, Variable>();
             _hookedVariables = new Dictionary<string, (Function Getter, Function Setter)>();
             _functions = builtins.ToDictionary(b => b.Identifier, b => (Function)new Function.Builtin(b.Callback, b.ParamCount));
-            _classes = new Dictionary<string, Class>();
+            _classes = new Dictionary<string, Class>
+            {
+                { "iterator", CoreLib.BaseClasses.IteratorClassInstance },
+                { "array_iterator", CoreLib.BaseClasses.ArrayIteratorInstance },
+            };
         }
 
         public void AddBuiltin(BuiltinFunction function) =>

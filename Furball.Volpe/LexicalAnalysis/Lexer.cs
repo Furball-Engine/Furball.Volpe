@@ -189,6 +189,9 @@ namespace Furball.Volpe.LexicalAnalysis
                     "else" => new TokenValue.Else(),
                     "while" => new TokenValue.While(),
                     "class" => new TokenValue.Class(),
+                    "zero" => new TokenValue.Zero(),
+                    "for" => new TokenValue.For(),
+                    "void" => new TokenValue.Void(),
                     "extends" => new TokenValue.Extends(),
                     
                     {} value => new TokenValue.Literal(value) 

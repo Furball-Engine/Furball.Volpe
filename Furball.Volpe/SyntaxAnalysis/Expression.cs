@@ -20,7 +20,9 @@ namespace Furball.Volpe.SyntaxAnalysis
         public record Return(Expression Expression) : ExpressionValue;
         public record IfExpression(Expression[] Conditions, Expression[][] Blocks, Expression[]? ElseBlock) : ExpressionValue;
         public record WhileExpression(Expression Condition, Expression[] Block) : ExpressionValue;
+        public record ForExpression(string varName, Expression IterableExpression, Expression[] Block) : ExpressionValue;
         public record Void : ExpressionValue;
+        public record Zero : ExpressionValue;
         public record True : ExpressionValue;
         public record False : ExpressionValue;
         public record Array(Expression[] InitialElements) : ExpressionValue;

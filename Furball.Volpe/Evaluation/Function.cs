@@ -7,13 +7,13 @@ namespace Furball.Volpe.Evaluation
     {
         public record Builtin(FunctionInvokeCallback Delegate, int ParameterCount) : Function
         {
-            public override Value Invoke(EvaluatorContext context, Value[] actualParameters) =>
+            public override Value Invoke(EvaluatorContext context, Span<Value> actualParameters) =>
                 Delegate(context, actualParameters);
         }
 
         public record Standard(string[] ParameterNames, Expression[] Expressions, Environment ParentEnvironment) : Function
         {
-            public override Value Invoke(EvaluatorContext context, Value[] actualParameters)
+            public override Value Invoke(EvaluatorContext context, Span<Value> actualParameters)
             {
                 Environment environment = new Environment(this.ParentEnvironment);
 
@@ -31,7 +31,7 @@ namespace Furball.Volpe.Evaluation
             public override int ParameterCount { get => ParameterNames.Length; init => throw new InvalidOperationException(); }
         }
 
-        public abstract Value Invoke(EvaluatorContext context, Value[] actualParameters);
+        public abstract Value Invoke(EvaluatorContext context, Span<Value> actualParameters);
         
         public abstract int ParameterCount { get; init; }
     }

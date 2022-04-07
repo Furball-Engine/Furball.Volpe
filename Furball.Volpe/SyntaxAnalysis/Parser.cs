@@ -250,6 +250,21 @@ namespace Furball.Volpe.SyntaxAnalysis
             return new ExpressionValue.WhileExpression(condExpression, block);
         }
 
+        private ExpressionValue.ForExpression ParseForExpression()
+        {
+            GetAndAssertNextTokenType<TokenValue.For>();
+            ForceGetNextTokenValueWithType<TokenValue.LeftRoundBracket>();
+            ForceGetNextTokenValueWithType<TokenValue.Dollar>();
+            string varName = ForceGetNextTokenValueWithType<TokenValue.Literal>().Value;
+            ForceGetNextTokenValueWithType<TokenValue.Colon>();
+            Expression iterableExpression = ForceParseNextExpression();
+            ForceGetNextTokenValueWithType<TokenValue.RightRoundBracket>();
+
+            Expression[] block = ParseExpressionBlock();
+
+            return new ExpressionValue.ForExpression(varName, iterableExpression, block);
+        }
+
         private ExpressionValue.IfExpression ParseIfExpression()    
         {
             List<Expression> conditions = new List<Expression>();
@@ -474,6 +489,8 @@ namespace Furball.Volpe.SyntaxAnalysis
             return new ExpressionValue.FunctionCall(functionName, actualParameters);
         }
 
+
+
         public ExpressionValue.ClassDefinition ParseClass()
         {
             GetAndAssertNextTokenType<TokenValue.Class>();
@@ -618,6 +635,9 @@ namespace Furball.Volpe.SyntaxAnalysis
                 case TokenValue.While:
                     expression = new Expression(ParseWhileExpression());
                     break;
+                case TokenValue.For:
+                    expression = new Expression(ParseForExpression());
+                    break;
                 case TokenValue.Func:
                     expression = new Expression(ParseLambda());
                     break;
@@ -643,7 +663,13 @@ namespace Furball.Volpe.SyntaxAnalysis
                         
                         TokenValue.False => 
                             _tokenConsumer.TryConsumeNextAndThen((_, _) => new ExpressionValue.False()),
-                        
+
+                        TokenValue.Zero =>
+                            _tokenConsumer.TryConsumeNextAndThen((_, _) => new ExpressionValue.Zero()),
+
+                        TokenValue.Void =>
+                            _tokenConsumer.TryConsumeNextAndThen((_, _) => new ExpressionValue.Void()),
+
                         TokenValue.LeftRoundBracket => ParseSubExpression(),
 
                         TokenValue.LeftCurlyBracket => ParseObject(),

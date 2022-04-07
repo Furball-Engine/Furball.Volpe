@@ -1,11 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
 using Furball.Volpe.Exceptions;
 using Furball.Volpe.LexicalAnalysis;
 using Furball.Volpe.Memory;
 using Furball.Volpe.SyntaxAnalysis;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Furball.Volpe.Evaluation
 {
@@ -205,7 +204,16 @@ namespace Furball.Volpe.Evaluation
 
             return new Value.FunctionReference(functionReference.Name, value!);
         }
-        
+
+        private Value CallMethod(Value value, Function function, Value[]? parameters = null)
+        {
+            List<Value> values = new List<Value>() { value };
+            if (parameters is not null)
+                values.AddRange(parameters!);
+
+            return function.Invoke(this, values.ToArray());
+        }
+
         private Value EvaluateMethodCall(ExpressionValue.MethodCall methodCall)
         {
             Function? function;
@@ -250,7 +258,7 @@ namespace Furball.Volpe.Evaluation
                 throw new ParamaterCountMismatchException(functionCall.Name,
                     parameterCount, functionCall.Parameters.Length, Expression.PositionInText);
 
-            List<Value> values = new List<Value>();
+            List<Value> values = new List<Value>(parameterCount);
             foreach (var expression in functionCall.Parameters)
                 values.Add(new EvaluatorContext(expression, Environment).Evaluate());
 
@@ -298,6 +306,30 @@ namespace Furball.Volpe.Evaluation
             }
 
             return new Value.Object(dict);
+        }
+
+        private Value EvaluateForExpression(ExpressionValue.ForExpression expr)
+        {
+            Value value = new EvaluatorContext(expr.IterableExpression, Environment, true).Evaluate();
+
+            if (value.Class == null || !value.Class.TryGetMethod("iter", out var iterMethod))
+                throw new InvalidOperationException("Not iterable");
+
+            Value iterator = CallMethod(value, iterMethod!);
+
+            if (iterator.Class == null || !iterator.Class.TryGetMethod("next", out var nextMethod))
+                throw new InvalidOperationException("Invalid iterator");
+
+            Value v;
+            Environment environment = new Environment(Environment);
+
+            while ((v = CallMethod(iterator, nextMethod!)) != Value.DefaultVoid)
+            {
+                environment.SetVariableValue(expr.varName, v);
+                new BlockEvaluatorContext(expr.Block, environment).Evaluate();
+            }
+
+            return Value.DefaultVoid;
         }
 
         public Value EvaluateClassDef(ExpressionValue.ClassDefinition expr)
@@ -350,6 +382,7 @@ namespace Furball.Volpe.Evaluation
                 ExpressionValue.SubExpression(var expr) => new EvaluatorContext(expr, Environment).Evaluate(),
                 ExpressionValue.FunctionReference expr => EvaluateFunctionReference(expr),
                 ExpressionValue.FunctionCall expr => EvaluateFunctionCall(expr),
+                ExpressionValue.ForExpression expr => EvaluateForExpression(expr),
                 ExpressionValue.String expr => new Value.String(expr.Value),
                 ExpressionValue.IfExpression expr => EvaluateIfExpression(expr),
                 ExpressionValue.WhileExpression expr => EvaluateWhileExpression(expr),
@@ -362,11 +395,14 @@ namespace Furball.Volpe.Evaluation
                 ExpressionValue.Object(var keys, var expressions) => EvaluateObject(keys, expressions),
                 ExpressionValue.ClassDefinition def => EvaluateClassDef(def),
                 ExpressionValue.MethodCall methodCall => EvaluateMethodCall(methodCall),
+                ExpressionValue.Zero => Value.DefaultZero,
+                ExpressionValue.Void => Value.DefaultVoid,
 
                 _ => throw new ArgumentException(Expression.Value.GetType().ToString())
             };
 
             return forceInner ? evaluated.InnerOrSelf : evaluated;
         }
+
     }
 }

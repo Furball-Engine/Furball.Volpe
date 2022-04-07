@@ -8,7 +8,7 @@ using Furball.Volpe.Memory;
 
 namespace Furball.Volpe.Evaluation
 {
-    public delegate Value FunctionInvokeCallback(EvaluatorContext context, Value[] parameters);
+    public delegate Value FunctionInvokeCallback(EvaluatorContext context, Span<Value> parameters);
         
     public class BuiltinFunction
     {

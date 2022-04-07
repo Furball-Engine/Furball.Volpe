@@ -1,3 +1,4 @@
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Furball.Volpe.Exceptions;
@@ -5,6 +6,17 @@ using Furball.Volpe.Memory;
 
 namespace Furball.Volpe.Evaluation.CoreLib {
     public class Arrays : CoreLibExtension {
+        private static Value Sum(EvaluatorContext context, Span<Value> values)
+        {
+            if (values[0] is not Value.Array(var array))
+                throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
+
+            if (array.Count == 0)
+                return Value.DefaultZero;
+
+            return array.Aggregate((Value)Value.DefaultZero, (v, element) => Operators.Sum(v, element.Value, context));
+        }
+
         public override BuiltinFunction[] FunctionExports() => new BuiltinFunction[] {
             new BuiltinFunction("arr_len", 1, (context, values) => {
                 if (values[0] is not Value.Array(var arr))
@@ -67,7 +79,8 @@ namespace Furball.Volpe.Evaluation.CoreLib {
                 if (values[0] is not Value.Array(var first))
                     throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
 
-                int index = first.FindIndex(x=> x.Value == values[1]);
+                Value value = values[1];
+                int index = first.FindIndex(x=> x.Value == value);
                 first.RemoveAt(index);
                 
                 return values[0];
@@ -116,6 +129,9 @@ namespace Furball.Volpe.Evaluation.CoreLib {
 
                 return new Value.Array(first.Concat(second).ToList());
             }),
+
+            new BuiltinFunction("Σ", 1, Sum),
+            new BuiltinFunction("sum", 1, Sum),
         };
     }
 }

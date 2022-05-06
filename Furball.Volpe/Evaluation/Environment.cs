@@ -15,6 +15,8 @@ namespace Furball.Volpe.Evaluation
         private readonly Dictionary<string, Function> _functions;
         private readonly Dictionary<string, Class> _classes;
 
+        public IReadOnlyDictionary<string, Variable> Variables => this._variables;
+
         public Environment(BuiltinFunction[] builtins)
         {
             _variables = new Dictionary<string, Variable>();

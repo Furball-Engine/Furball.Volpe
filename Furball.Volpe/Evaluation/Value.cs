@@ -142,5 +142,8 @@ namespace Furball.Volpe.Evaluation
         public abstract string Representation { get; }
 
         public string RepresentationWithClass => Class == null ? Representation : Representation + $" <class \"{Class.Name}\">";
+        public Number ToNumber() => (Number) this;
+        public Boolean ToBoolean() => (Boolean) this;
+        public String ToStringValue() => (String) this;
     }
 }

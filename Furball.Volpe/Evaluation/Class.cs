@@ -3,33 +3,32 @@ using System.Collections.Generic;
 using System.Linq;
 using Furball.Volpe.LexicalAnalysis;
 
-namespace Furball.Volpe.Evaluation
+namespace Furball.Volpe.Evaluation; 
+
+public class Class
 {
-    public class Class
+    private readonly Dictionary<string, Function> _methods;
+        
+    public string Name { get; }
+        
+    public Class? ExtendedClass { get; }
+
+    public bool TryGetMethod(string name, out Function? funcRef)
     {
-        private readonly Dictionary<string, Function> _methods;
-        
-        public string Name { get; }
-        
-        public Class? ExtendedClass { get; }
+        if (_methods.TryGetValue(name, out funcRef))
+            return true;
 
-        public bool TryGetMethod(string name, out Function? funcRef)
-        {
-            if (_methods.TryGetValue(name, out funcRef))
-                return true;
-
-            return ExtendedClass?.TryGetMethod(name, out funcRef) ?? false;
-        }
-
-        public bool TryGetConstructor(out Function? funcRef) => TryGetMethod("init", out funcRef);
-        
-        public Class(string name, (string id, Function fn)[] methods, Class? extendedClass = null)
-        {
-            _methods = methods.ToDictionary(p => p.id, p => p.fn);
-            Name = name;
-            ExtendedClass = extendedClass;
-        }
-
-        public Class(string name) : this(name, Array.Empty<(string, Function)>()){}
+        return ExtendedClass?.TryGetMethod(name, out funcRef) ?? false;
     }
+
+    public bool TryGetConstructor(out Function? funcRef) => TryGetMethod("init", out funcRef);
+        
+    public Class(string name, (string id, Function fn)[] methods, Class? extendedClass = null)
+    {
+        _methods      = methods.ToDictionary(p => p.id, p => p.fn);
+        Name          = name;
+        ExtendedClass = extendedClass;
+    }
+
+    public Class(string name) : this(name, Array.Empty<(string, Function)>()){}
 }

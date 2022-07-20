@@ -1,7 +1,6 @@
-namespace Furball.Volpe
+namespace Furball.Volpe; 
+
+public interface IPositionableInText
 {
-    public interface IPositionableInText
-    {
-        PositionInText PositionInText { get; set; } 
-    }
+    PositionInText PositionInText { get; set; } 
 }

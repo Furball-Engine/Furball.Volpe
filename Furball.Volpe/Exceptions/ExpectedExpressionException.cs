@@ -1,11 +1,10 @@
-namespace Furball.Volpe.Exceptions
-{
-    public class ExpectedExpressionException : VolpeException
-    {
-        public ExpectedExpressionException(PositionInText positionInText) : base(positionInText)
-        {
-        }
+namespace Furball.Volpe.Exceptions; 
 
-        public override string Description => "an expression was expected";
+public class ExpectedExpressionException : VolpeException
+{
+    public ExpectedExpressionException(PositionInText positionInText) : base(positionInText)
+    {
     }
+
+    public override string Description => "an expression was expected";
 }

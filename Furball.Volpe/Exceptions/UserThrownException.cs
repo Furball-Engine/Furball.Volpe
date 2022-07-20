@@ -1,9 +1,9 @@
-namespace Furball.Volpe.Exceptions {
-    public class UserThrownException : VolpeException {
-        public UserThrownException(PositionInText positionInText, string message) : base(positionInText) {
-            this.Description = message;
-        }
+namespace Furball.Volpe.Exceptions; 
 
-        public override string Description { get; }
+public class UserThrownException : VolpeException {
+    public UserThrownException(PositionInText positionInText, string message) : base(positionInText) {
+        this.Description = message;
     }
+
+    public override string Description { get; }
 }

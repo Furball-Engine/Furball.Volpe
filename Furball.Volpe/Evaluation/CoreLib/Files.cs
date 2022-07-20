@@ -4,53 +4,53 @@ using System.IO;
 using Furball.Volpe.Exceptions;
 using Furball.Volpe.Memory;
 
-namespace Furball.Volpe.Evaluation.CoreLib {
-    public class Files : CoreLibExtension {
+namespace Furball.Volpe.Evaluation.CoreLib; 
 
-        public override BuiltinFunction[] FunctionExports() => new BuiltinFunction[] {
-            new BuiltinFunction("file_read_all_lines", 1, (context, values) => {
-                if (values[0] is not Value.String(var filename))
-                    throw new InvalidValueTypeException(typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
+public class Files : CoreLibExtension {
 
-                string[] lines = File.ReadAllLines(filename);
+    public override BuiltinFunction[] FunctionExports() => new BuiltinFunction[] {
+        new BuiltinFunction("file_read_all_lines", 1, (context, values) => {
+            if (values[0] is not Value.String(var filename))
+                throw new InvalidValueTypeException(typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
 
-                List<CellSwap<Value>> valueLines = new();
+            string[] lines = File.ReadAllLines(filename);
 
-                foreach (string s in lines) {
-                    valueLines.Add(new CellSwap<Value>(new Value.String(s)));
-                }
+            List<CellSwap<Value>> valueLines = new();
 
-                return new Value.Array(valueLines);
-            }),
-            new BuiltinFunction("file_write_all_lines", 1, (context, values) => {
-                if (values[0] is not Value.String(var filename))
-                    throw new InvalidValueTypeException(typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
-                if (values[1] is not Value.Array(var data))
-                    throw new InvalidValueTypeException(typeof(Value.Array), values[1].GetType(), context.Expression.PositionInText);
+            foreach (string s in lines) {
+                valueLines.Add(new CellSwap<Value>(new Value.String(s)));
+            }
 
-                List<string> lines = new();
+            return new Value.Array(valueLines);
+        }),
+        new BuiltinFunction("file_write_all_lines", 1, (context, values) => {
+            if (values[0] is not Value.String(var filename))
+                throw new InvalidValueTypeException(typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
+            if (values[1] is not Value.Array(var data))
+                throw new InvalidValueTypeException(typeof(Value.Array), values[1].GetType(), context.Expression.PositionInText);
 
-                foreach (CellSwap<Value> value in data) {
-                    switch (value.Value) {
-                        case Value.Boolean boolean: {
-                            lines.Add(boolean.Value.ToString());
-                            break;
-                        }
-                        case Value.Number number: {
-                            lines.Add(number.Value.ToString(CultureInfo.InvariantCulture));
-                            break;
-                        }
-                        case Value.String str: {
-                            lines.Add(str.Value);
-                            break;
-                        }
+            List<string> lines = new();
+
+            foreach (CellSwap<Value> value in data) {
+                switch (value.Value) {
+                    case Value.Boolean boolean: {
+                        lines.Add(boolean.Value.ToString());
+                        break;
+                    }
+                    case Value.Number number: {
+                        lines.Add(number.Value.ToString(CultureInfo.InvariantCulture));
+                        break;
+                    }
+                    case Value.String str: {
+                        lines.Add(str.Value);
+                        break;
                     }
                 }
+            }
 
-                File.WriteAllLines(filename, lines);
+            File.WriteAllLines(filename, lines);
 
-                return Value.DefaultVoid;
-            }),
-        };
-    }
+            return Value.DefaultVoid;
+        }),
+    };
 }

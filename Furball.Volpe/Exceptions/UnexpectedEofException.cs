@@ -1,14 +1,13 @@
 using System;
 
-namespace Furball.Volpe.Exceptions
+namespace Furball.Volpe.Exceptions; 
+
+public class UnexpectedEofException : VolpeException
 {
-    public class UnexpectedEofException : VolpeException
+    public UnexpectedEofException(PositionInText positionInText) 
+        : base(positionInText)
     {
-        public UnexpectedEofException(PositionInText positionInText) 
-            : base(positionInText)
-        {
-        }
-        
-        public override string Description => $"unexpected End-Of-File";
     }
+        
+    public override string Description => $"unexpected End-Of-File";
 }

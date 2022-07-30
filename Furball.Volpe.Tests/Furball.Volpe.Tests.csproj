@@ -4,11 +4,13 @@
 
         <IsPackable>false</IsPackable>
 
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
 
         <AssemblyName>Furball.Volpe.Tests</AssemblyName>
 
         <RootNamespace>Furball.Volpe.Tests</RootNamespace>
+
+        <LangVersion>10</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>

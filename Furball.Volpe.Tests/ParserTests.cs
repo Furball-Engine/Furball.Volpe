@@ -4,199 +4,198 @@ using Furball.Volpe.LexicalAnalysis;
 using Furball.Volpe.SyntaxAnalysis;
 using NUnit.Framework;
 
-namespace Furball.Volpe.Tests
+namespace Furball.Volpe.Tests; 
+
+public static class ParserExtension
 {
-    public static class ParserExtension
+    public static Expression ParseNextExpression(this Parser parser)
     {
-        public static Expression ParseNextExpression(this Parser parser)
-        {
-            Expression expression;
-            parser.TryParseNextExpression(out expression);
+        Expression expression;
+        parser.TryParseNextExpression(out expression);
 
-            return expression;
-        }
+        return expression;
     }
+}
     
-    public class ParserTests
+public class ParserTests
+{
+    [Test]
+    public void ParseVariable()
     {
-        [Test]
-        public void ParseVariable()
-        {
-            Parser parser = new Parser(new Lexer("$test").GetTokenEnumerator().ToImmutableArray());
+        Parser parser = new Parser(new Lexer("$test").GetTokenEnumerator().ToImmutableArray());
 
-            Assert.AreEqual(parser.ParseNextExpression().Value, new ExpressionValue.Variable("test"));
-        }
-        
-        /*[Test]
-        public void ParseAssignment()
-        {
-            Expression[] values = new Parser(new Lexer("$test = 2 * 4").GetTokenEnumerator().ToImmutableArray())
-                .GetExpressionEnumerator().ToArray();
-
-            Assert.AreEqual(values, new Expression[] {
-                new Expression {
-                    Value = new ExpressionValue.(
-                        "test",
-                        new Expression { Value = new ExpressionValue.InfixExpression(
-                            new ExpressionOperator.Mul(),
-                            new Expression { Value = new ExpressionValue.Number(2) },
-                            new Expression { Value = new ExpressionValue.Number(4) })
-                        })
-                }
-            });
-        }*/
-        
-        [Test]
-        public void ParseAdd()
-        {
-            Expression[] values = new Parser(new Lexer("2 + 2").GetTokenEnumerator().ToImmutableArray())
-                .GetExpressionEnumerator().ToArray();
-
-            Assert.AreEqual(values, new Expression[] {
-                new Expression(
-                    new ExpressionValue.InfixExpression(
-                        new ExpressionOperator.Add(),
-                        new Expression(new ExpressionValue.Number(2)),
-                        new Expression(new ExpressionValue.Number(2))
-                    )
-                )
-            });
-        }
-        
-        [Test]
-        public void ParseAddSub()
-        {
-            Expression[] values = new Parser(new Lexer("2 + 2 - 4").GetTokenEnumerator().ToImmutableArray())
-                .GetExpressionEnumerator().ToArray();
-
-            Assert.AreEqual(values, new Expression[]
-            {
-                new Expression
-                (
-                    new ExpressionValue.InfixExpression(
-                        new ExpressionOperator.Sub(),
-                        new Expression (
-                            new ExpressionValue.InfixExpression(
-                                new ExpressionOperator.Add(), 
-                                new Expression(new ExpressionValue.Number(2)),
-                                new Expression(new ExpressionValue.Number(2)))
-                        ),
-                        new Expression(
-                            new ExpressionValue.Number(4)
-                        )
-                    )
-                )
-            });
-        }
-        
-        
-        [Test]
-        public void ParseSubExpression()
-        {
-            Expression[] values = new Parser(new Lexer("(2+2)*(2+2)").GetTokenEnumerator().ToImmutableArray())
-                .GetExpressionEnumerator().ToArray();
-
-            Assert.AreEqual(values, new Expression[]
-            {
-                new Expression(
-                    new ExpressionValue.InfixExpression(
-                        new ExpressionOperator.Mul(),
-                        new Expression(
-                            new ExpressionValue.SubExpression(new Expression(
-                                new ExpressionValue.InfixExpression(
-                                    new ExpressionOperator.Add(), 
-                                    new Expression(new ExpressionValue.Number(2)),
-                                    new Expression(new ExpressionValue.Number(2))
-                                )
-                            )
-                        )),
-                        new Expression(
-                            new ExpressionValue.SubExpression(new Expression(
-                                new ExpressionValue.InfixExpression(
-                                    new ExpressionOperator.Add(), 
-                                    new Expression(new ExpressionValue.Number(2)),
-                                    new Expression(new ExpressionValue.Number(2))
-                                )
-                        )))
-                ))
-            });
-        }
-
-        [Test]
-        public void ParseFunctionDefinition()
-        {
-            Expression expr =new Parser(
-                    new Lexer("funcdef hi($testVariable, $testVariable2) {}")
-                        .GetTokenEnumerator()
-                        .ToImmutableArray())
-                .ParseNextExpression();
-
-            ExpressionValue.FunctionDefinition functionDefinition = (ExpressionValue.FunctionDefinition) expr.Value;
-            
-            Assert.AreEqual(functionDefinition.Name, "hi");
-            CollectionAssert.AreEqual(functionDefinition.ParameterNames, new string[] { "testVariable", "testVariable2"  });
-            CollectionAssert.AreEqual(functionDefinition.Expressions, new Expression[] {});
-        }
-        
-        [Test]
-        public void ParseFunctionCall()
-        {
-            Expression expr =new Parser(new Lexer("hi(2, 3)").GetTokenEnumerator().ToImmutableArray())
-                .ParseNextExpression();
-
-            ExpressionValue.FunctionCall functionDefinition = (ExpressionValue.FunctionCall) expr.Value;
-            
-            Assert.AreEqual(functionDefinition.Name, "hi");
-            CollectionAssert.AreEqual(functionDefinition.Parameters, new Expression[]
-            {
-                new Expression(new ExpressionValue.Number(2)),
-                new Expression(new ExpressionValue.Number(3))
-            });
-        }
-        
-        [Test]
-        public void ParseFunctionCallNoBracketsWithAFollowingExpression()
-        {
-            Parser expr =new Parser(new Lexer("hi 2, 3; 2").GetTokenEnumerator().ToImmutableArray());
-            
-            ExpressionValue.FunctionCall functionDefinition = (ExpressionValue.FunctionCall) expr.ParseNextExpression().Value;
-            
-            Assert.AreEqual(functionDefinition.Name, "hi");
-            CollectionAssert.AreEqual(functionDefinition.Parameters, new Expression[]
-            {
-                new Expression (new ExpressionValue.Number(2)),
-                new Expression (new ExpressionValue.Number(3))
-            });
-            
-            ExpressionValue v = expr.ParseNextExpression().Value;
-            
-            Assert.AreEqual(v, new ExpressionValue.Number(2));
-        }
-        
-        [Test]
-        public void ParseIf()
-        {
-            var expr =new Parser(new Lexer("if (2 > 3) { $a = 2 } elif (1 == 1) { $a = 3 } else { $a = 4 }").GetTokenEnumerator()).ParseNextExpression();
-            
-            ExpressionValue.IfExpression ifExpr = (ExpressionValue.IfExpression) expr.Value;
-            CollectionAssert.AreEqual(ifExpr.Conditions, new Expression[]
-            {
-                new Expression
-                (
-                    new ExpressionValue.InfixExpression(
-                        new ExpressionOperator.GreaterThan(),
-                        new Expression (new ExpressionValue.Number(2)),
-                        new Expression (new ExpressionValue.Number(3)))
-                ),
-                new Expression
-                (
-                    new ExpressionValue.InfixExpression(
-                        new ExpressionOperator.Eq(),
-                        new Expression(new ExpressionValue.Number(1)),
-                        new Expression(new ExpressionValue.Number(1)))
-                ),
-            });
-        }
-        
+        Assert.AreEqual(parser.ParseNextExpression().Value, new ExpressionValue.Variable("test"));
     }
+        
+    /*[Test]
+    public void ParseAssignment()
+    {
+        Expression[] values = new Parser(new Lexer("$test = 2 * 4").GetTokenEnumerator().ToImmutableArray())
+            .GetExpressionEnumerator().ToArray();
+
+        Assert.AreEqual(values, new Expression[] {
+            new Expression {
+                Value = new ExpressionValue.(
+                    "test",
+                    new Expression { Value = new ExpressionValue.InfixExpression(
+                        new ExpressionOperator.Mul(),
+                        new Expression { Value = new ExpressionValue.Number(2) },
+                        new Expression { Value = new ExpressionValue.Number(4) })
+                    })
+            }
+        });
+    }*/
+        
+    [Test]
+    public void ParseAdd()
+    {
+        Expression[] values = new Parser(new Lexer("2 + 2").GetTokenEnumerator().ToImmutableArray())
+                             .GetExpressionEnumerator().ToArray();
+
+        Assert.AreEqual(values, new Expression[] {
+            new Expression(
+                new ExpressionValue.InfixExpression(
+                    new ExpressionOperator.Add(),
+                    new Expression(new ExpressionValue.Number(2)),
+                    new Expression(new ExpressionValue.Number(2))
+                )
+            )
+        });
+    }
+        
+    [Test]
+    public void ParseAddSub()
+    {
+        Expression[] values = new Parser(new Lexer("2 + 2 - 4").GetTokenEnumerator().ToImmutableArray())
+                             .GetExpressionEnumerator().ToArray();
+
+        Assert.AreEqual(values, new Expression[]
+        {
+            new Expression
+            (
+                new ExpressionValue.InfixExpression(
+                    new ExpressionOperator.Sub(),
+                    new Expression (
+                        new ExpressionValue.InfixExpression(
+                            new ExpressionOperator.Add(), 
+                            new Expression(new ExpressionValue.Number(2)),
+                            new Expression(new ExpressionValue.Number(2)))
+                    ),
+                    new Expression(
+                        new ExpressionValue.Number(4)
+                    )
+                )
+            )
+        });
+    }
+        
+        
+    [Test]
+    public void ParseSubExpression()
+    {
+        Expression[] values = new Parser(new Lexer("(2+2)*(2+2)").GetTokenEnumerator().ToImmutableArray())
+                             .GetExpressionEnumerator().ToArray();
+
+        Assert.AreEqual(values, new Expression[]
+        {
+            new Expression(
+                new ExpressionValue.InfixExpression(
+                    new ExpressionOperator.Mul(),
+                    new Expression(
+                        new ExpressionValue.SubExpression(new Expression(
+                                                              new ExpressionValue.InfixExpression(
+                                                                  new ExpressionOperator.Add(), 
+                                                                  new Expression(new ExpressionValue.Number(2)),
+                                                                  new Expression(new ExpressionValue.Number(2))
+                                                              )
+                                                          )
+                        )),
+                    new Expression(
+                        new ExpressionValue.SubExpression(new Expression(
+                                                              new ExpressionValue.InfixExpression(
+                                                                  new ExpressionOperator.Add(), 
+                                                                  new Expression(new ExpressionValue.Number(2)),
+                                                                  new Expression(new ExpressionValue.Number(2))
+                                                              )
+                                                          )))
+                ))
+        });
+    }
+
+    [Test]
+    public void ParseFunctionDefinition()
+    {
+        Expression expr =new Parser(
+                new Lexer("funcdef hi($testVariable, $testVariable2) {}")
+                   .GetTokenEnumerator()
+                   .ToImmutableArray())
+           .ParseNextExpression();
+
+        ExpressionValue.FunctionDefinition functionDefinition = (ExpressionValue.FunctionDefinition) expr.Value;
+            
+        Assert.AreEqual(functionDefinition.Name, "hi");
+        CollectionAssert.AreEqual(functionDefinition.ParameterNames, new string[] { "testVariable", "testVariable2"  });
+        CollectionAssert.AreEqual(functionDefinition.Expressions, new Expression[] {});
+    }
+        
+    [Test]
+    public void ParseFunctionCall()
+    {
+        Expression expr =new Parser(new Lexer("hi(2, 3)").GetTokenEnumerator().ToImmutableArray())
+           .ParseNextExpression();
+
+        ExpressionValue.FunctionCall functionDefinition = (ExpressionValue.FunctionCall) expr.Value;
+            
+        Assert.AreEqual(functionDefinition.Name, "hi");
+        CollectionAssert.AreEqual(functionDefinition.Parameters, new Expression[]
+        {
+            new Expression(new ExpressionValue.Number(2)),
+            new Expression(new ExpressionValue.Number(3))
+        });
+    }
+        
+    [Test]
+    public void ParseFunctionCallNoBracketsWithAFollowingExpression()
+    {
+        Parser expr =new Parser(new Lexer("hi 2, 3; 2").GetTokenEnumerator().ToImmutableArray());
+            
+        ExpressionValue.FunctionCall functionDefinition = (ExpressionValue.FunctionCall) expr.ParseNextExpression().Value;
+            
+        Assert.AreEqual(functionDefinition.Name, "hi");
+        CollectionAssert.AreEqual(functionDefinition.Parameters, new Expression[]
+        {
+            new Expression (new ExpressionValue.Number(2)),
+            new Expression (new ExpressionValue.Number(3))
+        });
+            
+        ExpressionValue v = expr.ParseNextExpression().Value;
+            
+        Assert.AreEqual(v, new ExpressionValue.Number(2));
+    }
+        
+    [Test]
+    public void ParseIf()
+    {
+        var expr =new Parser(new Lexer("if (2 > 3) { $a = 2 } elif (1 == 1) { $a = 3 } else { $a = 4 }").GetTokenEnumerator()).ParseNextExpression();
+            
+        ExpressionValue.IfExpression ifExpr = (ExpressionValue.IfExpression) expr.Value;
+        CollectionAssert.AreEqual(ifExpr.Conditions, new Expression[]
+        {
+            new Expression
+            (
+                new ExpressionValue.InfixExpression(
+                    new ExpressionOperator.GreaterThan(),
+                    new Expression (new ExpressionValue.Number(2)),
+                    new Expression (new ExpressionValue.Number(3)))
+            ),
+            new Expression
+            (
+                new ExpressionValue.InfixExpression(
+                    new ExpressionOperator.Eq(),
+                    new Expression(new ExpressionValue.Number(1)),
+                    new Expression(new ExpressionValue.Number(1)))
+            ),
+        });
+    }
+        
 }

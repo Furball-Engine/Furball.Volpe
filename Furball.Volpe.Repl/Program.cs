@@ -12,83 +12,58 @@ using Environment = Furball.Volpe.Evaluation.Environment;
 
 namespace Furball.Volpe.Repl
 {
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            Stream inputStream = Console.OpenStandardInput();
-            Stream outputStream = Console.OpenStandardOutput();
+    class Program {
+        public static StreamReader InputStream;
+        public static StreamWriter OutputStream;
+        
+        static void Main(string[] args) {
+            InputStream  = new(Console.OpenStandardInput());
+            OutputStream = new(Console.OpenStandardOutput());
+
+            OutputStream.AutoFlush = true;
+
+            bool replMode = args.Length == 0;
+
+            string s = "";
+            //TODO: Add logic to check for people sending files through stdin
+            //maybe if args[0] == "-"? that seems to be a standard convention in Unix
+
+            Environment environment = new(DefaultBuiltins.GetAll().Concat(Builtins.Funcs).ToArray());
             
-            Console.WriteLine($"Volpe Language - REPL");
-            
-            Environment environment = new Environment(DefaultBuiltins.GetAll().Concat(new BuiltinFunction[]
-            {
-                new BuiltinFunction("clear", 0, (_, _) =>
-                {
-                    Console.Clear();
-                    return Value.DefaultVoid;
-                }),
-                
-                new BuiltinFunction("println", 1, (context, values) =>
-                {
-                    if (values[0] is not Value.String(var str))
-                        throw new InvalidValueTypeException(
-                            typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
-                    
-                    Console.WriteLine(str);
-                    
-                    return Value.DefaultVoid;
-                }),
-                
-                new("timeit", 2, (context, values) =>
-                {
-                    if (values[0] is not Value.FunctionReference(_, var function))
-                        throw new InvalidValueTypeException(
-                            typeof(Value.FunctionReference), values[0].GetType(), context.Expression.PositionInText);
-                    
-                    if (values[1] is not Value.Number(var loops))
-                        throw new InvalidValueTypeException(
-                            typeof(Value.FunctionReference), values[0].GetType(), context.Expression.PositionInText);
+            if(replMode) {
+                Console.WriteLine($"Volpe Language - REPL");
 
-                    long lLoops = (long) loops;
-                    double totalMilliseconds = 0;
+                for (;;) {
+                    Console.Write(">> ");
+                    string input = Console.ReadLine();
 
-                    for (long i = 0; i < lLoops; i++)
-                    {
-                        Stopwatch stopwatch = new Stopwatch();
+                    try {
+                        Parser parser = new Parser(new Lexer(input!).GetTokenEnumerator());
+                        Value[] results = parser.GetExpressionEnumerator()
+                                                .Select(expr => new EvaluatorContext(expr, environment).Evaluate()).ToArray();
 
-                        stopwatch.Start();
-                        function.Invoke(context, Array.Empty<Value>());
-                        stopwatch.Stop();
-
-                        totalMilliseconds += stopwatch.Elapsed.TotalMilliseconds;
+                        for (int i = 0; i < results.Length; i++)
+                            Console.WriteLine($"[{i}] {results[i].RepresentationWithClass}");
                     }
-                    
-                    return new Value.Number(totalMilliseconds / loops);
-                })
-            }).ToArray());
-            
-            for (;;)
-            {
-                Console.Write(">> ");
-                string input = Console.ReadLine();
-
-                try
-                {
-                    Parser parser = new Parser(new Lexer(input!).GetTokenEnumerator());
-                    Value[] results = parser.GetExpressionEnumerator()
-                        .Select(expr => new EvaluatorContext(expr, environment).Evaluate()).ToArray();
-
-                    for (int i = 0; i < results.Length; i++)
-                        Console.WriteLine($"[{i}] {results[i].RepresentationWithClass}");
-                }
-                catch (VolpeException ex)
-                {
+                    catch (VolpeException ex) {
 #if DEBUG
-                    Console.WriteLine(ex);
+                        Console.WriteLine(ex);
 #else
                     Console.WriteLine(ex.Message);
 #endif
+                    }
+                }
+            }
+            else {
+                if (string.IsNullOrEmpty(s))
+                    s = File.ReadAllText(args[0]);
+                
+                IEnumerable<Token> tokenStream = new Lexer(s).GetTokenEnumerator();
+
+                Parser parser = new(tokenStream);
+                
+                while (parser.TryParseNextExpression(out Expression expression)) {
+                    new EvaluatorContext(expression!, environment).Evaluate();
                 }
             }
         }

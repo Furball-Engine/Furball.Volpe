@@ -58,7 +58,45 @@ public class LexerTests
             lexer.ConsumeNextToken().Value, 
             new TokenValue.Number(1234));
     }
+    
+    [Test]
+    public void ParseByte()
+    {
+        Lexer lexer = new Lexer("45b");
+            
+        Assert.AreEqual(
+            lexer.ConsumeNextToken().Value, 
+            new TokenValue.Byte(45));
+    }
+    
+    [Test]
+    public void ParseByteWithDecimal()
+    {
+        Lexer lexer = new Lexer("45.1b");
+        try {
+            lexer.ConsumeNextToken();
+        }
+        catch(UnexceptedSymbolException) {
+            Assert.Pass();
+        }
         
+        Assert.Fail();
+    }
+    
+    [Test]
+    public void ParseByteTooBig()
+    {
+        Lexer lexer = new Lexer("4511b");
+        try {
+            lexer.ConsumeNextToken();
+        }
+        catch(OutOfBoundsException) {
+            Assert.Pass();
+        }
+        
+        Assert.Fail();
+    }
+
     [Test]
     public void ParseRationalNumber()
     {
@@ -82,7 +120,7 @@ public class LexerTests
     [Test]
     public void ParseMultiple()
     {
-        TokenValue[] tokens = new Lexer("helpme 1234 \"help me\" 𝕙𝕖𝕝𝕡𝕞𝕖").GetTokenEnumerator().Select(t => t.Value).ToArray();
+        TokenValue[] tokens = new Lexer("helpme 1234 12b \"help me\" 𝕙𝕖𝕝𝕡𝕞𝕖").GetTokenEnumerator().Select(t => t.Value).ToArray();
             
         Assert.AreEqual(
             tokens, 
@@ -90,6 +128,7 @@ public class LexerTests
             {
                 new TokenValue.Literal("helpme"), 
                 new TokenValue.Number(1234), 
+                new TokenValue.Byte(12),
                 new TokenValue.String("help me"),
                 new TokenValue.Literal("𝕙𝕖𝕝𝕡𝕞𝕖")
             });

@@ -14,6 +14,8 @@ namespace Furball.Volpe.SyntaxAnalysis {
         public record String(string Value) : ExpressionValue;
 
         public record Number(double Value) : ExpressionValue;
+        
+        public record Byte(byte Value) : ExpressionValue;
 
         public record InfixExpression(ExpressionOperator Operator, Expression Left, Expression Right) : ExpressionValue;
 

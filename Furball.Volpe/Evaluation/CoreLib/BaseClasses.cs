@@ -20,6 +20,17 @@ public static class BaseClasses
         }) { }
     }
     
+    public class ByteClass : Class
+    {
+        public static readonly NumberClass Default = new NumberClass();
+        
+        public ByteClass() : base("byte", new (string, Function)[]
+        {
+            ("to_string", new Function.Builtin((context, values) => 
+                                                   new Value.String(((Value.Byte)values[0]).Value.ToString(CultureInfo.InvariantCulture)), 1)),
+        }) { }
+    }
+    
     public class StringClass : Class
     {
         public static readonly StringClass Default = new StringClass();

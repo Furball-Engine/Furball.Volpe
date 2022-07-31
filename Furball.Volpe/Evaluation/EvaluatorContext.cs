@@ -339,30 +339,30 @@ public readonly struct EvaluatorContext
         
     public Value Evaluate(bool forceInner = true)
     {
-        Value evaluated = Expression.Value switch
-        {
-            ExpressionValue.InfixExpression expr              => EvaluateInfixExpression(expr),
-            ExpressionValue.PrefixExpression expr             => EvaluatePrefixExpression(expr),
-            ExpressionValue.Number(var v)                     => new Value.Number(v),
-            ExpressionValue.Variable expr                     => EvaluateVariable(expr),
-            ExpressionValue.FunctionDefinition expr           => EvaluateFunctionDefinition(expr),
-            ExpressionValue.SubExpression(var expr)           => new EvaluatorContext(expr, Environment).Evaluate(),
-            ExpressionValue.FunctionReference expr            => EvaluateFunctionReference(expr),
-            ExpressionValue.FunctionCall expr                 => EvaluateFunctionCall(expr),
-            ExpressionValue.String expr                       => new Value.String(expr.Value),
-            ExpressionValue.IfExpression expr                 => EvaluateIfExpression(expr),
-            ExpressionValue.WhileExpression expr              => EvaluateWhileExpression(expr),
-            ExpressionValue.Return(var expr) when InFunction  => new Value.ToReturn(new EvaluatorContext(expr, Environment).Evaluate()),
-            ExpressionValue.Return(_) when !InFunction        => throw new ReturnNotAllowedOutsideFunctionsException(Expression.PositionInText),
-            ExpressionValue.True                              => Value.DefaultTrue,
-            ExpressionValue.False                             => Value.DefaultFalse,
-            ExpressionValue.Array(var initialElements)        => EvaluateArray(initialElements),
-            ExpressionValue.Lambda lambda                     => EvaluateLambda(lambda),
-            ExpressionValue.Object(var keys, var expressions) => EvaluateObject(keys, expressions),
-            ExpressionValue.ClassDefinition def               => EvaluateClassDef(def),
-            ExpressionValue.MethodCall methodCall             => EvaluateMethodCall(methodCall),
+        Value evaluated = this.Expression.Value switch {
+            ExpressionValue.InfixExpression expr                  => this.EvaluateInfixExpression(expr),
+            ExpressionValue.PrefixExpression expr                 => this.EvaluatePrefixExpression(expr),
+            ExpressionValue.Number(var v)                         => new Value.Number(v),
+            ExpressionValue.Byte(var v)                         => new Value.Byte(v),
+            ExpressionValue.Variable expr                         => this.EvaluateVariable(expr),
+            ExpressionValue.FunctionDefinition expr               => this.EvaluateFunctionDefinition(expr),
+            ExpressionValue.SubExpression(var expr)               => new EvaluatorContext(expr, this.Environment).Evaluate(),
+            ExpressionValue.FunctionReference expr                => this.EvaluateFunctionReference(expr),
+            ExpressionValue.FunctionCall expr                     => this.EvaluateFunctionCall(expr),
+            ExpressionValue.String expr                           => new Value.String(expr.Value),
+            ExpressionValue.IfExpression expr                     => this.EvaluateIfExpression(expr),
+            ExpressionValue.WhileExpression expr                  => this.EvaluateWhileExpression(expr),
+            ExpressionValue.Return(var expr) when this.InFunction => new Value.ToReturn(new EvaluatorContext(expr, this.Environment).Evaluate()),
+            ExpressionValue.Return(_) when !this.InFunction       => throw new ReturnNotAllowedOutsideFunctionsException(this.Expression.PositionInText),
+            ExpressionValue.True                                  => Value.DefaultTrue,
+            ExpressionValue.False                                 => Value.DefaultFalse,
+            ExpressionValue.Array(var initialElements)            => this.EvaluateArray(initialElements),
+            ExpressionValue.Lambda lambda                         => this.EvaluateLambda(lambda),
+            ExpressionValue.Object(var keys, var expressions)     => this.EvaluateObject(keys, expressions),
+            ExpressionValue.ClassDefinition def                   => this.EvaluateClassDef(def),
+            ExpressionValue.MethodCall methodCall                 => this.EvaluateMethodCall(methodCall),
 
-            _ => throw new ArgumentException(Expression.Value.GetType().ToString())
+            _ => throw new ArgumentException(this.Expression.Value.GetType().ToString())
         };
 
         return forceInner ? evaluated.InnerOrSelf : evaluated;

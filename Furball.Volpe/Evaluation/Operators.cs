@@ -97,7 +97,8 @@ public class Operators
         return (leftValue, rightValue) switch
         {
             (Value.Number(var n1), Value.Number(var n2)) => n1 > n2 ? Value.DefaultTrue : Value.DefaultFalse,
-            (Value.String(var n1), Value.String(var n2)) => 
+            (Value.Byte(var n1), Value.Byte(var n2))     => n1 > n2 ? Value.DefaultTrue : Value.DefaultFalse,
+            (Value.String(var n1), Value.String(var n2)) =>
                 string.Compare(n1, n2, StringComparison.Ordinal) > 0 ? Value.DefaultTrue : Value.DefaultFalse,
 
             _ => throw new UndefinedInfixOperationException(
@@ -110,6 +111,7 @@ public class Operators
         return (leftValue, rightValue) switch
         {
             (Value.Number(var n1), Value.Number(var n2)) => n1 < n2 ? Value.DefaultTrue : Value.DefaultFalse,
+            (Value.Byte(var n1), Value.Byte(var n2)) => n1 < n2 ? Value.DefaultTrue : Value.DefaultFalse,
             (Value.String(var n1), Value.String(var n2)) => 
                 string.Compare(n1, n2, StringComparison.Ordinal) < 0 ? Value.DefaultTrue : Value.DefaultFalse,
 
@@ -123,6 +125,7 @@ public class Operators
         return (leftValue, rightValue) switch
         {
             (Value.Number(var n1), Value.Number(var n2)) => n1 >= n2 ? Value.DefaultTrue : Value.DefaultFalse,
+            (Value.Byte(var n1), Value.Byte(var n2))     => n1 >= n2 ? Value.DefaultTrue : Value.DefaultFalse,
             (Value.String(var n1), Value.String(var n2)) => 
                 string.Compare(n1, n2, StringComparison.Ordinal) >= 0 ? Value.DefaultTrue : Value.DefaultFalse,
 
@@ -136,6 +139,7 @@ public class Operators
         return (leftValue, rightValue) switch
         {
             (Value.Number(var n1), Value.Number(var n2)) => n1 <= n2 ? Value.DefaultTrue : Value.DefaultFalse,
+            (Value.Byte(var n1), Value.Byte(var n2))     => n1 <= n2 ? Value.DefaultTrue : Value.DefaultFalse,
             (Value.String(var n1), Value.String(var n2)) => 
                 string.Compare(n1, n2, StringComparison.Ordinal) <= 0 ? Value.DefaultTrue : Value.DefaultFalse,
 
@@ -235,6 +239,7 @@ public class Operators
         return (rightValue, leftValue) switch
         {
             (Value.Number(var n1), Value.Number(var n2)) => new Value.Number(n1 + n2),
+            (Value.Byte(var n1), Value.Byte(var n2))     => new Value.Byte((byte)(n1 + n2)),
             (Value.Array n1, Value.Array n2)             => AddTwoArrays(n1, n2),
                 
             _ => throw new UndefinedInfixOperationException(
@@ -248,6 +253,7 @@ public class Operators
         return (rightValue, leftValue) switch
         {
             (Value.Number(var n1), Value.Number(var n2)) => new Value.Number(n1 - n2),
+            (Value.Byte(var n1), Value.Byte(var n2))     => new Value.Byte((byte)(n1 - n2)),
             (Value.String(var n1), Value.String(var n2)) => new Value.String(n1.Replace(n2, string.Empty)),
                 
             _ => throw new UndefinedInfixOperationException(
@@ -284,6 +290,7 @@ public class Operators
         return (rightValue, leftValue) switch
         {
             (Value.Number(var n1), Value.Number(var n2)) => new Value.Number(n1 * n2),
+            (Value.Byte(var n1), Value.Byte(var n2))     => new Value.Byte((byte)(n1 * n2)),
             (Value.String(var n1), Value.Number(var n2)) => new Value.String(MultiplyString(n1, (int)n2)),
             (Value.Array n1, var n2)                     => MultiplyArray(n1, n2),
             (var n2, Value.Array n1)                     => MultiplyArray(n1, n2),
@@ -299,8 +306,11 @@ public class Operators
         {
             (Value.Number, Value.Number(0)) => 
                 throw new OperatorDomainException(context.Expression.PositionInText, "cannot divide by zero"),
+            (Value.Byte, Value.Byte(0)) => 
+                throw new OperatorDomainException(context.Expression.PositionInText, "cannot divide by zero"),
                 
             (Value.Number(var n1), Value.Number(var n2)) => new Value.Number(n1 / n2),
+            (Value.Byte(var n1), Value.Byte(var n2))     => new Value.Byte((byte)(n1 / n2)),
                 
             _ => throw new UndefinedInfixOperationException(
                  nameof(Divide), rightValue.GetType(), leftValue.GetType(), context.Expression.PositionInText)

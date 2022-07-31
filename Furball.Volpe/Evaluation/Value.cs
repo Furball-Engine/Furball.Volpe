@@ -33,6 +33,13 @@ public abstract record Value
         public override string Representation => Value.ToString(CultureInfo.InvariantCulture);
     }
 
+    public record Byte(byte Value) : Value 
+    {
+        public override Class BaseClass => BaseClasses.ByteClass.Default;
+
+        public override string Representation => Value.ToString(CultureInfo.InvariantCulture);
+    }
+
     public record Boolean(bool Value) : Value
     {
         public override Class BaseClass => BaseClasses.BooleanClass.Default;

@@ -637,6 +637,9 @@ public class Parser
 
                     TokenValue.Number(var nValue) =>
                         _tokenConsumer.TryConsumeNextAndThen((_, _) => new ExpressionValue.Number(nValue)),
+                    
+                    TokenValue.Byte(var nValue) =>
+                        _tokenConsumer.TryConsumeNextAndThen((_, _) => new ExpressionValue.Byte(nValue)),
 
                     TokenValue.True => 
                         _tokenConsumer.TryConsumeNextAndThen((_, _) => new ExpressionValue.True()),

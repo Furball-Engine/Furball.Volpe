@@ -50,6 +50,7 @@ public abstract record TokenValue
     public record String(string  Value) : TokenValue;
     public record Func : TokenValue;
     public record Number(double Value) : TokenValue;
+    public record Byte(byte Value) : TokenValue;
     public record True : TokenValue;
     public record False : TokenValue;
     public record LeftBracket : TokenValue;

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-using Furball.Volpe.Evaluation;
 using Furball.Volpe.Exceptions;
 
 namespace Furball.Volpe.LexicalAnalysis; 

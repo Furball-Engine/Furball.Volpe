@@ -1,5 +1,3 @@
-using System;
-
 namespace Furball.Volpe.Exceptions; 
 
 public class CannotRedefineFunctionsException : VolpeException

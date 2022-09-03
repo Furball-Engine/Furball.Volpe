@@ -280,7 +280,7 @@ public readonly struct EvaluatorContext
         Environment environment = Environment;
 
         return new Value.Array(
-        initialElements.Select(element => new CellSwap<Value>(new EvaluatorContext(element, environment, false).Evaluate())).ToList());
+        initialElements.Select(element => new CellSwap<Value>(new EvaluatorContext(element, environment).Evaluate())).ToList());
     }
         
     public Value EvaluateObject(string[] keys, Expression[] expressions)
@@ -293,7 +293,7 @@ public readonly struct EvaluatorContext
                 throw new KeyAlreadyDefinedException(keys[i], Expression.PositionInText);
                 
             dict.Add(keys[i],
-                     new CellSwap<Value>(new EvaluatorContext(expressions[i], Environment, false).Evaluate()));
+                     new CellSwap<Value>(new EvaluatorContext(expressions[i], Environment).Evaluate()));
         }
 
         return new Value.Object(dict);

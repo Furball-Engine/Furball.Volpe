@@ -32,12 +32,12 @@ public class Variable
     }
 }
     
-public class TypedVariable<T> : Variable where T: Value
+public class TypedVariable<pT> : Variable where pT: Value
 {
-    public new EventHandler<T>? OnChange;
+    public new EventHandler<pT>? OnChange;
 
-    public T Value {
-        get => (T)base.RawValue;
+    public pT Value {
+        get => (pT)base.RawValue;
         set {
             base.RawValue = value;
             this.OnChange?.Invoke(this, value);
@@ -50,7 +50,7 @@ public class TypedVariable<T> : Variable where T: Value
             
         set
         {
-            if (value is not T castedValue)
+            if (value is not pT castedValue)
                 throw new InvalidOperationException($"This variable only supports ${value.GetType()} values.");
 
             base.RawValue = castedValue;
@@ -58,5 +58,5 @@ public class TypedVariable<T> : Variable where T: Value
         }
     }
 
-    public TypedVariable(string name, T value) : base(name, value) {}
+    public TypedVariable(string name, pT value) : base(name, value) {}
 }

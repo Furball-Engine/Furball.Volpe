@@ -1,17 +1,17 @@
 namespace Furball.Volpe.Memory; 
 
-public class CellSwap<T>
+public class CellSwap<pT>
 {
-    public T Value { get; private set; }
+    public pT Value { get; private set; }
 
-    public void Swap(T value)
+    public void Swap(pT value)
     {
         Value = value;
     } 
         
-    public static implicit operator T(CellSwap<T> cell) => cell.Value;
+    public static implicit operator pT(CellSwap<pT> cell) => cell.Value;
         
-    public CellSwap(T value)
+    public CellSwap(pT value)
     {
         Value = value;
     }

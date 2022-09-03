@@ -28,17 +28,17 @@ public class Parser
         return token!;
     }
 
-    private T ForceGetNextTokenValueWithType<T>() where T : TokenValue
+    private pT ForceGetNextTokenValueWithType<pT>() where pT : TokenValue
     {
         Token token = ForceGetNextToken();
 
-        if (token.Value is not T tokenValue)
+        if (token.Value is not pT tokenValue)
             throw new UnexpectedTokenException(token!.PositionInText, token);
 
         return tokenValue;
     }
         
-    private bool TryPeekNextTokenWithType<T>(out T? value) where T : TokenValue
+    private bool TryPeekNextTokenWithType<pT>(out pT? value) where pT : TokenValue
     {
         value = null;
 
@@ -47,7 +47,7 @@ public class Parser
         if (!_tokenConsumer.TryPeekNext(out token))
             return false;
 
-        if (token!.Value is not T tokenValue)
+        if (token!.Value is not pT tokenValue)
             return false;
 
         value = tokenValue;
@@ -55,13 +55,13 @@ public class Parser
         return true;
     }
         
-    private bool TryGetNextTokenWithType<T>(out T? value) where T : TokenValue
+    private bool TryGetNextTokenWithType<pT>(out pT? value) where pT : TokenValue
     {
         value = null;
             
         Token token = ForceGetNextToken();
 
-        if (token.Value is not T tokenValue)
+        if (token.Value is not pT tokenValue)
             return false;
 
         value = tokenValue;
@@ -69,12 +69,12 @@ public class Parser
         return true;
     }
 
-    private T GetAndAssertNextTokenType<T>() where T : TokenValue
+    private pT GetAndAssertNextTokenType<pT>() where pT : TokenValue
     {
-        TokenValue value = (T)ForceGetNextToken().Value;
-        Debug.Assert(value is T);
+        TokenValue value = (pT)ForceGetNextToken().Value;
+        Debug.Assert(value is pT);
 
-        return (T)value;
+        return (pT)value;
     }
 
     private Expression ForceParseNextExpression(

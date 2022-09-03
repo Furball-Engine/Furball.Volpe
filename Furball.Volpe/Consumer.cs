@@ -3,28 +3,28 @@ using System.Collections.Generic;
 
 namespace Furball.Volpe; 
 
-public class Consumer<T> 
+public class Consumer<pT> 
 {
-    public Consumer(IEnumerable<T> enumerable)
+    public Consumer(IEnumerable<pT> enumerable)
     {
         Enumerator = enumerable.GetEnumerator();
     }
         
-    protected IEnumerator<T> Enumerator { get; }
+    protected IEnumerator<pT> Enumerator { get; }
         
     public int ConsumedCount { get; private set; }
 
-    public T? LastConsumed { get; private set; }
+    public pT? LastConsumed { get; private set; }
 
     private object? _onHold;
 
-    public virtual bool TryPeekNext(out T? value)
+    public virtual bool TryPeekNext(out pT? value)
     {
         value = default;
 
         if (_onHold != null)
         {
-            value = (T) _onHold;
+            value = (pT) _onHold;
             return true;
         }
 
@@ -35,19 +35,19 @@ public class Consumer<T>
         return true;
     }
 
-    public TResult TryConsumeNextAndThen<TResult>(Func<bool, T?, TResult> function)
+    public pTResult TryConsumeNextAndThen<pTResult>(Func<bool, pT?, pTResult> function)
     {
-        bool consumed = TryConsumeNext(out T? value);
+        bool consumed = TryConsumeNext(out pT? value);
         return function(consumed, value);
     }
         
     public bool SkipOne() => TryConsumeNext(out _);
 
-    public void SkipTill(Func<T, bool> predicate)
+    public void SkipTill(Func<pT, bool> predicate)
     {
         for (;;)
         {
-            T? t;
+            pT? t;
             if (!TryPeekNext(out t))
                 break;
                 
@@ -58,15 +58,15 @@ public class Consumer<T>
         }
     } 
         
-    public void SkipTill<TState>(Func<TState, T, (bool, TState)> predicate, TState initialState)
+    public void SkipTill<pTState>(Func<pTState, pT, (bool, pTState)> predicate, pTState initialState)
     {
         for (;;)
         {
-            T? t;
+            pT? t;
             if (!TryPeekNext(out t))
                 break;
 
-            (bool result, TState newState) = predicate(initialState, t!);
+            (bool result, pTState newState) = predicate(initialState, t!);
                 
             if (!result)
                 break;
@@ -77,14 +77,14 @@ public class Consumer<T>
         }
     } 
         
-    public virtual bool TryConsumeNext(out T? value)
+    public virtual bool TryConsumeNext(out pT? value)
     {
         value = default;
         ConsumedCount++;
             
         if (_onHold != null)
         {
-            value   = (T) _onHold;
+            value   = (pT) _onHold;
             _onHold = null;
             return true;
         }

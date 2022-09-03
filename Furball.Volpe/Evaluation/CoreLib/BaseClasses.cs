@@ -15,7 +15,7 @@ public static class BaseClasses
         
         public NumberClass() : base("number", new (string, Function)[]
         {
-            ("to_string", new Function.Builtin((context, values) => 
+            ("to_string", new Function.Builtin((_, values) => 
                                                    new Value.String(((Value.Number)values[0]).Value.ToString(CultureInfo.InvariantCulture)), 1)),
         }) { }
     }
@@ -26,7 +26,7 @@ public static class BaseClasses
         
         public ByteClass() : base("byte", new (string, Function)[]
         {
-            ("to_string", new Function.Builtin((context, values) => 
+            ("to_string", new Function.Builtin((_, values) => 
                                                    new Value.String(((Value.Byte)values[0]).Value.ToString(CultureInfo.InvariantCulture)), 1)),
         }) { }
     }
@@ -64,15 +64,15 @@ public static class BaseClasses
 
                     return new Value.String(string.Format(formatString, parameters.ToArray()));
                 }, 2)),
-            ("length", new Function.Builtin((context, parameters) => {
+            ("length", new Function.Builtin((_, parameters) => {
                     Value.String str = (Value.String)parameters[0];
                     return new Value.Number(str.Value.Length);
                 }, 0)),
-            ("to_upper", new Function.Builtin((context, parameters) => {
+            ("to_upper", new Function.Builtin((_, parameters) => {
                     Value.String str = (Value.String)parameters[0];
                     return new Value.String(str.Value.ToUpper());
                 }, 0)),
-            ("to_lower", new Function.Builtin((context, parameters) => {
+            ("to_lower", new Function.Builtin((_, parameters) => {
                     Value.String str = (Value.String)parameters[0];
                     return new Value.String(str.Value.ToLower());
                 }, 0)),
@@ -118,7 +118,7 @@ public static class BaseClasses
 
                     return new Value.String(str.Value.Replace(what, with));
                 }, 2)),
-            ("trim", new Function.Builtin((context, parameters) => {
+            ("trim", new Function.Builtin((_, parameters) => {
                     Value.String str = (Value.String)parameters[0];
                     return new Value.String(str.Value.Trim());
                 }, 0)),
@@ -131,12 +131,12 @@ public static class BaseClasses
         
         public ArrayClass() : base("array", new (string, Function)[]
         {
-            ("length", new Function.Builtin((context, parameters) => {
+            ("length", new Function.Builtin((_, parameters) => {
                     Value.Array arr = (Value.Array)parameters[0];
 
                     return new Value.Number(arr.Value.Count);
                 }, 0)),
-            ("append", new Function.Builtin((context, parameters) => {
+            ("append", new Function.Builtin((_, parameters) => {
                     Value.Array arr = (Value.Array)parameters[0];
 
                     arr.Value.Add(new CellSwap<Value>(parameters[1]));
@@ -182,7 +182,7 @@ public static class BaseClasses
 
                     return new Value.Void();
                 }, 1)),
-            ("remove", new Function.Builtin((context, parameters) => {
+            ("remove", new Function.Builtin((_, parameters) => {
                     Value.Array arr = (Value.Array)parameters[0];
 
                     int index = arr.Value.FindIndex(x=> x.Value == parameters[1]);

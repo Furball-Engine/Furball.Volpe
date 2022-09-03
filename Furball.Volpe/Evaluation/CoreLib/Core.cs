@@ -20,7 +20,7 @@ public class Core : CoreLibExtension {
                                               context.Expression.PositionInText);
         }),
 
-        new BuiltinFunction ("string", 1, (context, values) => {
+        new BuiltinFunction ("string", 1, (_, values) => {
             Value value = values[0];
 
             if (value is Value.String)
@@ -32,7 +32,7 @@ public class Core : CoreLibExtension {
             return new Value.String(value.Representation);
         }),
 
-        new BuiltinFunction ("repr", 1, (context, values) => new Value.String(values[0].Representation)),
+        new BuiltinFunction ("repr", 1, (_, values) => new Value.String(values[0].Representation)),
 
         new BuiltinFunction ("hook", 3, (context, values) => {
             if (values[0] is not Value.String(var name))
@@ -51,7 +51,7 @@ public class Core : CoreLibExtension {
             return Value.DefaultVoid;
         }),
 
-        new BuiltinFunction ("type", 1, (context, values) => {
+        new BuiltinFunction ("type", 1, (_, values) => {
             return new Value.String(values[0] switch
             {
                 Value.Number            => "number",
@@ -87,7 +87,7 @@ public class Core : CoreLibExtension {
             throw new UserThrownException(context.Expression.PositionInText, first);
         }),
             
-        new BuiltinFunction("clone", 1, (context, values) =>
+        new BuiltinFunction("clone", 1, (_, values) =>
         {
             switch (values[0])
             {

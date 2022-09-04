@@ -11,7 +11,7 @@ public static class BaseClasses
 {
     public class NumberClass : Class
     {
-        public static readonly NumberClass Default = new NumberClass();
+        public static readonly NumberClass Default = new();
         
         public NumberClass() : base("number", new (string, Function)[]
         {
@@ -22,7 +22,7 @@ public static class BaseClasses
     
     public class ByteClass : Class
     {
-        public static readonly NumberClass Default = new NumberClass();
+        public static readonly NumberClass Default = new();
         
         public ByteClass() : base("byte", new (string, Function)[]
         {
@@ -33,7 +33,7 @@ public static class BaseClasses
     
     public class StringClass : Class
     {
-        public static readonly StringClass Default = new StringClass();
+        public static readonly StringClass Default = new();
         
         public StringClass() : base("string", new (string, Function)[]
         {
@@ -127,7 +127,7 @@ public static class BaseClasses
     
     public class ArrayClass : Class
     {
-        public static readonly ArrayClass Default = new ArrayClass();
+        public static readonly ArrayClass Default = new();
         
         public ArrayClass() : base("array", new (string, Function)[]
         {
@@ -177,7 +177,7 @@ public static class BaseClasses
                     if (index >= arr.Value.Count || index < 0)
                         throw new IndexOutOfBoundsException(arr.Value, index, context.Expression.PositionInText);
 
-                    Value oldValue = arr.Value[index];
+                    // Value oldValue = arr.Value[index];
                     arr.Value.RemoveAt(index);
 
                     return new Value.Void();
@@ -212,7 +212,7 @@ public static class BaseClasses
                     if (parameters[1] is not Value.FunctionReference(_, var function))
                         throw new InvalidValueTypeException(typeof(Value.FunctionReference), parameters[1].GetType(), context.Expression.PositionInText);
 
-                    List<CellSwap<Value>> newArray = new List<CellSwap<Value>>(arr.Value.Count);
+                    List<CellSwap<Value>> newArray = new(arr.Value.Count);
 
                     for (int i = 0; i < arr.Value.Count; i++)
                     {
@@ -235,7 +235,7 @@ public static class BaseClasses
     
     public class ObjectClass : Class
     {
-        public static readonly ObjectClass Default = new ObjectClass();
+        public static readonly ObjectClass Default = new();
         
         public ObjectClass() : base("object", new (string, Function)[]
         {
@@ -245,7 +245,7 @@ public static class BaseClasses
         
     public class BooleanClass : Class
     {
-        public static readonly BooleanClass Default = new BooleanClass();
+        public static readonly BooleanClass Default = new();
         
         public BooleanClass() : base("bool", new (string, Function)[]
         {

@@ -65,7 +65,7 @@ public abstract record Value
 
         public Array Copy()
         {
-            List<CellSwap<Value>> newArray = new List<CellSwap<Value>>(Value.Count);
+            List<CellSwap<Value>> newArray = new(Value.Count);
 
             for (int i = 0; i < Value.Count; i++)
                 newArray.Add(new CellSwap<Value>(Value[i].Value));
@@ -77,7 +77,7 @@ public abstract record Value
         {
             get
             {
-                StringBuilder stringBuilder = new StringBuilder();
+                StringBuilder stringBuilder = new();
 
                 stringBuilder.Append('[');
 
@@ -102,7 +102,7 @@ public abstract record Value
             
         public Object Copy()
         {
-            Dictionary<string, CellSwap<Value>> newDict = new Dictionary<string, CellSwap<Value>>(Value);
+            Dictionary<string, CellSwap<Value>> newDict = new(Value);
 
             foreach (var pair in Value)
                 newDict.Add(pair.Key, new CellSwap<Value>(pair.Value.Value));
@@ -114,7 +114,7 @@ public abstract record Value
         {
             get
             {
-                StringBuilder stringBuilder = new StringBuilder();
+                StringBuilder stringBuilder = new();
 
                 stringBuilder.Append('{');
 
@@ -141,9 +141,9 @@ public abstract record Value
         public override string Representation => $"<Function \"{Name}\", {Function.GetHashCode()}>";
     }
 
-    public static readonly Void    DefaultVoid  = new Void();
-    public static readonly Boolean DefaultTrue  = new Boolean(true);
-    public static readonly Boolean DefaultFalse = new Boolean(false);
+    public static readonly Void    DefaultVoid  = new();
+    public static readonly Boolean DefaultTrue  = new(true);
+    public static readonly Boolean DefaultFalse = new(false);
         
     public abstract string Representation { get; }
 

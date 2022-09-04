@@ -7,5 +7,5 @@ public class UnexpectedEofException : VolpeException
     {
     }
         
-    public override string Description => $"unexpected End-Of-File";
+    public override string Description => "unexpected End-Of-File";
 }

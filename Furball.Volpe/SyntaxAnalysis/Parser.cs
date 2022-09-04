@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Furball.Volpe.Exceptions;
 using Furball.Volpe.LexicalAnalysis;
+// ReSharper disable UnusedMember.Local
 
 namespace Furball.Volpe.SyntaxAnalysis; 
 
@@ -33,18 +34,17 @@ public class Parser
         Token token = ForceGetNextToken();
 
         if (token.Value is not pT tokenValue)
-            throw new UnexpectedTokenException(token!.PositionInText, token);
+            throw new UnexpectedTokenException(token.PositionInText, token);
 
         return tokenValue;
     }
         
+    // ReSharper disable once OutParameterValueIsAlwaysDiscarded.Local
     private bool TryPeekNextTokenWithType<pT>(out pT? value) where pT : TokenValue
     {
         value = null;
 
-        Token? token;
-
-        if (!_tokenConsumer.TryPeekNext(out token))
+        if (!_tokenConsumer.TryPeekNext(out Token? token))
             return false;
 
         if (token!.Value is not pT tokenValue)
@@ -131,7 +131,7 @@ public class Parser
 
     private Expression[] ParseExpressionBlock()
     {
-        List<Expression> expressions = new List<Expression>();
+        List<Expression> expressions = new();
             
         ForceGetNextTokenValueWithType<TokenValue.LeftCurlyBracket>();
 
@@ -158,7 +158,7 @@ public class Parser
         {
             ForceGetNextTokenValueWithType<TokenValue.LeftRoundBracket>();
                 
-            List<string> variableNames = new List<string>();
+            List<string> variableNames = new();
             bool         needComma     = false;
 
             for (;;)
@@ -200,7 +200,7 @@ public class Parser
         {
             ForceGetNextTokenValueWithType<TokenValue.LeftRoundBracket>();
                 
-            List<string> variableNames = new List<string>();
+            List<string> variableNames = new();
             bool         needComma     = false;
 
             for (;;)
@@ -252,8 +252,8 @@ public class Parser
 
     private ExpressionValue.IfExpression ParseIfExpression()    
     {
-        List<Expression>   conditions = new List<Expression>();
-        List<Expression[]> blocks     = new List<Expression[]>();
+        List<Expression>   conditions = new();
+        List<Expression[]> blocks     = new();
         Expression[]?      elseBlock  = null;
 
         // Parse first if
@@ -296,7 +296,7 @@ public class Parser
     {
         GetAndAssertNextTokenType<TokenValue.LeftBracket>();
 
-        List<Expression> initialElements = new List<Expression>();
+        List<Expression> initialElements = new();
         bool             needComma       = false;
             
         for (;;)
@@ -334,8 +334,8 @@ public class Parser
 
         bool needComma = false;
             
-        List<string>     keys        = new List<string>();
-        List<Expression> expressions = new List<Expression>();
+        List<string>     keys        = new();
+        List<Expression> expressions = new();
 
         for (;;)
         {
@@ -381,7 +381,7 @@ public class Parser
     {
         Expression[] ParseActualParameterListWithoutBrackets()
         {
-            List<Expression> actualParameters = new List<Expression>();
+            List<Expression> actualParameters = new();
             bool             needComma        = false;
 
             for (;;)
@@ -419,7 +419,7 @@ public class Parser
         {
             GetAndAssertNextTokenType<TokenValue.LeftRoundBracket>();
 
-            List<Expression> actualParameters = new List<Expression>();
+            List<Expression> actualParameters = new();
             bool             needComma        = false;
 
             for (;;)
@@ -486,7 +486,7 @@ public class Parser
             extendsClassName = ForceGetNextTokenValueWithType<TokenValue.Literal>().Value;
         }
 
-        List<ExpressionValue.FunctionDefinition> methodDefinition = new List<ExpressionValue.FunctionDefinition>();
+        List<ExpressionValue.FunctionDefinition> methodDefinition = new();
 
         ForceGetNextTokenValueWithType<TokenValue.LeftCurlyBracket>();
             
@@ -527,10 +527,8 @@ public class Parser
                         expr, 
                         new Expression 
                         (
-                        new ExpressionValue.String(literal.Value), 
-                        GetLastConsumedTokenPositionOrZero()
-                        )),
-                        expr.PositionInText
+                        new ExpressionValue.String(literal.Value)
+                        ))
                         );
                     break;
                     
@@ -545,8 +543,7 @@ public class Parser
                         new ExpressionValue.InfixExpression(
                         new ExpressionOperator.ArrayAccess(), 
                         expr, 
-                        indexExpr),
-                        expr.PositionInText
+                        indexExpr)
                         );
                     break;
                     
@@ -561,8 +558,7 @@ public class Parser
                         new ExpressionValue.MethodCall(
                         expr, 
                         callExpr.Name,
-                        callExpr.Parameters),
-                        expr.PositionInText
+                        callExpr.Parameters)
                         );
 
                     if (!canBeInSubExpression)
@@ -686,9 +682,7 @@ public class Parser
                     (
                     new ExpressionValue.InfixExpression(
                     expressionOperator, expression,
-                    ForceParseNextExpression(expressionOperator.Precedence)),
-                            
-                    currentPositionInText
+                    ForceParseNextExpression(expressionOperator.Precedence))
                     );
                 }
                 else if (token is
@@ -698,7 +692,7 @@ public class Parser
                          })
                     break;
                 else
-                    throw new UnexpectedTokenException(GetLastConsumedTokenPositionOrZero(), token!);
+                    throw new UnexpectedTokenException(GetLastConsumedTokenPositionOrZero(), token);
             }
         }
 

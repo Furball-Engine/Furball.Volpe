@@ -72,8 +72,8 @@ public abstract record TokenValue
     public record Class : TokenValue;
     public record Extends : TokenValue;
     public record ClassAccess : TokenValue;
-    public bool IsOperator => this is TokenValue.BooleanOperator or TokenValue.ArithmeticalOperator 
-                                  or TokenValue.OperatorWithAssignment or TokenValue.Assign or TokenValue.Append;
+    public bool IsOperator => this is BooleanOperator or ArithmeticalOperator 
+                                  or OperatorWithAssignment or Assign or Append;
 }
     
 public class Token: IPositionableInText

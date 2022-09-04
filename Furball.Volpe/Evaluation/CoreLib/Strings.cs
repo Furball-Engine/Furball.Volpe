@@ -8,7 +8,7 @@ namespace Furball.Volpe.Evaluation.CoreLib;
 public class Strings : CoreLibExtension {
 
     public override BuiltinFunction[] FunctionExports() => new BuiltinFunction[] {
-        new BuiltinFunction("str_format", 2, (context, values) => {
+        new("str_format", 2, (context, values) => {
             if(values[0] is not Value.String(var formatString))
                 throw new InvalidValueTypeException(typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
             if(values[1] is not Value.Array(var paramArray))
@@ -35,25 +35,25 @@ public class Strings : CoreLibExtension {
 
             return new Value.String(string.Format(formatString, parameters.ToArray()));
         }),
-        new BuiltinFunction("str_len", 1, (context, values) => {
+        new("str_len", 1, (context, values) => {
             if(values[0] is not Value.String(var str))
                 throw new InvalidValueTypeException(typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
 
             return new Value.Number(str.Length);
         }),
-        new BuiltinFunction("str_toupper", 1, (context, values) => {
+        new("str_toupper", 1, (context, values) => {
             if(values[0] is not Value.String(var str))
                 throw new InvalidValueTypeException(typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
 
             return new Value.String(str.ToUpper());
         }),
-        new BuiltinFunction("str_tolower", 1, (context, values) => {
+        new("str_tolower", 1, (context, values) => {
             if(values[0] is not Value.String(var str))
                 throw new InvalidValueTypeException(typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
 
             return new Value.String(str.ToLower());
         }),
-        new BuiltinFunction("str_substr", 3, (context, values) => {
+        new("str_substr", 3, (context, values) => {
             if(values[0] is not Value.String(var str))
                 throw new InvalidValueTypeException(typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
             if(values[1] is not Value.Number(var begin))
@@ -63,7 +63,7 @@ public class Strings : CoreLibExtension {
 
             return new Value.String(str.Substring((int)begin, (int)length));
         }),
-        new BuiltinFunction("str_split", 2, (context, values) => {
+        new("str_split", 2, (context, values) => {
             if(values[0] is not Value.String(var str))
                 throw new InvalidValueTypeException(typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
             if(values[1] is not Value.String(var delimiter))
@@ -77,7 +77,7 @@ public class Strings : CoreLibExtension {
 
             return new Value.Array(split);
         }),
-        new BuiltinFunction("str_contains", 2, (context, values) => {
+        new("str_contains", 2, (context, values) => {
             if(values[0] is not Value.String(var str))
                 throw new InvalidValueTypeException(typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
             if(values[1] is not Value.String(var what))
@@ -85,7 +85,7 @@ public class Strings : CoreLibExtension {
 
             return new Value.Boolean(str.Contains(what));
         }),
-        new BuiltinFunction("str_replace", 3, (context, values) => {
+        new("str_replace", 3, (context, values) => {
             if(values[0] is not Value.String(var str))
                 throw new InvalidValueTypeException(typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
             if(values[1] is not Value.String(var what))
@@ -95,7 +95,7 @@ public class Strings : CoreLibExtension {
 
             return new Value.String(str.Replace(what, with));
         }),
-        new BuiltinFunction("str_trim", 1, (context, values) => {
+        new("str_trim", 1, (context, values) => {
             if(values[0] is not Value.String(var str))
                 throw new InvalidValueTypeException(typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
 

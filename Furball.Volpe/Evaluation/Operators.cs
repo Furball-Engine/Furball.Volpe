@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Furball.Volpe.Exceptions;
 using Furball.Volpe.Memory;
+using KeyNotFoundException=Furball.Volpe.Exceptions.KeyNotFoundException;
 
 namespace Furball.Volpe.Evaluation; 
 
@@ -12,7 +13,7 @@ public class Operators
     {
         Value.Array PositiveArray(Value.Array source)
         {
-            List<CellSwap<Value>> newArray = new List<CellSwap<Value>>(source.Value.Count);
+            List<CellSwap<Value>> newArray = new(source.Value.Count);
 
             for (int i = 0; i < source.Value.Count; i++)
                 newArray.Add(new CellSwap<Value>(Positive(source.Value[i].Value, context)));
@@ -43,7 +44,7 @@ public class Operators
         CellSwap<Value> ObjectElementAt(Value.Object dict, string key)
         {
             if (!dict.Value.ContainsKey(key))
-                throw new Exceptions.KeyNotFoundException(key, context.Expression.PositionInText);
+                throw new KeyNotFoundException(key, context.Expression.PositionInText);
                 
             return dict.Value[key];
         }
@@ -109,7 +110,7 @@ public class Operators
         return (leftValue, rightValue) switch
         {
             (Value.Number(var n1), Value.Number(var n2)) => n1 < n2 ? Value.DefaultTrue : Value.DefaultFalse,
-            (Value.Byte(var n1), Value.Byte(var n2)) => n1 < n2 ? Value.DefaultTrue : Value.DefaultFalse,
+            (Value.Byte(var n1), Value.Byte(var n2))     => n1 < n2 ? Value.DefaultTrue : Value.DefaultFalse,
             (Value.String(var n1), Value.String(var n2)) => 
                 string.Compare(n1, n2, StringComparison.Ordinal) < 0 ? Value.DefaultTrue : Value.DefaultFalse,
 
@@ -161,7 +162,7 @@ public class Operators
     {
         Value NegateArray(Value.Array arr1)
         {
-            List<CellSwap<Value>> newArray = new List<CellSwap<Value>>(arr1.Value.Count);
+            List<CellSwap<Value>> newArray = new(arr1.Value.Count);
 
             for (int i = 0; i < arr1.Value.Count; i++)
                 newArray.Add(new CellSwap<Value>(Negative(arr1.Value[i].Value, context)));
@@ -226,7 +227,7 @@ public class Operators
                                                   "The arrays do not have the same length");
                     
             int                   length   = n1.Value.Count;
-            List<CellSwap<Value>> newArray = new List<CellSwap<Value>>(length);
+            List<CellSwap<Value>> newArray = new(length);
 
             for (int i = 0; i < length; i++)
                 newArray.Add(new CellSwap<Value>(Sum(n1.Value[i].Value, n2.Value[i].Value, context)));
@@ -267,7 +268,7 @@ public class Operators
                 throw new OperatorDomainException(context.Expression.PositionInText,
                                                   "A string cannot be multiplied by a negative integer");
 
-            StringBuilder stringBuilder = new StringBuilder(count * source.Length);
+            StringBuilder stringBuilder = new(count * source.Length);
 
             for (int i = 0; i < count; i++)
                 stringBuilder.Append(source);
@@ -277,7 +278,7 @@ public class Operators
             
         Value.Array MultiplyArray(Value.Array source, Value left)
         {
-            List<CellSwap<Value>> newArray = new List<CellSwap<Value>>(source.Value.Count);
+            List<CellSwap<Value>> newArray = new(source.Value.Count);
 
             for (int i = 0; i < source.Value.Count; i++)
                 newArray.Add(new CellSwap<Value>(Multiply(source.Value[i].Value, left, context)));

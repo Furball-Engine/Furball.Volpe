@@ -9,7 +9,7 @@ public class Objects : CoreLibExtension
     {
         return new BuiltinFunction[]
         {
-            new BuiltinFunction("obj_add", 3, (context, values) =>
+            new("obj_add", 3, (context, values) =>
             {
                 if (values[0] is not Value.Object(var dict))
                     throw new InvalidValueTypeException(typeof(Value.Object), values[0].GetType(),
@@ -26,7 +26,7 @@ public class Objects : CoreLibExtension
                 return values[0];
             }),
                 
-            new BuiltinFunction("obj_has_key", 2, (context, values) =>
+            new("obj_has_key", 2, (context, values) =>
             {
                 if (values[0] is not Value.Object(var dict))
                     throw new InvalidValueTypeException(typeof(Value.Object), values[0].GetType(),
@@ -38,7 +38,7 @@ public class Objects : CoreLibExtension
                 return dict.ContainsKey(key) ? Value.DefaultTrue : Value.DefaultFalse;
             }),
                 
-            new BuiltinFunction("obj_get_or_add", 3, (context, values) =>
+            new("obj_get_or_add", 3, (context, values) =>
             {
                 if (values[0] is not Value.Object(var dict))
                     throw new InvalidValueTypeException(typeof(Value.Object), values[0].GetType(),
@@ -55,7 +55,7 @@ public class Objects : CoreLibExtension
                 return values[2];                
             }),
                 
-            new BuiltinFunction("obj_remove", 2, (context, values) =>
+            new("obj_remove", 2, (context, values) =>
             {
                 if (values[0] is not Value.Object(var dict))
                     throw new InvalidValueTypeException(typeof(Value.Object), values[0].GetType(),

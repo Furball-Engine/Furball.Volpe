@@ -1,6 +1,5 @@
 using System;
 
-
 namespace System.Runtime.CompilerServices {
     internal static class IsExternalInit { }
 }
@@ -56,7 +55,7 @@ namespace Furball.Volpe.SyntaxAnalysis {
 
         #region IEquatable implementation
 
-        public Expression(ExpressionValue value, PositionInText position = default) {
+        public Expression(ExpressionValue value) {
             Value = value;
         }
 

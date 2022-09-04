@@ -9,7 +9,7 @@ namespace Furball.Volpe.Evaluation.CoreLib;
 public class Files : CoreLibExtension {
 
     public override BuiltinFunction[] FunctionExports() => new BuiltinFunction[] {
-        new BuiltinFunction("file_read_all_lines", 1, (context, values) => {
+        new("file_read_all_lines", 1, (context, values) => {
             if (values[0] is not Value.String(var filename))
                 throw new InvalidValueTypeException(typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
 
@@ -23,7 +23,7 @@ public class Files : CoreLibExtension {
 
             return new Value.Array(valueLines);
         }),
-        new BuiltinFunction("file_write_all_lines", 1, (context, values) => {
+        new("file_write_all_lines", 1, (context, values) => {
             if (values[0] is not Value.String(var filename))
                 throw new InvalidValueTypeException(typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
             if (values[1] is not Value.Array(var data))

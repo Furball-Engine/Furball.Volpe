@@ -7,7 +7,7 @@ namespace Furball.Volpe.Evaluation.CoreLib;
 
 public class Core : CoreLibExtension {
     public override BuiltinFunction[] FunctionExports() => new BuiltinFunction[] {
-        new BuiltinFunction ("int", 1, (context, values) => {
+        new("int", 1, (context, values) => {
             Value value = values[0];
 
             if (value is Value.Number)
@@ -20,7 +20,7 @@ public class Core : CoreLibExtension {
                                               context.Expression.PositionInText);
         }),
 
-        new BuiltinFunction ("string", 1, (_, values) => {
+        new("string", 1, (_, values) => {
             Value value = values[0];
 
             if (value is Value.String)
@@ -32,9 +32,9 @@ public class Core : CoreLibExtension {
             return new Value.String(value.Representation);
         }),
 
-        new BuiltinFunction ("repr", 1, (_, values) => new Value.String(values[0].Representation)),
+        new("repr", 1, (_, values) => new Value.String(values[0].Representation)),
 
-        new BuiltinFunction ("hook", 3, (context, values) => {
+        new("hook", 3, (context, values) => {
             if (values[0] is not Value.String(var name))
                 throw new InvalidValueTypeException(
                 typeof(Value.FunctionReference), values[0].GetType(), context.Expression.PositionInText);
@@ -51,7 +51,7 @@ public class Core : CoreLibExtension {
             return Value.DefaultVoid;
         }),
 
-        new BuiltinFunction ("type", 1, (_, values) => {
+        new("type", 1, (_, values) => {
             return new Value.String(values[0] switch
             {
                 Value.Number            => "number",
@@ -66,7 +66,7 @@ public class Core : CoreLibExtension {
             });
         }),
 
-        new BuiltinFunction ("invoke", 1, (context, values) => {
+        new("invoke", 1, (context, values) => {
             if (values[0] is not Value.FunctionReference functionReference)
                 throw new InvalidValueTypeException(
                 typeof(Value.FunctionReference), values[0].GetType(),
@@ -80,14 +80,14 @@ public class Core : CoreLibExtension {
             return functionReference.Function.Invoke(context, values.Skip(1).ToArray());
         }),
 
-        new BuiltinFunction("error", 1, (context, values) => {
+        new("error", 1, (context, values) => {
             if (values[0] is not Value.String(var first))
                 throw new InvalidValueTypeException(typeof(Value.String), values[0].GetType(), context.Expression.PositionInText);
 
             throw new UserThrownException(context.Expression.PositionInText, first);
         }),
             
-        new BuiltinFunction("clone", 1, (_, values) =>
+        new("clone", 1, (_, values) =>
         {
             switch (values[0])
             {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using Furball.Volpe.Exceptions;
@@ -18,7 +19,7 @@ public class Lexer
     private string ConsumeNextString()
     {
         char          character;
-        StringBuilder stringBuilder = new StringBuilder();
+        StringBuilder stringBuilder = new();
             
         if (!_textConsumer.TryConsumeNext(out character) || character != '"')
             throw new InvalidOperationException();
@@ -42,7 +43,7 @@ public class Lexer
 
     private string ConsumeNextLiteral()
     {
-        StringBuilder stringBuilder = new StringBuilder();
+        StringBuilder stringBuilder = new();
             
         for(;;)
         {
@@ -129,7 +130,7 @@ public class Lexer
 
     private TokenValue ConsumeOperator()
     {
-        StringBuilder stringBuilder = new StringBuilder();
+        StringBuilder stringBuilder = new();
             
         for(;;)
         {
@@ -181,7 +182,7 @@ public class Lexer
         if (!_textConsumer.TryPeekNext(out character))
             return false;
 
-        TokenValue tokenValue = null;
+        TokenValue? tokenValue = null;
         switch (character) {
             case '"':
                 tokenValue = new TokenValue.String(this.ConsumeNextString());
@@ -253,8 +254,10 @@ public class Lexer
             case var c:
                 throw new UnexceptedSymbolException(c, currentPositionInText);
         }
+        
+        Debug.Assert(tokenValue != null, "tokenValue != null");
 
-        token = new Token {Value = tokenValue, PositionInText = currentPositionInText};
+        token = new Token {Value = tokenValue!, PositionInText = currentPositionInText};
 
         return true;
     }

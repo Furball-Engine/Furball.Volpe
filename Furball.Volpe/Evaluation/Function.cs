@@ -15,7 +15,7 @@ public abstract record Function
     {
         public override Value Invoke(EvaluatorContext context, Value[] actualParameters)
         {
-            Environment environment = new Environment(this.ParentEnvironment);
+            Environment environment = new(this.ParentEnvironment);
 
             for (int i = 0; i < ParameterCount; i++)
                 environment.SetVariableValue(ParameterNames[i], actualParameters[i]);

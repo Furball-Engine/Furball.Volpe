@@ -224,7 +224,7 @@ public readonly struct EvaluatorContext
             throw new ParamaterCountMismatchException(methodCall.Name,
                                                       parameterCount, methodCall.Parameters.Length, Expression.PositionInText);
 
-        List<Value> values = new List<Value>() {v};
+        List<Value> values = new() {v};
             
         foreach (var expression in methodCall.Parameters)
             values.Add(new EvaluatorContext(expression, Environment).Evaluate());
@@ -249,7 +249,7 @@ public readonly struct EvaluatorContext
             throw new ParamaterCountMismatchException(functionCall.Name,
                                                       parameterCount, functionCall.Parameters.Length, Expression.PositionInText);
 
-        List<Value> values = new List<Value>();
+        List<Value> values = new();
         foreach (var expression in functionCall.Parameters)
             values.Add(new EvaluatorContext(expression, Environment).Evaluate());
 
@@ -285,7 +285,7 @@ public readonly struct EvaluatorContext
         
     public Value EvaluateObject(string[] keys, Expression[] expressions)
     {
-        Dictionary<string, CellSwap<Value>> dict = new Dictionary<string, CellSwap<Value>>();
+        Dictionary<string, CellSwap<Value>> dict = new();
 
         for (int i = 0; i < keys.Length; i++)
         {
@@ -343,7 +343,7 @@ public readonly struct EvaluatorContext
             ExpressionValue.InfixExpression expr                  => this.EvaluateInfixExpression(expr),
             ExpressionValue.PrefixExpression expr                 => this.EvaluatePrefixExpression(expr),
             ExpressionValue.Number(var v)                         => new Value.Number(v),
-            ExpressionValue.Byte(var v)                         => new Value.Byte(v),
+            ExpressionValue.Byte(var v)                           => new Value.Byte(v),
             ExpressionValue.Variable expr                         => this.EvaluateVariable(expr),
             ExpressionValue.FunctionDefinition expr               => this.EvaluateFunctionDefinition(expr),
             ExpressionValue.SubExpression(var expr)               => new EvaluatorContext(expr, this.Environment).Evaluate(),

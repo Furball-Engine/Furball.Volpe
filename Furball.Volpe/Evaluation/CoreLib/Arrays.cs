@@ -7,13 +7,13 @@ namespace Furball.Volpe.Evaluation.CoreLib;
 
 public class Arrays : CoreLibExtension {
     public override BuiltinFunction[] FunctionExports() => new BuiltinFunction[] {
-        new BuiltinFunction("arr_len", 1, (context, values) => {
+        new("arr_len", 1, (context, values) => {
             if (values[0] is not Value.Array(var arr))
                 throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
 
             return new Value.Number(arr.Count);
         }),
-        new BuiltinFunction("arr_append", 2, (context, values) => {
+        new("arr_append", 2, (context, values) => {
             if (values[0] is not Value.Array(var arr))
                 throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
 
@@ -22,7 +22,7 @@ public class Arrays : CoreLibExtension {
             return values[0];
         }),
             
-        new BuiltinFunction("arr_append_range", 2, (context, values) => {
+        new("arr_append_range", 2, (context, values) => {
             if (values[0] is not Value.Array(var first))
                 throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
             if (values[1] is not Value.Array(var second))
@@ -33,7 +33,7 @@ public class Arrays : CoreLibExtension {
             return values[0];
         }),
             
-        new BuiltinFunction("arr_remove_range", 2, (context, values) => {
+        new("arr_remove_range", 2, (context, values) => {
             if (values[0] is not Value.Array(var first))
                 throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
             if (values[1] is not Value.Array(var second))
@@ -47,7 +47,7 @@ public class Arrays : CoreLibExtension {
             return values[0];
         }),
             
-        new BuiltinFunction("arr_remove_at", 2, (context, values) => {
+        new("arr_remove_at", 2, (context, values) => {
             if (values[0] is not Value.Array(var arr))
                 throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
             if (values[1] is not Value.Number(var fIndex))
@@ -64,7 +64,7 @@ public class Arrays : CoreLibExtension {
             return oldValue;
         }),
             
-        new BuiltinFunction("arr_remove", 2, (context, values) => {
+        new("arr_remove", 2, (context, values) => {
             if (values[0] is not Value.Array(var first))
                 throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
 
@@ -74,7 +74,7 @@ public class Arrays : CoreLibExtension {
             return values[0];
         }),
             
-        new BuiltinFunction("arr_insert_at", 3, (context, values) => {
+        new("arr_insert_at", 3, (context, values) => {
             if (values[0] is not Value.Array(var arr))
                 throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
 
@@ -91,14 +91,14 @@ public class Arrays : CoreLibExtension {
             return values[0];
         }),
             
-        new BuiltinFunction("arr_map", 2, (context, values) =>
+        new("arr_map", 2, (context, values) =>
         {
             if(values[0] is not Value.Array(var first))
                 throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
             if(values[1] is not Value.FunctionReference(_, var function))
                 throw new InvalidValueTypeException(typeof(Value.FunctionReference), values[1].GetType(), context.Expression.PositionInText);
 
-            List<CellSwap<Value>> newArray = new List<CellSwap<Value>>(first.Count);
+            List<CellSwap<Value>> newArray = new(first.Count);
 
             for (int i = 0; i < first.Count; i++)
             {
@@ -109,7 +109,7 @@ public class Arrays : CoreLibExtension {
             return new Value.Array(newArray);   
         }),
             
-        new BuiltinFunction("arr_concat", 2, (context, values) => {
+        new("arr_concat", 2, (context, values) => {
             if(values[0] is not Value.Array(var first))
                 throw new InvalidValueTypeException(typeof(Value.Array), values[0].GetType(), context.Expression.PositionInText);
             if(values[1] is not Value.Array(var second))

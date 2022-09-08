@@ -7,6 +7,25 @@ public interface IVariable
     string Name { get; }
 }
 
+public static class VariableExtensions 
+{
+    public static Variable ToVariable(this IVariable value)
+    {
+        if (value is not Variable concreteVariable)
+            throw new InvalidOperationException("The variable is not a concrete variable.");
+
+        return concreteVariable;
+    }
+    
+    public static TypedVariable<T> ToTypedVariable<T>(this IVariable value) where T : Value
+    {
+        if (value is not TypedVariable<T> typedVariable)
+            throw new InvalidOperationException($"The variable is not a typed variable with {typeof(T)}.");
+
+        return typedVariable;
+    }
+}
+
 public class Variable : IVariable
 {
     public EventHandler<Value>? OnChange;
@@ -43,7 +62,7 @@ public class HookedVariable : IVariable
 
     public Function Getter { get; }
     public Function Setter { get; }
-
+    
     public HookedVariable(string name, Function getter, Function setter)
     {
         Getter = getter;
@@ -63,7 +82,7 @@ public class TypedVariable<T> : Variable where T: Value
         }
     }
 
-    public new Value RawValue
+    public override Value RawValue
     {
         get => base.RawValue;
             

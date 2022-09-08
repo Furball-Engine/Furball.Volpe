@@ -187,19 +187,12 @@ public readonly struct EvaluatorContext
 
         if (Environment.TryGetVariable(expr.Name, out var variable))
         {
-            switch (variable)
+            value = variable switch
             {
-                case HookedVariable hookedVariable:
-                    value = hookedVariable.Getter.Invoke(this, Array.Empty<Value>());
-                    break;
-
-                case Variable normalVariable:
-                    value = normalVariable.RawValue;
-                    break;
-
-                default:
-                    throw new Exception("Unreachable code");
-            }
+                HookedVariable hookedVariable => hookedVariable.Getter.Invoke(this, Array.Empty<Value>()),
+                Variable normalVariable => normalVariable.RawValue,
+                _ => throw new Exception("Unreachable code")
+            };
         } 
         else
             throw new VariableNotFoundException(expr.Name, Expression.PositionInText);
@@ -276,11 +269,14 @@ public readonly struct EvaluatorContext
             throw new ParamaterCountMismatchException(functionCall.Name,
                                                       parameterCount, functionCall.Parameters.Length, Expression.PositionInText);
 
-        List<Value> values = new List<Value>();
-        foreach (var expression in functionCall.Parameters)
-            values.Add(new EvaluatorContext(expression, Environment).Evaluate());
+        int paramCount = functionCall.Parameters.Length;
+        Expression[] parameters = functionCall.Parameters;
+        
+        Value[] values = new Value[paramCount];
+        for (int i = 0; i < paramCount; i++)
+            values[i] = new EvaluatorContext(parameters[i], Environment).Evaluate();
 
-        Value v = function.Invoke(this, values.ToArray());
+        Value v = function.Invoke(this, values);
         v.Class = cls;
 
         return v;

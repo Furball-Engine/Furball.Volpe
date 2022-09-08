@@ -31,8 +31,15 @@ public class EvaluatorTests
         Value value = new EvaluatorContext(expression, environment).Evaluate();
             
         Assert.AreEqual(value, new Value.Number(11));
-        Assert.IsTrue(environment.TryGetVariableValue("test", out value));
-        Assert.AreEqual(value, new Value.Number(11));
+
+        IVariable variable;
+        Variable concreteVariable = null;
+        
+        Assert.IsTrue(environment.TryGetVariable("test", out variable));
+        Assert.IsTrue(variable is Variable);
+        
+        concreteVariable = variable.ToVariable();
+        Assert.AreEqual(concreteVariable.RawValue, new Value.Number(11));
     }
         
         

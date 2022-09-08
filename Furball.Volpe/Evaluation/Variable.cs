@@ -73,7 +73,7 @@ public class HookedVariable : IVariable
 
 public class TypedVariable<T> : Variable where T: Value
 {
-    public new EventHandler<pT>? OnChange;
+    public new EventHandler<T>? OnChange;
 
     public T Value {
         get => (T)this.RawValue;
@@ -96,5 +96,5 @@ public class TypedVariable<T> : Variable where T: Value
         }
     }
 
-    public TypedVariable(string name, pT value) : base(name, value) {}
+    public TypedVariable(string name, T value) : base(name, value) {}
 }

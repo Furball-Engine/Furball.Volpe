@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using Furball.Volpe.Exceptions;
-using Furball.Volpe.Memory;
 
 namespace Furball.Volpe.Evaluation.CoreLib; 
 
@@ -15,10 +14,10 @@ public class Files : CoreLibExtension {
 
             string[] lines = File.ReadAllLines(filename);
 
-            List<CellSwap<Value>> valueLines = new();
+            List<Value> valueLines = new();
 
             foreach (string s in lines) {
-                valueLines.Add(new CellSwap<Value>(new Value.String(s)));
+                valueLines.Add(new Value.String(s));
             }
 
             return new Value.Array(valueLines);
@@ -31,8 +30,8 @@ public class Files : CoreLibExtension {
 
             List<string> lines = new();
 
-            foreach (CellSwap<Value> value in data) {
-                switch (value.Value) {
+            foreach (Value value in data) {
+                switch (value) {
                     case Value.Boolean boolean: {
                         lines.Add(boolean.Value.ToString());
                         break;

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Furball.Volpe.Exceptions;
 using Furball.Volpe.LexicalAnalysis;
-using Furball.Volpe.Memory;
 using Furball.Volpe.SyntaxAnalysis;
 
 namespace Furball.Volpe.Evaluation; 
@@ -107,7 +106,7 @@ public readonly struct EvaluatorContext
         if (left.Value is ExpressionValue.InfixExpression &&
             new EvaluatorContext(left, Environment).Evaluate(forceInner: false) is Value.ValueReference reference)
         {
-            reference.Value.Swap(rightV);
+            reference.Value.Value = rightV;
             return reference.InnerOrSelf;
         }
 
@@ -302,21 +301,25 @@ public readonly struct EvaluatorContext
     {
         Environment environment = Environment;
 
-        return new Value.Array(
-        initialElements.Select(element => new CellSwap<Value>(new EvaluatorContext(element, environment, false).Evaluate())).ToList());
+        List<Value> array = new List<Value>();
+
+        int count = initialElements.Length;
+        for (int i = 0; i < count; i++)
+            array.Add(new EvaluatorContext(initialElements[i], environment, false).Evaluate());
+
+        return new Value.Array(array);
     }
         
     public Value EvaluateObject(string[] keys, Expression[] expressions)
     {
-        Dictionary<string, CellSwap<Value>> dict = new Dictionary<string, CellSwap<Value>>();
+        Dictionary<string, Value> dict = new Dictionary<string, Value>();
 
         for (int i = 0; i < keys.Length; i++)
         {
             if (dict.ContainsKey(keys[i]))
                 throw new KeyAlreadyDefinedException(keys[i], Expression.PositionInText);
                 
-            dict.Add(keys[i],
-                     new CellSwap<Value>(new EvaluatorContext(expressions[i], Environment, false).Evaluate()));
+            dict.Add(keys[i], new EvaluatorContext(expressions[i], Environment, false).Evaluate());
         }
 
         return new Value.Object(dict);

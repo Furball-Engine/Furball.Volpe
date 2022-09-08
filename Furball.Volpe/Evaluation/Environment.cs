@@ -8,7 +8,7 @@ public class Environment
 {
     public Environment? Parent { get; }
         
-    private readonly Dictionary<string, IVariable>                           _variables;
+    private readonly Dictionary<string, IVariable>                          _variables;
     private readonly Dictionary<string, Function>                           _functions;
     private readonly Dictionary<string, Class>                              _classes;
 

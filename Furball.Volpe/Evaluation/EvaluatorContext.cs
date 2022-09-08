@@ -50,11 +50,25 @@ public readonly struct EvaluatorContext
 
     private Value AssignVariable(string variableName, Value value)
     {
-        Function? setter;
-        if (Environment.TryGetSetterFromHookedVariable(variableName, out setter))
-            setter!.Invoke(this, new Value[] {value});
+        if (Environment.TryGetVariable(variableName, out var variable))
+        {
+            switch (variable)
+            {
+                case HookedVariable hookedVariable:
+                    hookedVariable.Setter.Invoke(this, new Value[] { value });
+                    break;
+
+                case Variable normalVariable:
+                    normalVariable.RawValue = value;
+                    break;
+
+                default:
+                    throw new Exception("Unreachable code");
+            }
+        } 
         else
-            Environment.SetVariableValue(variableName, value);
+            Environment.SetVariable(new Variable(variableName, value));
+
 
         return value;
     }
@@ -169,15 +183,28 @@ public readonly struct EvaluatorContext
 
     private Value EvaluateVariable(ExpressionValue.Variable expr)
     {
-        Value? value;
+        Value value;
 
-        Function? getter;
-        if (Environment.TryGetGetterFromHookedVariable(expr.Name, out getter))
-            value = getter!.Invoke(this, Array.Empty<Value>());
-        else if (!Environment.TryGetVariableValue(expr.Name, out value))
+        if (Environment.TryGetVariable(expr.Name, out var variable))
+        {
+            switch (variable)
+            {
+                case HookedVariable hookedVariable:
+                    value = hookedVariable.Getter.Invoke(this, Array.Empty<Value>());
+                    break;
+
+                case Variable normalVariable:
+                    value = normalVariable.RawValue;
+                    break;
+
+                default:
+                    throw new Exception("Unreachable code");
+            }
+        } 
+        else
             throw new VariableNotFoundException(expr.Name, Expression.PositionInText);
 
-        return value!;
+        return value;
     }
 
     private Value EvaluateLambda(ExpressionValue.Lambda lambda) =>
@@ -343,7 +370,7 @@ public readonly struct EvaluatorContext
             ExpressionValue.InfixExpression expr                  => this.EvaluateInfixExpression(expr),
             ExpressionValue.PrefixExpression expr                 => this.EvaluatePrefixExpression(expr),
             ExpressionValue.Number(var v)                         => new Value.Number(v),
-            ExpressionValue.Byte(var v)                         => new Value.Byte(v),
+            ExpressionValue.Byte(var v)                           => new Value.Byte(v),
             ExpressionValue.Variable expr                         => this.EvaluateVariable(expr),
             ExpressionValue.FunctionDefinition expr               => this.EvaluateFunctionDefinition(expr),
             ExpressionValue.SubExpression(var expr)               => new EvaluatorContext(expr, this.Environment).Evaluate(),

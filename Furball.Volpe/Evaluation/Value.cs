@@ -29,7 +29,7 @@ public abstract record Value
     public record Number(double Value) : Value
     {
         public override Class BaseClass => BaseClasses.NumberClass.Default;
-
+        
         public override string Representation => Value.ToString(CultureInfo.InvariantCulture);
     }
 

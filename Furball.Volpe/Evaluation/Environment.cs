@@ -8,17 +8,15 @@ public class Environment
 {
     public Environment? Parent { get; }
         
-    private readonly Dictionary<string, Variable>                           _variables;
-    private readonly Dictionary<string, (Function Getter, Function Setter)> _hookedVariables;
+    private readonly Dictionary<string, IVariable>                           _variables;
     private readonly Dictionary<string, Function>                           _functions;
     private readonly Dictionary<string, Class>                              _classes;
 
-    public IReadOnlyDictionary<string, Variable> Variables => this._variables;
+    public IReadOnlyDictionary<string, IVariable> Variables => this._variables;
 
     public Environment(BuiltinFunction[] builtins)
     {
-        _variables       = new Dictionary<string, Variable>();
-        _hookedVariables = new Dictionary<string, (Function Getter, Function Setter)>();
+        _variables       = new Dictionary<string, IVariable>();
         _functions       = builtins.ToDictionary(b => b.Identifier, b => (Function)new Function.Builtin(b.Callback, b.ParamCount));
         _classes         = new Dictionary<string, Class>();
     }
@@ -88,41 +86,7 @@ public class Environment
         return true;
     }
 
-    public bool TryGetGetterFromHookedVariable(string variableName, out Function? getter)
-    {
-        getter = null;
-        (Function Getter, Function Setter) pair;
-
-        if (_hookedVariables.TryGetValue(variableName, out pair))
-        {
-            getter = pair.Getter;
-            return true;
-        }
-
-        if (Parent is not null)
-            return Parent.TryGetGetterFromHookedVariable(variableName, out getter);
-
-        return false;
-    }
-        
-    public bool TryGetSetterFromHookedVariable(string variableName, out Function? setter)
-    {
-        setter = null;
-        (Function Getter, Function Setter) pair;
-
-        if (_hookedVariables.TryGetValue(variableName, out pair))
-        {
-            setter = pair.Setter;
-            return true;
-        }
-            
-        if (Parent is not null)
-            return Parent.TryGetSetterFromHookedVariable(variableName, out setter);
-            
-        return false;
-    }
-
-    public bool TryGetVariable(string variableName, out Variable? value)
+    public bool TryGetVariable(string variableName, out IVariable? value)
     {
         value = null;
 
@@ -134,28 +98,11 @@ public class Environment
 
         return false;
     }
-        
-    public bool TryGetVariableValue(string variableName, out Value? value)
-    {
-        value = null;
-
-        Variable? variable;
-        if (_variables.TryGetValue(variableName, out variable))
-        {
-            value = variable.RawValue;
-            return true;
-        }
-
-        if (Parent is not null)
-            return Parent.TryGetVariableValue(variableName, out value);
-
-        return false;
-    }
 
     public bool HasVariable(string variableName) => _variables.ContainsKey(variableName);
     public bool HasFunction(string functionName) => _functions.ContainsKey(functionName);
 
-    public void SetVariable(Variable variable, bool shadowParentVariables = true)
+    public void SetVariable(IVariable variable, bool shadowParentVariables = true)
     {
         if (!shadowParentVariables && Parent is not null && Parent.HasVariable(variable.Name))
         {
@@ -167,34 +114,5 @@ public class Environment
             _variables[variable.Name] = variable;
         else
             _variables.Add(variable.Name, variable);
-    }
-        
-    public void SetVariableValue(string variableName, Value value, bool shadowParentVariables = true)
-    {
-        if (!shadowParentVariables && Parent is not null && Parent.HasVariable(variableName))
-        {
-            Parent.SetVariableValue(variableName, value, false);
-            return;
-        }
-
-        if (_variables.ContainsKey(variableName))
-            _variables[variableName].RawValue = value;
-        else
-            _variables.Add(variableName, new Variable(variableName, value));
-    }
-        
-    public void HookVariableToGetterAndSetter(string                                                           variableName, 
-                                              (Value.FunctionReference Getter, Value.FunctionReference Setter) value, bool shadowParentVariables = true)
-    {
-        if (!shadowParentVariables && Parent is not null && Parent.HasVariable(variableName))
-        {
-            Parent.HookVariableToGetterAndSetter(variableName, value);
-            return;
-        }
-
-        if (_variables.ContainsKey(variableName))
-            _hookedVariables[variableName] = (value.Getter.Function, value.Setter.Function);
-        else
-            _hookedVariables.Add(variableName, (value.Getter.Function, value.Setter.Function));
     }
 }

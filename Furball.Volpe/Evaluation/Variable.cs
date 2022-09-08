@@ -2,7 +2,12 @@ using System;
 
 namespace Furball.Volpe.Evaluation; 
 
-public class Variable
+public interface IVariable
+{
+    string Name { get; }
+}
+
+public class Variable : IVariable
 {
     public EventHandler<Value>? OnChange;
 
@@ -31,27 +36,41 @@ public class Variable
         _value = value;
     }
 }
-    
+
+public class HookedVariable : IVariable
+{
+    public string Name { get; }
+
+    public Function Getter { get; }
+    public Function Setter { get; }
+
+    public HookedVariable(string name, Function getter, Function setter)
+    {
+        Getter = getter;
+        Setter = setter;
+        Name = name;
+    }
+}
+
 public class TypedVariable<T> : Variable where T: Value
 {
     public new EventHandler<T>? OnChange;
 
     public T Value {
-        get => (T)base.RawValue;
+        get => (T)this.RawValue;
         set {
-            base.RawValue = value;
-            this.OnChange?.Invoke(this, value);
+            this.RawValue = value;
         }
     }
 
-    public override Value RawValue
+    public new Value RawValue
     {
         get => base.RawValue;
             
         set
         {
             if (value is not T castedValue)
-                throw new InvalidOperationException($"This variable only supports ${value.GetType()} values.");
+                throw new InvalidOperationException($"This variable only supports {value.GetType()} values.");
 
             base.RawValue = castedValue;
             this.OnChange?.Invoke(this, castedValue);

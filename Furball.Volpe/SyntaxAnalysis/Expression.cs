@@ -1,9 +1,5 @@
+
 using System;
-
-
-namespace System.Runtime.CompilerServices {
-    internal static class IsExternalInit { }
-}
 
 namespace Furball.Volpe.SyntaxAnalysis {
     public abstract record ExpressionValue {

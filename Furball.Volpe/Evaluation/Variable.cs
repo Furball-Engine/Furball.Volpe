@@ -2,7 +2,31 @@ using System;
 
 namespace Furball.Volpe.Evaluation; 
 
-public class Variable
+public interface IVariable
+{
+    string Name { get; }
+}
+
+public static class VariableExtensions 
+{
+    public static Variable ToVariable(this IVariable value)
+    {
+        if (value is not Variable concreteVariable)
+            throw new InvalidOperationException("The variable is not a concrete variable.");
+
+        return concreteVariable;
+    }
+    
+    public static TypedVariable<T> ToTypedVariable<T>(this IVariable value) where T : Value
+    {
+        if (value is not TypedVariable<T> typedVariable)
+            throw new InvalidOperationException($"The variable is not a typed variable with {typeof(T)}.");
+
+        return typedVariable;
+    }
+}
+
+public class Variable : IVariable
 {
     public EventHandler<Value>? OnChange;
 
@@ -31,16 +55,30 @@ public class Variable
         _value = value;
     }
 }
+
+public class HookedVariable : IVariable
+{
+    public string Name { get; }
+
+    public Function Getter { get; }
+    public Function Setter { get; }
     
-public class TypedVariable<pT> : Variable where pT: Value
+    public HookedVariable(string name, Function getter, Function setter)
+    {
+        Getter = getter;
+        Setter = setter;
+        Name = name;
+    }
+}
+
+public class TypedVariable<T> : Variable where T: Value
 {
     public new EventHandler<pT>? OnChange;
 
-    public pT Value {
-        get => (pT)base.RawValue;
+    public T Value {
+        get => (T)this.RawValue;
         set {
-            base.RawValue = value;
-            this.OnChange?.Invoke(this, value);
+            this.RawValue = value;
         }
     }
 
@@ -50,8 +88,8 @@ public class TypedVariable<pT> : Variable where pT: Value
             
         set
         {
-            if (value is not pT castedValue)
-                throw new InvalidOperationException($"This variable only supports ${value.GetType()} values.");
+            if (value is not T castedValue)
+                throw new InvalidOperationException($"This variable only supports {value.GetType()} values.");
 
             base.RawValue = castedValue;
             this.OnChange?.Invoke(this, castedValue);

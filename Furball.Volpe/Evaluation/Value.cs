@@ -3,9 +3,60 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using Furball.Volpe.Evaluation.CoreLib;
-using Furball.Volpe.Memory;
+using Furball.Volpe.Exceptions;
 
-namespace Furball.Volpe.Evaluation; 
+namespace Furball.Volpe.Evaluation;
+
+public interface IValueRef
+{
+    Value Value { get; set; }
+}
+
+public class ArrayValueRef : IValueRef
+{
+    private List<Value> _array;
+    private int _index;
+
+    public ArrayValueRef(List<Value> array, int index)
+    {
+        _array = array;
+        _index = index;
+    }
+
+    public Value Value
+    {
+        get => _array[_index];
+        set => _array[_index] = value;
+    }
+}
+
+public class ObjectValueRef : IValueRef
+{
+    private Dictionary<string, Value> _dictionary;
+    private string _key;
+
+    private PositionInText _positionInText;
+    
+    public ObjectValueRef(Dictionary<string, Value> dictionary, string key, PositionInText positionInText)
+    {
+        _dictionary = dictionary;
+        _key = key;
+        _positionInText = positionInText;
+    }
+
+    public Value Value
+    {
+        get
+        {
+            Value? value;
+            if (!_dictionary.TryGetValue(_key, out value))
+                throw new Exceptions.KeyNotFoundException(_key, _positionInText);
+            
+            return value;
+        }
+        set => _dictionary[_key] = value;
+    }
+}
 
 public abstract record Value
 {
@@ -14,7 +65,7 @@ public abstract record Value
         
     public virtual Value InnerOrSelf => this;
 
-    public record ValueReference(CellSwap<Value> Value) : Value
+    public record ValueReference(IValueRef Value) : Value
     {
         public override string Representation => Value.Value.Representation;
 
@@ -29,7 +80,7 @@ public abstract record Value
     public record Number(double Value) : Value
     {
         public override Class BaseClass => BaseClasses.NumberClass.Default;
-
+        
         public override string Representation => Value.ToString(CultureInfo.InvariantCulture);
     }
 
@@ -58,20 +109,15 @@ public abstract record Value
     {
         public override string Representation => "void";
     }
+    
+    
 
-    public record Array(List<CellSwap<Value>> Value) : Value
+    public record Array(List<Value> Value) : Value
     {
         public override Class BaseClass => BaseClasses.ArrayClass.Default;
 
-        public Array Copy()
-        {
-            List<CellSwap<Value>> newArray = new(Value.Count);
-
-            for (int i = 0; i < Value.Count; i++)
-                newArray.Add(new CellSwap<Value>(Value[i].Value));
-
-            return this with { Value = newArray };
-        }
+        public Array Copy() =>
+            this with { Value = new List<Value>(Value) };
             
         public override string Representation
         {
@@ -83,8 +129,8 @@ public abstract record Value
 
                 for (int i = 0; i < Value.Count; i++)
                 {
-                    stringBuilder.Append(Value[i].Value.RepresentationWithClass);
-                        
+                    stringBuilder.Append(Value[i].RepresentationWithClass);
+
                     if (i != Value.Count - 1)
                         stringBuilder.Append(',');
                 }
@@ -96,19 +142,12 @@ public abstract record Value
         }
     }
         
-    public record Object(Dictionary<string, CellSwap<Value>> Value) : Value
+    public record Object(Dictionary<string, Value> Value) : Value
     {
         public override Class BaseClass => BaseClasses.ObjectClass.Default;
             
-        public Object Copy()
-        {
-            Dictionary<string, CellSwap<Value>> newDict = new(Value);
-
-            foreach (var pair in Value)
-                newDict.Add(pair.Key, new CellSwap<Value>(pair.Value.Value));
-                
-            return this with { Value = newDict };
-        }
+        public Object Copy() =>
+            this with { Value = new Dictionary<string, Value>(Value) };
 
         public override string Representation
         {
@@ -121,7 +160,7 @@ public abstract record Value
                 int i = 0;
                 foreach (var key in Value.Keys)
                 {
-                    stringBuilder.Append($"\"{key}\" = {Value[key].Value.RepresentationWithClass}");
+                    stringBuilder.Append($"\"{key}\" = {Value[key].RepresentationWithClass}");
                         
                     if (i != Value.Count - 1)
                         stringBuilder.Append(',');
@@ -141,9 +180,10 @@ public abstract record Value
         public override string Representation => $"<Function \"{Name}\", {Function.GetHashCode()}>";
     }
 
-    public static readonly Void    DefaultVoid  = new();
-    public static readonly Boolean DefaultTrue  = new(true);
-    public static readonly Boolean DefaultFalse = new(false);
+    public static readonly Void    DefaultVoid  = new Void();
+    
+    public static readonly Boolean DefaultTrue  = new Boolean(true);
+    public static readonly Boolean DefaultFalse = new Boolean(false);
         
     public abstract string Representation { get; }
 

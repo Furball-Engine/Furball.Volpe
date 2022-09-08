@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Furball.Volpe.Exceptions;
-using Furball.Volpe.Memory;
 
 namespace Furball.Volpe.Evaluation.CoreLib; 
 
@@ -16,8 +15,8 @@ public class Strings : CoreLibExtension {
 
             List<object> parameters = new();
 
-            foreach (CellSwap<Value> value in paramArray) {
-                switch (value.Value) {
+            foreach (Value value in paramArray) {
+                switch (value) {
                     case Value.Boolean boolean: {
                         parameters.Add(boolean.Value);
                         break;
@@ -69,10 +68,10 @@ public class Strings : CoreLibExtension {
             if(values[1] is not Value.String(var delimiter))
                 throw new InvalidValueTypeException(typeof(Value.String), values[1].GetType(), context.Expression.PositionInText);
 
-            List<CellSwap<Value>> split = new();
+            List<Value> split = new();
 
             foreach (string s in str.Split(new []{delimiter}, StringSplitOptions.None)) {
-                split.Add(new CellSwap<Value>(new Value.String(s)));
+                split.Add(new Value.String(s));
             }
 
             return new Value.Array(split);

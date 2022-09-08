@@ -1,5 +1,4 @@
 using Furball.Volpe.Exceptions;
-using Furball.Volpe.Memory;
 
 namespace Furball.Volpe.Evaluation.CoreLib; 
 
@@ -21,7 +20,7 @@ public class Objects : CoreLibExtension
                 if (dict.ContainsKey(key))
                     throw new KeyAlreadyDefinedException(key, context.Expression.PositionInText);
                     
-                dict.Add(key, new CellSwap<Value>(values[2]));
+                dict.Add(key, values[2]);
 
                 return values[0];
             }),
@@ -48,9 +47,9 @@ public class Objects : CoreLibExtension
                                                         context.Expression.PositionInText);
 
                 if (dict.TryGetValue(key, out var value))
-                    return value.Value;
+                    return value;
                     
-                dict.Add(key, new CellSwap<Value>(values[2]));
+                dict.Add(key, values[2]);
 
                 return values[2];                
             }),

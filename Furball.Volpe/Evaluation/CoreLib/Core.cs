@@ -47,7 +47,7 @@ public class Core : CoreLibExtension {
                 throw new InvalidValueTypeException(
                 typeof(Value.FunctionReference), values[2].GetType(), context.Expression.PositionInText);
 
-            context.Environment.HookVariableToGetterAndSetter(name, (f1, f2));
+            context.Environment.SetVariable(new HookedVariable(name, f1.Function, f2.Function));
             return Value.DefaultVoid;
         }),
 

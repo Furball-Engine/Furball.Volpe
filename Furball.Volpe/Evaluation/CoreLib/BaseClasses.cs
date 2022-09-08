@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Furball.Volpe.Exceptions;
-using Furball.Volpe.Memory;
 
 namespace Furball.Volpe.Evaluation.CoreLib; 
 
@@ -45,8 +44,8 @@ public static class BaseClasses
 
                     List<object> parameters = new();
 
-                    foreach (CellSwap<Value> value in paramArray) {
-                        switch (value.Value) {
+                    foreach (Value value in paramArray) {
+                        switch (value) {
                             case Value.Boolean boolean: {
                                 parameters.Add(boolean.Value);
                                 break;
@@ -93,10 +92,10 @@ public static class BaseClasses
                     if (parameters[1] is not Value.String(var delimiter))
                         throw new InvalidValueTypeException(typeof(Value.String), parameters[1].GetType(), context.Expression.PositionInText);
 
-                    List<CellSwap<Value>> split = new();
+                    List<Value> split = new();
 
                     foreach (string s in str.Value.Split(new []{delimiter}, StringSplitOptions.None)) {
-                        split.Add(new CellSwap<Value>(new Value.String(s)));
+                        split.Add(new Value.String(s));
                     }
 
                     return new Value.Array(split);
@@ -139,7 +138,7 @@ public static class BaseClasses
             ("append", new Function.Builtin((_, parameters) => {
                     Value.Array arr = (Value.Array)parameters[0];
 
-                    arr.Value.Add(new CellSwap<Value>(parameters[1]));
+                    arr.Value.Add(parameters[1]);
 
                     return new Value.Void();
                 }, 1)),
@@ -159,10 +158,11 @@ public static class BaseClasses
                     if (parameters[1] is not Value.Array(var toRemove))
                         throw new InvalidValueTypeException(typeof(Value.Array), parameters[1].GetType(), context.Expression.PositionInText);
 
-                    foreach (CellSwap<Value> value in toRemove) {
-                        int index = arr.Value.FindIndex(x=> x.Value == value.Value);
-                        arr.Value.RemoveAt(index);
+                    for (int i = 0; i < toRemove.Count; i++)
+                    {
+                        int index = arr.Value.FindIndex(x=> x == toRemove[i]);
                     }
+
 
                     return new Value.Void();
                 }, 1)),
@@ -185,7 +185,7 @@ public static class BaseClasses
             ("remove", new Function.Builtin((_, parameters) => {
                     Value.Array arr = (Value.Array)parameters[0];
 
-                    int index = arr.Value.FindIndex(x=> x.Value == parameters[1]);
+                    int index = arr.Value.FindIndex(x=> x == parameters[1]);
                     arr.Value.RemoveAt(index);
 
                     return new Value.Void();
@@ -202,7 +202,7 @@ public static class BaseClasses
                     if (index >= arr.Value.Count || index < 0)
                         throw new IndexOutOfBoundsException(arr.Value, index, context.Expression.PositionInText);
 
-                    arr.Value.Insert(index, new CellSwap<Value>(parameters[2]));
+                    arr.Value.Insert(index, parameters[2]);
 
                     return new Value.Void();
                 }, 2)),
@@ -212,12 +212,12 @@ public static class BaseClasses
                     if (parameters[1] is not Value.FunctionReference(_, var function))
                         throw new InvalidValueTypeException(typeof(Value.FunctionReference), parameters[1].GetType(), context.Expression.PositionInText);
 
-                    List<CellSwap<Value>> newArray = new(arr.Value.Count);
+                    List<Value> newArray = new List<Value>(arr.Value.Count);
 
                     for (int i = 0; i < arr.Value.Count; i++)
                     {
-                        Value value = function.Invoke(context, new Value[] {arr.Value[i].Value});
-                        newArray.Add(new CellSwap<Value>(value));
+                        Value value = function.Invoke(context, new Value[] {arr.Value[i]});
+                        newArray.Add(value);
                     }
 
                     return new Value.Array(newArray);
@@ -249,7 +249,7 @@ public static class BaseClasses
         
         public BooleanClass() : base("bool", new (string, Function)[]
         {
-                
+            
         }) { }
     }
 }

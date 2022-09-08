@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Furball.Volpe.Exceptions;
-using Furball.Volpe.Memory;
-using KeyNotFoundException=Furball.Volpe.Exceptions.KeyNotFoundException;
 
 namespace Furball.Volpe.Evaluation; 
 
@@ -13,10 +11,10 @@ public class Operators
     {
         Value.Array PositiveArray(Value.Array source)
         {
-            List<CellSwap<Value>> newArray = new(source.Value.Count);
+            List<Value> newArray = new List<Value>(source.Value.Count);
 
             for (int i = 0; i < source.Value.Count; i++)
-                newArray.Add(new CellSwap<Value>(Positive(source.Value[i].Value, context)));
+                newArray.Add(Positive(source.Value[i], context));
 
             return new Value.Array(newArray);
         }
@@ -33,26 +31,20 @@ public class Operators
         
     public static Value ArrayAccess(Value leftValue, Value rightValue, EvaluatorContext context)
     {
-        CellSwap<Value> ElementAt(List<CellSwap<Value>> array, int index)
+        IValueRef ElementAt(List<Value> array, int index)
         {
             if (index >= array.Count || index < 0)
                 throw new IndexOutOfBoundsException(array, index, context.Expression.PositionInText);
 
-            return array[index];
+            return new ArrayValueRef(array, index);
         }
 
-        CellSwap<Value> ObjectElementAt(Value.Object dict, string key)
-        {
-            if (!dict.Value.ContainsKey(key))
-                throw new KeyNotFoundException(key, context.Expression.PositionInText);
-                
-            return dict.Value[key];
-        }
+        IValueRef ObjectElementAt(Dictionary<string, Value> dict, string key) => new ObjectValueRef(dict, key, context.Expression.PositionInText);
             
         return (leftValue, rightValue) switch
         {
             (Value.Array(var arr), Value.Number(var n1)) => new Value.ValueReference(ElementAt(arr, (int)n1)),
-            (Value.Object arr, Value.String(var n1))     => new Value.ValueReference(ObjectElementAt(arr, n1)),
+            (Value.Object(var dict), Value.String(var n1)) => new Value.ValueReference(ObjectElementAt(dict, n1)),
                 
             _ => throw new UndefinedPrefixOperationException(
                  nameof(ArrayAccess), leftValue.GetType(), context.Expression.PositionInText)
@@ -162,10 +154,10 @@ public class Operators
     {
         Value NegateArray(Value.Array arr1)
         {
-            List<CellSwap<Value>> newArray = new(arr1.Value.Count);
+            List<Value> newArray = new List<Value>(arr1.Value.Count);
 
             for (int i = 0; i < arr1.Value.Count; i++)
-                newArray.Add(new CellSwap<Value>(Negative(arr1.Value[i].Value, context)));
+                newArray.Add(Negative(arr1.Value[i], context));
                 
             return new Value.Array(newArray);
         }
@@ -187,7 +179,7 @@ public class Operators
             arr1 = arr1.Copy();
 
             for (int i = 0; i < arr2.Value.Count; i++)
-                arr1.Value.Add(new CellSwap<Value>(arr2.Value[i].Value));
+                arr1.Value.Add(arr2.Value[i]);
 
             return arr1;
         }
@@ -201,7 +193,7 @@ public class Operators
                 if (obj1.Value.ContainsKey(key))
                     throw new KeyAlreadyDefinedException(key, context.Expression.PositionInText);
                     
-                obj1.Value.Add(key, new CellSwap<Value>(obj2.Value[key].Value));
+                obj1.Value.Add(key, obj2.Value[key]);
             }
 
             return obj1;
@@ -227,10 +219,10 @@ public class Operators
                                                   "The arrays do not have the same length");
                     
             int                   length   = n1.Value.Count;
-            List<CellSwap<Value>> newArray = new(length);
+            List<Value> newArray = new List<Value>(length);
 
             for (int i = 0; i < length; i++)
-                newArray.Add(new CellSwap<Value>(Sum(n1.Value[i].Value, n2.Value[i].Value, context)));
+                newArray.Add(Sum(n1.Value[i], n2.Value[i], context));
 
             return new Value.Array(newArray);
         }
@@ -278,10 +270,10 @@ public class Operators
             
         Value.Array MultiplyArray(Value.Array source, Value left)
         {
-            List<CellSwap<Value>> newArray = new(source.Value.Count);
+            List<Value> newArray = new List<Value>(source.Value.Count);
 
             for (int i = 0; i < source.Value.Count; i++)
-                newArray.Add(new CellSwap<Value>(Multiply(source.Value[i].Value, left, context)));
+                newArray.Add(Multiply(source.Value[i], left, context));
 
             return new Value.Array(newArray);
         }

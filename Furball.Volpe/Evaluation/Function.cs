@@ -18,7 +18,10 @@ public abstract record Function
             Environment environment = new(this.ParentEnvironment);
 
             for (int i = 0; i < ParameterCount; i++)
-                environment.SetVariableValue(ParameterNames[i], actualParameters[i]);
+            {
+                string name = ParameterNames[i];
+                environment.SetVariable(new Variable(name, actualParameters[i]));
+            }
 
             Value v = new BlockEvaluatorContext(Expressions, environment, inFunction: true).Evaluate();
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Furball.Volpe.Exceptions;
 using Furball.Volpe.LexicalAnalysis;
-using Furball.Volpe.Memory;
 using Furball.Volpe.SyntaxAnalysis;
 
 namespace Furball.Volpe.Evaluation; 
@@ -50,11 +49,25 @@ public readonly struct EvaluatorContext
 
     private Value AssignVariable(string variableName, Value value)
     {
-        Function? setter;
-        if (Environment.TryGetSetterFromHookedVariable(variableName, out setter))
-            setter!.Invoke(this, new Value[] {value});
+        if (Environment.TryGetVariable(variableName, out var variable))
+        {
+            switch (variable)
+            {
+                case HookedVariable hookedVariable:
+                    hookedVariable.Setter.Invoke(this, new Value[] { value });
+                    break;
+
+                case Variable normalVariable:
+                    normalVariable.RawValue = value;
+                    break;
+
+                default:
+                    throw new Exception("Unreachable code");
+            }
+        } 
         else
-            Environment.SetVariableValue(variableName, value);
+            Environment.SetVariable(new Variable(variableName, value));
+
 
         return value;
     }
@@ -93,7 +106,7 @@ public readonly struct EvaluatorContext
         if (left.Value is ExpressionValue.InfixExpression &&
             new EvaluatorContext(left, Environment).Evaluate(forceInner: false) is Value.ValueReference reference)
         {
-            reference.Value.Swap(rightV);
+            reference.Value.Value = rightV;
             return reference.InnerOrSelf;
         }
 
@@ -169,15 +182,21 @@ public readonly struct EvaluatorContext
 
     private Value EvaluateVariable(ExpressionValue.Variable expr)
     {
-        Value? value;
+        Value value;
 
-        Function? getter;
-        if (Environment.TryGetGetterFromHookedVariable(expr.Name, out getter))
-            value = getter!.Invoke(this, Array.Empty<Value>());
-        else if (!Environment.TryGetVariableValue(expr.Name, out value))
+        if (Environment.TryGetVariable(expr.Name, out var variable))
+        {
+            value = variable switch
+            {
+                HookedVariable hookedVariable => hookedVariable.Getter.Invoke(this, Array.Empty<Value>()),
+                Variable normalVariable => normalVariable.RawValue,
+                _ => throw new Exception("Unreachable code")
+            };
+        } 
+        else
             throw new VariableNotFoundException(expr.Name, Expression.PositionInText);
 
-        return value!;
+        return value;
     }
 
     private Value EvaluateLambda(ExpressionValue.Lambda lambda) =>
@@ -249,11 +268,14 @@ public readonly struct EvaluatorContext
             throw new ParamaterCountMismatchException(functionCall.Name,
                                                       parameterCount, functionCall.Parameters.Length, Expression.PositionInText);
 
-        List<Value> values = new();
-        foreach (var expression in functionCall.Parameters)
-            values.Add(new EvaluatorContext(expression, Environment).Evaluate());
+        int paramCount = functionCall.Parameters.Length;
+        Expression[] parameters = functionCall.Parameters;
+        
+        Value[] values = new Value[paramCount];
+        for (int i = 0; i < paramCount; i++)
+            values[i] = new EvaluatorContext(parameters[i], Environment).Evaluate();
 
-        Value v = function.Invoke(this, values.ToArray());
+        Value v = function.Invoke(this, values);
         v.Class = cls;
 
         return v;
@@ -279,21 +301,25 @@ public readonly struct EvaluatorContext
     {
         Environment environment = Environment;
 
-        return new Value.Array(
-        initialElements.Select(element => new CellSwap<Value>(new EvaluatorContext(element, environment).Evaluate())).ToList());
+        List<Value> array = new List<Value>();
+
+        int count = initialElements.Length;
+        for (int i = 0; i < count; i++)
+            array.Add(new EvaluatorContext(initialElements[i], environment, false).Evaluate());
+
+        return new Value.Array(array);
     }
         
     public Value EvaluateObject(string[] keys, Expression[] expressions)
     {
-        Dictionary<string, CellSwap<Value>> dict = new();
+        Dictionary<string, Value> dict = new Dictionary<string, Value>();
 
         for (int i = 0; i < keys.Length; i++)
         {
             if (dict.ContainsKey(keys[i]))
                 throw new KeyAlreadyDefinedException(keys[i], Expression.PositionInText);
                 
-            dict.Add(keys[i],
-                     new CellSwap<Value>(new EvaluatorContext(expressions[i], Environment).Evaluate()));
+            dict.Add(keys[i], new EvaluatorContext(expressions[i], Environment, false).Evaluate());
         }
 
         return new Value.Object(dict);

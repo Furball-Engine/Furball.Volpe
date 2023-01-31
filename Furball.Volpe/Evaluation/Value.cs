@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using Furball.Volpe.Evaluation.CoreLib;
-using Furball.Volpe.Exceptions;
 
 namespace Furball.Volpe.Evaluation;
 
